@@ -1120,12 +1120,16 @@ class AwsS3 extends Service_Base implements Service {
 		}
 
 		// get the requested directory.
-		$directory = str_replace( array(
-			$this->get_url_mark( '' ),
-			$this->get_url_mark( $this->get_bucket_name() ),
-			$this->get_directory(),
-			'//'
-		), array( '', '', '', '/' ), $this->directory );
+		$directory = str_replace(
+			array(
+				$this->get_url_mark( '' ),
+				$this->get_url_mark( $this->get_bucket_name() ),
+				$this->get_directory(),
+				'//',
+			),
+			array( '', '', '', '/' ),
+			$this->directory
+		);
 
 		// bail if directory is empty.
 		if ( empty( $directory ) ) {
