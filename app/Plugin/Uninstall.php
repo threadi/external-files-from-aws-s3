@@ -57,6 +57,7 @@ class Uninstall {
 	 * @return void
 	 */
 	public function run(): void {
-		// TODO to add.
+		// remove custom transient.
+		delete_transient( 'efml_aws_s3_regions' );
 	}
 }

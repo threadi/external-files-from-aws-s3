@@ -31,7 +31,7 @@ class Protocol extends Protocol_Base {
 	 *
 	 * @var string
 	 */
-	protected string $name = 's3';
+	protected string $name = 'aws-s3';
 
 	/**
 	 * Return whether the file using this protocol is available.
@@ -142,12 +142,12 @@ class Protocol extends Protocol_Base {
 				/**
 				 * Run action if we have files to check via AWS S3-protocol.
 				 *
-				 * @since 5.0.0 Available since 5.0.0.
+				 * @since 1.0.0 Available since 1.0.0.
 				 *
 				 * @param string $url   The URL to import.
 				 * @param array<int|string,mixed> $files List of matches (the URLs).
 				 */
-				do_action( 'efml_s3_directory_import_files', $url, $files );
+				do_action( 'efmlawss3_directory_import_files', $url, $files );
 
 				// loop through all dirs and get infos about its files.
 				foreach ( $files as $dir => $dir_data ) {
@@ -155,11 +155,11 @@ class Protocol extends Protocol_Base {
 					/**
 					 * Run action just before the file check via AWS S3-protocol.
 					 *
-					 * @since 5.0.0 Available since 5.0.0.
+					 * @since 1.0.0 Available since 1.0.0.
 					 *
 					 * @param string $file_url   The URL to import.
 					 */
-					do_action( 'efml_s3_directory_import_file_check', $dir );
+					do_action( 'efmlawss3_directory_import_file_check', $dir );
 
 					// bail if files is empty.
 					if ( empty( $dir_data['files'] ) ) {
@@ -215,11 +215,11 @@ class Protocol extends Protocol_Base {
 						/**
 						 * Filter the query to save a file from AWS S3.
 						 *
-						 * @since 5.0.0 Available since 5.0.0.
+						 * @since 1.0.0 Available since 1.0.0.
 						 * @param array<string,mixed> $query The query.
 						 * @param S3Client $s3_client The AWS S3 Client.
 						 */
-						$query = apply_filters( 'efml_s3_file_import_query', $query, $s3_client );
+						$query = apply_filters( 'efmlawss3_s3_file_import_query', $query, $s3_client );
 
 						// try to load the requested bucket to save the tmp file.
 						$s3_client->getObject( $query );
@@ -257,11 +257,11 @@ class Protocol extends Protocol_Base {
 				/**
 				 * Filter the query to save a file from AWS S3.
 				 *
-				 * @since 5.0.0 Available since 5.0.0.
+				 * @since 1.0.0 Available since 1.0.0.
 				 * @param array<string,mixed> $query The query.
 				 * @param S3Client $s3_client The AWS S3 Client.
 				 */
-				$query = apply_filters( 'efml_s3_file_import_query', $query, $s3_client );
+				$query = apply_filters( 'efmlawss3_s3_file_import_query', $query, $s3_client );
 
 				// try to load the requested bucket.
 				$result = $s3_client->getObject( $query );

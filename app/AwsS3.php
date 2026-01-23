@@ -49,7 +49,7 @@ class AwsS3 extends Service_Base implements Service {
 	 *
 	 * @var string
 	 */
-	protected string $name = 's3';
+	protected string $name = 'aws-s3';
 
 	/**
 	 * The public label.
@@ -125,11 +125,11 @@ class AwsS3 extends Service_Base implements Service {
 		$this->title = __( 'Choose file(s) from your AWS S3 server', 'external-files-from-aws-s3' ); // @phpstan-ignore property.notFound
 
 		// use our own hooks.
-		add_filter( 'efml_service_s3_hide_file', array( $this, 'prevent_not_allowed_files' ), 10, 3 );
+		add_filter( 'efmlawss3_service_s3_hide_file', array( $this, 'prevent_not_allowed_files' ), 10, 3 );
 		add_filter( 'efml_protocols', array( $this, 'add_protocol' ) );
 		add_filter( 'efml_directory_listing', array( $this, 'prepare_tree_building' ), 10, 3 );
 		add_filter( 'efml_http_header_args', array( $this, 'remove_authorization_header' ), 10, 2 );
-		add_filter( 'efml_aws_s3_query_params', array( $this, 'change_file_query' ) );
+		add_filter( 'efmlawss3_aws_s3_query_params', array( $this, 'change_file_query' ) );
 		add_filter( 'efml_http_check_content_type', array( $this, 'allow_content_type' ), 10, 2 );
 		add_filter( 'efml_files_check_content_type', array( $this, 'allow_content_type' ), 10, 2 );
 		add_filter( 'efml_external_file_infos', array( $this, 'set_real_mime_type' ), 10, 2 );
@@ -159,11 +159,11 @@ class AwsS3 extends Service_Base implements Service {
 			/**
 			 * Filter the query for files in AWS S3.
 			 *
-			 * @since 5.0.0 Available since 5.0.0.
+			 * @since 1.0.0 Available since 1.0.0.
 			 * @param array $query The query.
 			 * @param string $directory The URL.
 			 */
-			$query = apply_filters( 'efml_aws_s3_query_params', $query, $directory );
+			$query = apply_filters( 'efmlawss3_aws_s3_query_params', $query, $directory );
 
 			// try to load the requested bucket.
 			$result = $s3->listObjectsV2( $query );
@@ -204,7 +204,7 @@ class AwsS3 extends Service_Base implements Service {
 				/**
 				 * Filter whether given AWS S3 file should be hidden.
 				 *
-				 * @since 5.0.0 Available since 5.0.0.
+				 * @since 1.0.0 Available since 1.0.0.
 				 *
 				 * @param bool $false True if it should be hidden.
 				 * @param array<string,mixed> $file The array with the file data.
@@ -212,7 +212,7 @@ class AwsS3 extends Service_Base implements Service {
 				 *
 				 * @noinspection PhpConditionAlreadyCheckedInspection
 				 */
-				if ( apply_filters( 'efml_service_s3_hide_file', $false, $file, $directory ) ) {
+				if ( apply_filters( 'efmlawss3_service_s3_hide_file', $false, $file, $directory ) ) {
 					continue;
 				}
 
@@ -661,7 +661,7 @@ class AwsS3 extends Service_Base implements Service {
 	 */
 	private function get_regions(): array {
 		// get cached value.
-		$list = get_transient( 'eml_aws_s3_regions' );
+		$list = get_transient( 'efml_aws_s3_regions' );
 
 		// use them if they are set.
 		if ( ! empty( $list ) && is_array( $list ) ) {
@@ -685,13 +685,13 @@ class AwsS3 extends Service_Base implements Service {
 		/**
 		 * Filter the resulting list of AWS S3 regions.
 		 *
-		 * @since 5.0.0 Available since 5.0.0.
+		 * @since 1.0.0 Available since 1.0.0.
 		 * @param array<string,string> $list List of regions.
 		 */
-		$list = apply_filters( 'efml_service_s3_regions', $list );
+		$list = apply_filters( 'efmlawss3_service_s3_regions', $list );
 
 		// save the list in cache.
-		set_transient( 'eml_aws_s3_regions', $list, WEEK_IN_SECONDS );
+		set_transient( 'efml_aws_s3_regions', $list, WEEK_IN_SECONDS );
 
 		// return the list.
 		return $list;
@@ -732,11 +732,11 @@ class AwsS3 extends Service_Base implements Service {
 		/**
 		 * Filter the default AWS S3 region.
 		 *
-		 * @since 5.0.0 Available since 5.0.0.
+		 * @since 1.0.0 Available since 1.0.0.
 		 * @param string $default_region The default region.
 		 * @param string $language The actual language.
 		 */
-		return apply_filters( 'efml_service_s3_default_region', $default_region, $language );
+		return apply_filters( 'efmlawss3_service_s3_default_region', $default_region, $language );
 	}
 
 	/**
@@ -804,10 +804,10 @@ class AwsS3 extends Service_Base implements Service {
 		/**
 		 * Filter the list of possible user settings for AWS S3.
 		 *
-		 * @since 5.0.0 Available since 5.0.0.
+		 * @since 1.0.0 Available since 1.0.0.
 		 * @param array<string,mixed> $list The list of settings.
 		 */
-		return apply_filters( 'efml_service_s3_user_settings', $list );
+		return apply_filters( 'efmlawss3_service_s3_user_settings', $list );
 	}
 
 	/**
@@ -1120,14 +1120,12 @@ class AwsS3 extends Service_Base implements Service {
 		}
 
 		// get the requested directory.
-		$directory = str_replace(
-			array(
-				$this->get_url_mark( $this->get_bucket_name() ),
-				$this->get_directory(),
-			),
-			'',
-			$this->directory
-		);
+		$directory = str_replace( array(
+			$this->get_url_mark( '' ),
+			$this->get_url_mark( $this->get_bucket_name() ),
+			$this->get_directory(),
+			'//'
+		), array( '', '', '', '/' ), $this->directory );
 
 		// bail if directory is empty.
 		if ( empty( $directory ) ) {
