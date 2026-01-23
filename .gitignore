@@ -1,0 +1,6 @@
+/.idea
+*.zip
+languages/*.json
+/vendor/
+/build/build.properties
+

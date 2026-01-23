@@ -1,0 +1,239 @@
+# Copyright (C) 2026 Thomas Zwirner
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: External files from AWS S3 in Media Library @@VersionNumber@@\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/external-files-from-aws-s3\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-01-23T21:50:10+01:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: external-files-from-aws-s3\n"
+
+#. Plugin Name of the plugin
+#: external-files-from-aws-s3.php
+msgid "External files from AWS S3 in Media Library"
+msgstr ""
+
+#. Description of the plugin
+#: external-files-from-aws-s3.php
+msgid "Extends External files in Media Library for usage AWS S3."
+msgstr ""
+
+#. Author of the plugin
+#: external-files-from-aws-s3.php
+msgid "Thomas Zwirner"
+msgstr ""
+
+#. Author URI of the plugin
+#: external-files-from-aws-s3.php
+msgid "https://www.thomaszwirner.de"
+msgstr ""
+
+#: app/AwsS3.php:125
+msgid "Choose file(s) from your AWS S3 server"
+msgstr ""
+
+#: app/AwsS3.php:182
+msgid "No files returned from AWS S3."
+msgstr ""
+
+#. translators: %1$d will be replaced by an HTTP-status code like 403.
+#: app/AwsS3.php:309
+#: app/AwsS3.php:395
+#, php-format
+msgid "Credentials and/or bucket are not valid. AWS S3 returns with HTTP-Status %1$d!"
+msgstr ""
+
+#: app/AwsS3.php:330
+msgid "Import"
+msgstr ""
+
+#: app/AwsS3.php:332
+msgid "File-type is not supported"
+msgstr ""
+
+#: app/AwsS3.php:348
+msgid "Go to AWS S3 Bucket"
+msgstr ""
+
+#: app/AwsS3.php:352
+msgid "Import active directory"
+msgstr ""
+
+#: app/AwsS3.php:356
+msgid "Save active directory as your external source"
+msgstr ""
+
+#: app/AwsS3.php:374
+msgid "No credentials set for this AWS S3 connection!"
+msgstr ""
+
+#. translators: %1$d will be replaced by an HTTP-status (like 301).
+#: app/AwsS3.php:402
+#, php-format
+msgid "Credentials and/or bucket are not valid. AWS S3 returns with HTTP-Status %1$d! Error:"
+msgstr ""
+
+#: app/AwsS3.php:592
+#: app/AwsS3.php:780
+#: app/AwsS3.php:981
+msgid "Access key"
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:594
+#: app/AwsS3.php:782
+#, php-format
+msgid "Get your access key as described <a href=\"%1$s\" target=\"_blank\">here (opens in a new window)</a>."
+msgstr ""
+
+#: app/AwsS3.php:595
+#: app/AwsS3.php:784
+#: app/AwsS3.php:982
+msgid "The access key"
+msgstr ""
+
+#: app/AwsS3.php:606
+#: app/AwsS3.php:787
+#: app/AwsS3.php:990
+msgid "Secret key"
+msgstr ""
+
+#: app/AwsS3.php:607
+#: app/AwsS3.php:789
+#: app/AwsS3.php:991
+msgid "The secret key"
+msgstr ""
+
+#: app/AwsS3.php:616
+#: app/AwsS3.php:792
+#: app/AwsS3.php:999
+msgid "Bucket"
+msgstr ""
+
+#: app/AwsS3.php:617
+msgid "The bucket you want to use."
+msgstr ""
+
+#: app/AwsS3.php:628
+msgid "Hint"
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:630
+#, php-format
+msgid "Each user will find its settings in his own <a href=\"%1$s\">user profile</a>."
+msgstr ""
+
+#: app/AwsS3.php:640
+msgid "Choose the region"
+msgstr ""
+
+#: app/AwsS3.php:650
+msgid "Max. files to load during import per iteration"
+msgstr ""
+
+#: app/AwsS3.php:651
+msgid "This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import."
+msgstr ""
+
+#: app/AwsS3.php:760
+msgid "AWS S3"
+msgstr ""
+
+#: app/AwsS3.php:794
+#: app/AwsS3.php:1000
+msgid "The bucket you want to use"
+msgstr ""
+
+#: app/AwsS3.php:797
+msgid "Choose your region"
+msgstr ""
+
+#: app/AwsS3.php:1007
+msgid "Region"
+msgstr ""
+
+#: app/AwsS3.php:1008
+msgid "The region the bucket is located in"
+msgstr ""
+
+#: app/AwsS3.php:1046
+msgid "Connect to your AWS S3"
+msgstr ""
+
+#: app/AwsS3.php:1050
+msgid "Enter your credentials"
+msgstr ""
+
+#: app/AwsS3.php:1065
+msgid "An authentication JSON has already been set by an administrator in the plugin settings. Just connect for show the files."
+msgstr ""
+
+#: app/AwsS3.php:1069
+msgid "An authentication JSON must be set by an administrator in the plugin settings."
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:1074
+#, php-format
+msgid "Set your authentication JSON <a href=\"%1$s\">here</a>."
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:1078
+#, php-format
+msgid "Your access token is already set <a href=\"%1$s\">here</a>. Just connect for show the files."
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:1085
+#, php-format
+msgid "Set your authentication JSON <a href=\"%1$s\">in your profile</a>."
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:1089
+#, php-format
+msgid "Your authentication JSON is already set <a href=\"%1$s\">in your profile</a>. Just connect for show the files."
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3.php:1093
+#, php-format
+msgid "Enter your AWS S3 credentials in this form. How to obtain them is described <a href=\"%1$s\">here</a>."
+msgstr ""
+
+#: app/AwsS3/Export.php:75
+#: app/AwsS3/Export.php:153
+msgid "Given path is not a AWS S3-URL."
+msgstr ""
+
+#. translators: %1$s will be replaced by the attachment ID, %2$s by the bucket name.
+#: app/AwsS3/Export.php:108
+#, php-format
+msgid "Exporting attachment ID %1$s to AWS S3 bucket %2$s."
+msgstr ""
+
+#: app/AwsS3/Export.php:121
+msgid "File would not be public available on your AWS S3 bucket. Check the settings in the bucket to use the export of files."
+msgstr ""
+
+#: app/AwsS3/Export.php:180
+msgid "File could not be deleted! Error:"
+msgstr ""
+
+#. translators: %1$s will be replaced by a URL.
+#: app/AwsS3/Protocol.php:293
+#, php-format
+msgid "Error during request of AWS S3 file. <a href=\"%1$s\">Check the log</a> for details."
+msgstr ""
+
+#: app/AwsS3/Protocol.php:294
+msgid "Error during request of AWS S3 file:"
+msgstr ""
