@@ -131,7 +131,7 @@ class Protocol extends Protocol_Base {
 			// list of files.
 			$results = array();
 
-			// get the WP_Filesystem.
+			// get the "WP_Filesystem".
 			$wp_filesystem = Helper::get_wp_filesystem();
 
 			// if mime type check results with false values, it is a directory.
