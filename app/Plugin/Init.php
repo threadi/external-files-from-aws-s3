@@ -31,7 +31,7 @@ class Init {
 	 */
 	private function __construct() {}
 
-    /**
+	/**
 	 * Prevent cloning of this object.
 	 *
 	 * @return void
@@ -66,6 +66,7 @@ class Init {
 		// add the service.
 		add_filter( 'efml_services_support', array( $this, 'add_service' ) );
 		add_filter( 'efml_service_plugins', array( $this, 'remove_service_plugin' ) );
+		add_filter( 'efml_configurations', array( $this, 'add_configuration' ) );
 
 		// misc.
 		add_action( 'init', array( $this, 'init_languages' ) );
@@ -100,7 +101,7 @@ class Init {
 	 */
 	public function activation(): void {
 		// set the capabilities for this new service.
-		Roles::get_instance()->set( array( 'administrator', 'editor' ), 'efml_cap_' . AwsS3::get_instance()->get_name() );
+		Roles::get_instance()->set( AwsS3::get_instance()->get_default_roles(), 'efml_cap_' . AwsS3::get_instance()->get_name() );
 	}
 
 	/**
@@ -118,12 +119,12 @@ class Init {
 		$is_active = in_array( $slug, (array) get_option( 'active_plugins', array() ), true );
 
 		// bail if result is true.
-		if( $is_active ) {
+		if ( $is_active ) {
 			return true;
 		}
 
 		// bail if we are not in multisite.
-		if( ! is_multisite() ) {
+		if ( ! is_multisite() ) {
 			return false;
 		}
 
@@ -131,12 +132,12 @@ class Init {
 		$sitewide_plugins = get_site_option( 'active_sitewide_plugins' );
 
 		// bail if not list could be loaded.
-		if( ! is_array( $sitewide_plugins ) ) {
+		if ( ! is_array( $sitewide_plugins ) ) {
 			return false;
 		}
 
 		// return the result.
-		return isset( $sitewide_plugins[$slug] );
+		return isset( $sitewide_plugins[ $slug ] );
 	}
 
 	/**
@@ -148,5 +149,20 @@ class Init {
 	public function remove_service_plugin( array $plugins ): array {
 		unset( $plugins['external-files-from-aws-s3'] );
 		return $plugins;
+	}
+
+	/**
+	 * Add our own custom configuration to the list.
+	 *
+	 * @param array<int,string> $configurations List of configurations.
+	 *
+	 * @return array<int,string>
+	 */
+	public function add_configuration( array $configurations ): array {
+		// add our custom configuration.
+		$configurations[] = '\ExternalFilesFromAwsS3\Plugin\Configuration';
+
+		// return the resulting configurations.
+		return $configurations;
 	}
 }

@@ -18,6 +18,7 @@ defined( 'ABSPATH' ) || exit;
 use Aws\EndpointV2\EndpointDefinitionProvider;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use ExternalFilesFromAwsS3\AwsS3\Export;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Number;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Password;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Select;
@@ -34,7 +35,6 @@ use ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Languages;
 use ExternalFilesInMediaLibrary\Plugin\Log;
-use ExternalFilesInMediaLibrary\Services\S3\Export;
 use ExternalFilesInMediaLibrary\Services\Service;
 use ExternalFilesInMediaLibrary\Services\Service_Base;
 use WP_Error;
@@ -1221,7 +1221,7 @@ class AwsS3 extends Service_Base implements Service {
 	}
 
 	/**
-	 * Allow to use AWS S3 URLs which return "application/octed-stream" for files.
+	 * Allow to use AWS S3 URLs.
 	 *
 	 * @param bool   $return_value The return value (true to check the file type, so we return here false).
 	 * @param string $url The URL to check.
@@ -1301,5 +1301,14 @@ class AwsS3 extends Service_Base implements Service {
 
 		// return the found directory.
 		return $real_tree;
+	}
+
+	/**
+	 * Return the default roles to use for this service.
+	 *
+	 * @return array<int,string>
+	 */
+	public function get_default_roles(): array {
+		return array( 'administrator', 'editor' );
 	}
 }
