@@ -1120,7 +1120,7 @@ class AwsS3 extends Service_Base implements Service {
 		}
 
 		// bail if no specific directory is set.
-		if( $this->directory === $this->get_directory() ) {
+		if ( $this->directory === $this->get_directory() ) {
 			return $query;
 		}
 
