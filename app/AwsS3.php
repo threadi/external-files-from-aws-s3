@@ -527,7 +527,7 @@ class AwsS3 extends Service_Base implements Service {
 	 */
 	public function add_protocol( array $protocols ): array {
 		// add the AWS S3 protocol before the HTTPS-protocol and return resulting list of protocols.
-		array_unshift( $protocols, 'ExternalFilesInMediaLibrary\Services\S3\Protocol' );
+		array_unshift( $protocols, 'ExternalFilesFromAwsS3\AwsS3\Protocol' );
 
 		// return the resulting list.
 		return $protocols;
@@ -818,7 +818,7 @@ class AwsS3 extends Service_Base implements Service {
 	 * @return string
 	 */
 	public function get_url_mark( string $bucket_name ): string {
-		return 'https://console.aws.amazon.com/s3/buckets/' . trailingslashit( $bucket_name );
+		return 'https://console.aws.amazon.com/s3/buckets/' . ( ! empty( $bucket_name ) ? trailingslashit( $bucket_name ) : '' );
 	}
 
 	/**
@@ -1116,6 +1116,11 @@ class AwsS3 extends Service_Base implements Service {
 	public function change_file_query( array $query ): array {
 		// bail if directory is not set.
 		if ( empty( $this->directory ) ) {
+			return $query;
+		}
+
+		// bail if no specific directory is set.
+		if( $this->directory === $this->get_directory() ) {
 			return $query;
 		}
 
