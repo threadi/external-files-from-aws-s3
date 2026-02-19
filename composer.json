@@ -47,7 +47,6 @@
     },
     "require": {
         "php": "^8.1",
-        "aws/aws-sdk-php": "^3.352",
-        "afragen/git-updater-lite": "^2"
+        "aws/aws-sdk-php": "^3.352"
     }
 }
