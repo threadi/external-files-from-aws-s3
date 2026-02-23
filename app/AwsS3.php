@@ -1,6 +1,6 @@
 <?php
 /**
- * File to handle the AWS S3 support as directory listing.
+ * File to handle the S3 support as directory listing.
  *
  * Hints:
  * - Public bucket URLs are created like this: https://console.aws.amazon.com/s3/buckets/BucketName/
@@ -41,7 +41,7 @@ use WP_Error;
 use WP_User;
 
 /**
- * Object to handle support for AWS S3-based directory listing.
+ * Object to handle support for S3-based directory listing.
  */
 class AwsS3 extends Service_Base implements Service {
 	/**
@@ -56,7 +56,7 @@ class AwsS3 extends Service_Base implements Service {
 	 *
 	 * @var string
 	 */
-	protected string $label = 'AWS S3';
+	protected string $label = 'S3';
 
 	/**
 	 * Slug of settings tab.
@@ -122,7 +122,7 @@ class AwsS3 extends Service_Base implements Service {
 		}
 
 		// set title.
-		$this->title = __( 'Choose file(s) from your AWS S3 server', 'external-files-from-aws-s3' ); // @phpstan-ignore property.notFound
+		$this->title = __( 'Choose file(s) from your S3 server', 'external-files-from-aws-s3' ); // @phpstan-ignore property.notFound
 
 		// use our own hooks.
 		add_filter( 'efmlawss3_service_s3_hide_file', array( $this, 'prevent_not_allowed_files' ), 10, 3 );
@@ -306,7 +306,7 @@ class AwsS3 extends Service_Base implements Service {
 			// create error object.
 			$error = new WP_Error();
 			/* translators: %1$d will be replaced by an HTTP-status code like 403. */
-			$error->add( 'efml_service_s3', sprintf( __( 'Credentials and/or bucket are not valid. AWS S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
+			$error->add( 'efml_service_s3', sprintf( __( 'Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
 
 			// add it to the list.
 			$this->add_error( $error );
@@ -344,8 +344,8 @@ class AwsS3 extends Service_Base implements Service {
 			parent::get_global_actions(),
 			array(
 				array(
-					'action' => 'location.href="https://console.aws.amazon.com/s3/buckets/";',
-					'label'  => __( 'Go to AWS S3 Bucket', 'external-files-from-aws-s3' ),
+					'action' => 'location.href="https://console.aws.amazon.com/s3/buckets/";', // TODO !!!
+					'label'  => __( 'Go to S3 Bucket', 'external-files-from-aws-s3' ),
 				),
 				array(
 					'action' => 'efml_get_import_dialog( { "service": "' . $this->get_name() . '", "urls": "' . $this->get_url_mark( $this->get_bucket_name() ) . '" + actualDirectoryPath, "fields": config.fields, "term": config.term } );',
@@ -371,7 +371,7 @@ class AwsS3 extends Service_Base implements Service {
 		if ( empty( $this->get_fields() ) ) {
 			// create error object.
 			$error = new WP_Error();
-			$error->add( 'efml_service_s3', __( 'No credentials set for this AWS S3 connection!', 'external-files-from-aws-s3' ) );
+			$error->add( 'efml_service_s3', __( 'No credentials set for this S3 connection!', 'external-files-from-aws-s3' ) );
 
 			// add it to the list.
 			$this->add_error( $error );
@@ -380,7 +380,7 @@ class AwsS3 extends Service_Base implements Service {
 			return false;
 		}
 
-		// get AWS S3 client to check if credentials are ok.
+		// get S3 client to check if credentials are ok.
 		$s3 = $this->get_s3_client();
 		try {
 			// try to load the requested bucket.
@@ -392,14 +392,14 @@ class AwsS3 extends Service_Base implements Service {
 			// create error object.
 			$error = new WP_Error();
 			/* translators: %1$d will be replaced by an HTTP-status code like 403. */
-			$error->add( 'efml_service_s3', sprintf( __( 'Credentials and/or bucket are not valid. AWS S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
+			$error->add( 'efml_service_s3', sprintf( __( 'Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
 
 			// add it to the list.
 			$this->add_error( $error );
 
 			// add log entry.
 			/* translators: %1$d will be replaced by an HTTP-status (like 301). */
-			Log::get_instance()->create( sprintf( __( 'Credentials and/or bucket are not valid. AWS S3 returns with HTTP-Status %1$d! Error:', 'external-files-from-aws-s3' ), $e->getStatusCode() ) . ' <code>' . $e->getMessage() . '</code>', '', 'error' );
+			Log::get_instance()->create( sprintf( __( 'Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d! Error:', 'external-files-from-aws-s3' ), $e->getStatusCode() ) . ' <code>' . $e->getMessage() . '</code>', '', 'error' );
 
 			// return false to prevent any further actions.
 			return false;
@@ -415,17 +415,35 @@ class AwsS3 extends Service_Base implements Service {
 		// get the fields.
 		$fields = $this->get_fields();
 
-		// create and return the AWS S3 client object.
-		return new S3Client(
-			array(
-				'version'     => 'latest',
-				'region'      => $this->get_region(),
-				'credentials' => array(
-					'key'    => $fields['access_key']['value'],
-					'secret' => $fields['secret']['value'],
-				),
-			)
+		// create the configuration array for the client object.
+		$configuration = array(
+			'version'     => 'latest',
+			'region'      => $this->get_region(),
+			'credentials' => array(
+				'key'    => $fields['access_key']['value'],
+				'secret' => $fields['secret']['value'],
+			),
 		);
+
+		// get the chosen provider.
+		$provider = Providers::get_instance()->get_provider_by_name( $fields['provider']['value'] );
+
+		// if provider could be found, initialize its additional handler.
+		if( $provider instanceof Provider_Base ) {
+			$provider->init();
+		}
+
+		/**
+		 * Filter the configuration for the S3Client object.
+		 *
+		 * @since 1.0.0 Available since 1.0.0.
+		 * @param array<string,mixed> $configuration The configuration.
+		 * @param array<string,mixed> $fields The fields.
+		 */
+		$configuration = apply_filters( 'efmlawss3_aws_client_configuration', $configuration, $fields );
+
+		// create and return the S3 client object.
+		return new S3Client( $configuration );
 	}
 
 	/**
@@ -534,7 +552,7 @@ class AwsS3 extends Service_Base implements Service {
 	}
 
 	/**
-	 * Add settings for AWS S3 support.
+	 * Add settings for S3 support.
 	 *
 	 * @return void
 	 */
@@ -579,8 +597,18 @@ class AwsS3 extends Service_Base implements Service {
 			return;
 		}
 
-		// add setting for region.
+		// add settings.
 		if ( defined( 'EFML_ACTIVATION_RUNNING' ) || 'global' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
+			// add setting.
+			$setting = $settings_obj->add_setting( 'eml_s3_provider' );
+			$setting->set_section( $section );
+			$setting->set_type( 'string' );
+			$setting->set_default( 'aws_s3' );
+			$field = new Select();
+			$field->set_title( __( 'Choose provider', 'external-files-from-aws-s3' ) );
+			$field->set_options( $this->get_provider() );
+			$setting->set_field( $field );
+
 			// add setting.
 			$setting = $settings_obj->add_setting( 'eml_s3_access_key' );
 			$setting->set_section( $section );
@@ -776,6 +804,12 @@ class AwsS3 extends Service_Base implements Service {
 	 */
 	public function get_user_settings(): array {
 		$list = array(
+			's3_provider' => array(
+				'label'       => __( 'Choose provider', 'external-files-from-aws-s3' ),
+				'field'       => 'select',
+				'options' => $this->get_provider(),
+				'default'     => 'aws_s3'
+			),
 			's3_access_key' => array(
 				'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
 				/* translators: %1$s will be replaced by a URL. */
@@ -975,6 +1009,32 @@ class AwsS3 extends Service_Base implements Service {
 
 			// set the fields.
 			$this->fields = array( // @phpstan-ignore property.notFound
+				'provider' => array(
+					'name'        => 'provider',
+					'type'        => 'select',
+					'label'       => __( 'Choose provider', 'external-files-from-aws-s3' ),
+					'placeholder' => __( 'The region the bucket is located in', 'external-files-from-aws-s3' ),
+					'options'     => $this->get_provider_for_react(),
+					'value'       => $values['provider'],
+				),
+				'account_id' => array(
+					'name'        => 'account_id',
+					'type'        => 'text',
+					'label'       => __( 'Account ID', 'external-files-from-aws-s3' ),
+					'placeholder' => __( 'The account ID', 'external-files-from-aws-s3' ),
+					'description' => __( 'Only required for Cloudflare R2', 'external-files-from-aws-s3' ),
+					'value'       => $values['account_id'],
+					'readonly'    => ! empty( $values['account_id'] ),
+					'not_required'=> true
+				),
+				'r2_eu' => array(
+					'name'        => 'r2_eu',
+					'type'        => 'checkbox',
+					'label'       => __( 'Cloudflare R2 bucket is in EU', 'external-files-from-aws-s3' ),
+					'value'       => $values['r2_eu'],
+					'readonly'    => ! empty( $values['r2_eu'] ),
+					'not_required'=> true
+				),
 				'access_key' => array(
 					'name'        => 'access_key',
 					'type'        => 'text',
@@ -1090,7 +1150,7 @@ class AwsS3 extends Service_Base implements Service {
 		}
 
 		/* translators: %1$s will be replaced by a URL. */
-		return sprintf( __( 'Enter your AWS S3 credentials in this form. How to obtain them is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' );
+		return sprintf( __( 'Enter your S3 credentials in this form. How to get them for AWS S3 is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' );
 	}
 
 	/**
@@ -1157,6 +1217,9 @@ class AwsS3 extends Service_Base implements Service {
 	private function get_field_values(): array {
 		// prepare the return array.
 		$values = array(
+			'provider' => '',
+			'account_id' => '',
+			'r2_eu' => '',
 			'access_key' => '',
 			'secret_key' => '',
 			'bucket'     => '',
@@ -1165,6 +1228,9 @@ class AwsS3 extends Service_Base implements Service {
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
+			$values['provider'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_provider', '' ) );
+			$values['account_id'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_account_id', '' ) );
+			$values['r2_eu'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_r2_eu', '' ) );
 			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_access_key', '' ) );
 			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_secret_key', '' ) );
 			$values['bucket']     = get_option( 'eml_s3_bucket', '' );
@@ -1182,6 +1248,9 @@ class AwsS3 extends Service_Base implements Service {
 			}
 
 			// get the values.
+			$values['provider'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_provider', true ) );
+			$values['account_id'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_account_id', true ) );
+			$values['r2_eu'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_r2_eu', true ) );
 			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_access_key', true ) );
 			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_secret_key', true ) );
 			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_bucket', true ) );
@@ -1273,12 +1342,19 @@ class AwsS3 extends Service_Base implements Service {
 	 * @return string
 	 */
 	public function get_public_url_of_file( string $key ): string {
-		return sprintf(
-			'https://%s.s3.%s.amazonaws.com/%s',
-			$this->get_bucket_name(),
-			$this->get_region(),
-			$key
-		);
+		// get the fields.
+		$fields = $this->get_fields();
+
+		// get the chosen provider.
+		$provider = Providers::get_instance()->get_provider_by_name( $fields['provider']['value'] );
+
+		// if provider could be found, initialize its additional handler.
+		if( ! $provider instanceof Provider_Base ) {
+			return '';
+		}
+
+		// get the public URL from provider object.
+		return $provider->get_public_url_of_file( $key, $fields );
 	}
 
 	/**
@@ -1315,5 +1391,50 @@ class AwsS3 extends Service_Base implements Service {
 	 */
 	public function get_default_roles(): array {
 		return array( 'administrator', 'editor' );
+	}
+
+	/**
+	 * Convert the providers list to a react-compatible array.
+	 *
+	 * @return array<int,array<string,string>>
+	 */
+	private function get_provider(): array {
+		// get the providers.
+		$providers = Providers::get_instance()->get_providers_as_objects();
+
+		// create list for react.
+		$providers_for_react = array();
+
+		// add each region to the list.
+		foreach ( $providers as $provider_obj ) {
+			$providers_for_react[ $provider_obj->get_name() ] = $provider_obj->get_label();
+		}
+
+		// return the resulting list.
+		return $providers_for_react;
+	}
+
+	/**
+	 * Convert the providers list to a react-compatible array.
+	 *
+	 * @return array<int,array<string,string>>
+	 */
+	private function get_provider_for_react(): array {
+		// get the providers.
+		$providers = Providers::get_instance()->get_providers_as_objects();
+
+		// create list for react.
+		$providers_for_react = array();
+
+		// add each region to the list.
+		foreach ( $providers as $provider_obj ) {
+			$providers_for_react[] = array(
+				'value' => $provider_obj->get_name(),
+				'label' => $provider_obj->get_label(),
+			);
+		}
+
+		// return the resulting list.
+		return $providers_for_react;
 	}
 }
