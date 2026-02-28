@@ -1,0 +1,9 @@
+.efml-cloudflare-r2:before {
+	background-image: url(../gfx/cloudflare-logo.png);
+	background-repeat: no-repeat;
+	background-size: contain;
+	filter: brightness(0) saturate(100%) invert(38%) sepia(50%) saturate(1478%) hue-rotate(176deg) brightness(83%) contrast(81%);
+	content: '';
+	height: 32px;
+	width: 92px;
+}

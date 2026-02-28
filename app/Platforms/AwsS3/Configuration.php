@@ -5,12 +5,12 @@
  * @package external-files-in-media-library
  */
 
-namespace ExternalFilesFromAwsS3\Plugin;
+namespace ExternalFilesFromAwsS3\Platforms\AwsS3;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use ExternalFilesFromAwsS3\AwsS3;
+use ExternalFilesFromAwsS3\Platforms\AwsS3;
 use ExternalFilesInMediaLibrary\Plugin\Configuration_Base;
 use ExternalFilesInMediaLibrary\Services\Services;
 

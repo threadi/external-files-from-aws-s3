@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name:       External files from AWS S3 in Media Library
- * Description:       Extends External files in Media Library for usage AWS S3.
+ * Plugin Name:       External files from AWS S3-compatible platforms in Media Library
+ * Description:       Extends External files in Media Library for usage AWS S3-compatible platforms.
  * Requires at least: 6.2
  * Requires PHP:      8.1
  * Requires Plugins:  external-files-in-media-library
