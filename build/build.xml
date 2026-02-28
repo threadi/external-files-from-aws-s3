@@ -106,6 +106,7 @@
     <target name="build" description="Builds a new release" depends="init,generate-documentation,autoloader-generation,check-phpstan,check-php-compatibility,check-wcs,setVersionNumber">
         <delete file="${build.dir}/${plugin.slug}_${plugin.version}.zip"/>
         <zip destfile="${build.dir}/${plugin.slug}_${plugin.version}.zip">
+            <zipfileset dir="${src.dir}/admin" prefix="${plugin.slug}/admin" />
             <zipfileset dir="${src.dir}/app" prefix="${plugin.slug}/app" />
             <zipfileset dir="${src.dir}/gfx" prefix="${plugin.slug}/gfx" />
             <zipfileset dir="${src.dir}/languages" prefix="${plugin.slug}/languages" />
@@ -116,7 +117,6 @@
             <zipfileset dir="${src.dir}/vendor/symfony" prefix="${plugin.slug}/vendor/symfony" />
             <zipfileset dir="${src.dir}/vendor/guzzlehttp" prefix="${plugin.slug}/vendor/guzzlehttp" />
             <zipfileset dir="${src.dir}/vendor/mtdowling" prefix="${plugin.slug}/vendor/mtdowling" />
-            <zipfileset dir="${src.dir}/vendor/afragen" prefix="${plugin.slug}/vendor/afragen" />
             <zipfileset dir="${src.dir}" includes="readme-release.txt" fullpath="${plugin.slug}/readme.txt" />
             <zipfileset dir="${src.dir}" includes="uninstall-release.php" fullpath="${plugin.slug}/uninstall.php" />
             <zipfileset dir="${src.dir}" includes="uninstall.php,composer.json" prefix="${plugin.slug}" />

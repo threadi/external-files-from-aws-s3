@@ -10,8 +10,8 @@ namespace ExternalFilesFromAwsS3\Plugin;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use ExternalFilesFromAwsS3\AwsS3;
 use ExternalFilesInMediaLibrary\Plugin\Roles;
+use ExternalFilesInMediaLibrary\Services\Service_Base;
 use ExternalFilesInMediaLibrary\Services\Service_Plugin_Base;
 
 /**
@@ -66,10 +66,11 @@ class Init {
 		// add the service.
 		add_filter( 'efml_services_support', array( $this, 'add_service' ) );
 		add_filter( 'efml_service_plugins', array( $this, 'remove_service_plugin' ) );
-		add_filter( 'efml_configurations', array( $this, 'add_configuration' ) );
+		add_filter( 'efml_configurations', array( $this, 'add_configurations' ) );
 
 		// misc.
 		add_action( 'init', array( $this, 'init_languages' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'add_styles_in_admin' ) );
 		add_filter( 'wp_consent_api_registered_' . plugin_basename( EFMLAWSS3_PLUGIN ), array( $this, 'register_consent_api' ) );
 	}
 
@@ -84,15 +85,66 @@ class Init {
 	}
 
 	/**
-	 * Add the service to the main plugin.
+	 * Return the supported S3-compatible platforms.
+	 *
+	 * @return array<int,string>
+	 */
+	private function get_platforms(): array {
+		return array(
+			'ExternalFilesFromAwsS3\Platforms\AwsS3',
+			'ExternalFilesFromAwsS3\Platforms\CloudflareR2',
+		);
+	}
+
+	/**
+	 * Return the supported S3-compatible platforms as objects.
+	 *
+	 * @return array<int,Service_Base>
+	 */
+	private function get_platforms_as_object(): array {
+		// create the list.
+		$list = array();
+
+		// add each supported platform.
+		foreach ( $this->get_platforms() as $platform_class_name ) {
+			// bail if class does not exist.
+			if ( ! class_exists( $platform_class_name ) ) {
+				continue;
+			}
+
+			// get class name with method.
+			$class_name = $platform_class_name . '::get_instance';
+
+			// bail if it is not callable.
+			if ( ! is_callable( $class_name ) ) {
+				continue;
+			}
+
+			// initiate object.
+			$obj = $class_name();
+
+			// bail if object is not a "Service_Base" object.
+			if ( ! $obj instanceof Service_Base ) {
+				continue;
+			}
+
+			// add it to the list.
+			$list[] = $obj;
+		}
+
+		// return the resulting list.
+		return $list;
+	}
+
+	/**
+	 * Add the services for the supported platforms to the main plugin.
 	 *
 	 * @param array<int,string> $services The list of services.
 	 *
 	 * @return array<int,string>
 	 */
 	public function add_service( array $services ): array {
-		$services[] = 'ExternalFilesFromAwsS3\AwsS3';
-		return $services;
+		return array_merge( $services, $this->get_platforms() );
 	}
 
 	/**
@@ -101,8 +153,13 @@ class Init {
 	 * @return void
 	 */
 	public function activation(): void {
-		// set the capabilities for this new service.
-		Roles::get_instance()->set( AwsS3::get_instance()->get_default_roles(), 'efml_cap_' . AwsS3::get_instance()->get_name() );
+		// get the roles object.
+		$roles_obj = Roles::get_instance();
+
+		// add each supported platform.
+		foreach ( $this->get_platforms_as_object() as $obj ) {
+			$roles_obj->set( $obj->get_default_roles(), 'efml_cap_' . $obj->get_name() );
+		}
 	}
 
 	/**
@@ -159,9 +216,10 @@ class Init {
 	 *
 	 * @return array<int,string>
 	 */
-	public function add_configuration( array $configurations ): array {
-		// add our custom configuration.
-		$configurations[] = '\ExternalFilesFromAwsS3\Plugin\Configuration';
+	public function add_configurations( array $configurations ): array {
+		foreach ( $this->get_platforms_as_object() as $obj ) {
+			$configurations[] = $obj->get_configuration_object_name();
+		}
 
 		// return the resulting configurations.
 		return $configurations;
@@ -175,5 +233,43 @@ class Init {
 	 */
 	public function register_consent_api(): bool {
 		return true;
+	}
+
+	/**
+	 * Add CSS- and JS-files for the backend.
+	 *
+	 * @param string $hook The used hook.
+	 *
+	 * @return void
+	 */
+	public function add_styles_in_admin( string $hook ): void {
+		// bail if page is used where we do not use it.
+		// TODO find better way.
+		if ( ! in_array(
+			$hook,
+			array(
+				'plugins_page_efml_service_plugins',
+				'upload.php',
+				'media-new.php',
+				'edit-tags.php',
+				'post.php',
+				'settings_page_eml_settings',
+				'options-general.php',
+				'media_page_efml_local_directories',
+				'term.php',
+				'profile.php',
+			),
+			true
+		) ) {
+			return;
+		}
+
+		// admin-specific styles.
+		wp_enqueue_style(
+			'efmlawss3-admin',
+			Helper::get_plugin_url() . 'admin/style.css',
+			array(),
+			Helper::get_file_version( Helper::get_plugin_dir() . 'admin/style.css' ),
+		);
 	}
 }

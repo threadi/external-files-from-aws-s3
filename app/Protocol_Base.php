@@ -1,21 +1,19 @@
 <?php
 /**
- * File, which handles the AWS S3 support as own protocol.
+ * File for base object, which handles the S3 support as own protocol.
  *
  * @package external-files-from-aws-s3
  */
 
-namespace ExternalFilesFromAwsS3\AwsS3;
+namespace ExternalFilesFromAwsS3;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
-use ExternalFilesFromAwsS3\AwsS3;
 use ExternalFilesInMediaLibrary\ExternalFiles\Files;
 use ExternalFilesInMediaLibrary\ExternalFiles\Import;
-use ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base;
 use ExternalFilesInMediaLibrary\ExternalFiles\Protocols\Http;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Log;
@@ -25,13 +23,13 @@ use WP_Filesystem_Base;
 /**
  * Object to handle different protocols.
  */
-class Protocol extends Protocol_Base {
+class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base {
 	/**
 	 * The internal protocol name.
 	 *
 	 * @var string
 	 */
-	protected string $name = 'aws-s3';
+	protected string $name = '';
 
 	/**
 	 * Return whether the file using this protocol is available.
@@ -48,8 +46,7 @@ class Protocol extends Protocol_Base {
 	 * @return bool
 	 */
 	public function is_url_compatible(): bool {
-		// bail if this is not an AWS S3 URL.
-		return ! ( ! str_contains( $this->get_url(), 'amazonaws.com' ) && ! str_starts_with( $this->get_url(), AwsS3::get_instance()->get_url_mark( '' ) ) );
+		return false;
 	}
 
 	/**
@@ -65,7 +62,7 @@ class Protocol extends Protocol_Base {
 			return false;
 		}
 
-		// return true as AWS S3 URLs are available.
+		// return true as URLs of this protocol are available.
 		return true;
 	}
 
@@ -103,6 +100,15 @@ class Protocol extends Protocol_Base {
 	}
 
 	/**
+	 * Return the corresponding "Service_Base" object.
+	 *
+	 * @return Platform_Base|false
+	 */
+	protected function get_directory_listing_object(): Platform_Base|false {
+		return false;
+	}
+
+	/**
 	 * Return infos to each given URL.
 	 *
 	 * @return array<int|string,array<string,mixed>|bool> List of files with its infos.
@@ -111,14 +117,19 @@ class Protocol extends Protocol_Base {
 		// get fields.
 		$fields = $this->get_fields();
 
-		// get our own S3 object.
-		$s3 = AwsS3::get_instance();
+		// get our own service object.
+		$s3 = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3 instanceof Platform_Base ) {
+			return array();
+		}
 
 		// set the fields.
 		$s3->set_fields( $fields );
 
-		// remove the domain from URL to get the Key (aka path to the file in AWS S3).
-		$url = str_replace( $s3->get_url_mark( $fields['bucket']['value'] ), '', $this->get_url() );
+		// remove the domain from URL to get the Key (aka path to the file in S3).
+		$url = $s3->get_requested_url( $this->get_url(), $fields );
 
 		// get the S3Client.
 		$s3_client = $s3->get_s3_client();
@@ -140,7 +151,7 @@ class Protocol extends Protocol_Base {
 				$files = $s3->get_directory_listing( '/' );
 
 				/**
-				 * Run action if we have files to check via AWS S3-protocol.
+				 * Run action if we have files to check via S3-protocol.
 				 *
 				 * @since 1.0.0 Available since 1.0.0.
 				 *
@@ -153,7 +164,7 @@ class Protocol extends Protocol_Base {
 				foreach ( $files as $dir => $dir_data ) {
 					$dir = (string) $dir;
 					/**
-					 * Run action just before the file check via AWS S3-protocol.
+					 * Run action just before the file check via S3-protocol.
 					 *
 					 * @since 1.0.0 Available since 1.0.0.
 					 *
@@ -166,7 +177,7 @@ class Protocol extends Protocol_Base {
 						continue;
 					}
 
-					// set counter for files, which has been loaded from AWS S3.
+					// set counter for files, which has been loaded from S3.
 					$loaded_files = 0;
 
 					// add each file to the list.
@@ -213,13 +224,13 @@ class Protocol extends Protocol_Base {
 						);
 
 						/**
-						 * Filter the query to save a file from AWS S3.
+						 * Filter the query to save a file from S3.
 						 *
 						 * @since 1.0.0 Available since 1.0.0.
 						 * @param array<string,mixed> $query The query.
-						 * @param S3Client $s3_client The AWS S3 Client.
+						 * @param S3Client $s3_client The S3 Client.
 						 */
-						$query = apply_filters( 'efmlawss3_s3_file_import_query', $query, $s3_client );
+						$query = apply_filters( 'efmlawss3_file_import_query', $query, $s3_client );
 
 						// try to load the requested bucket to save the tmp file.
 						$s3_client->getObject( $query );
@@ -245,7 +256,7 @@ class Protocol extends Protocol_Base {
 				$wp_filesystem->delete( $tmp_file_name );
 
 				// get the key from given URL.
-				$key = str_replace( sprintf( 'https://%s.s3.%s.amazonaws.com/', $fields['bucket']['value'], $fields['region']['value'] ), '', $this->get_url() );
+				$key = $this->get_key_of_file( $this->get_url() );
 
 				// set query for the file and save it in tmp dir.
 				$query = array(
@@ -255,13 +266,13 @@ class Protocol extends Protocol_Base {
 				);
 
 				/**
-				 * Filter the query to save a file from AWS S3.
+				 * Filter the query to save a file from S3.
 				 *
 				 * @since 1.0.0 Available since 1.0.0.
 				 * @param array<string,mixed> $query The query.
-				 * @param S3Client $s3_client The AWS S3 Client.
+				 * @param S3Client $s3_client The S3 Client.
 				 */
-				$query = apply_filters( 'efmlawss3_s3_file_import_query', $query, $s3_client );
+				$query = apply_filters( 'efmlawss3_file_import_query', $query, $s3_client );
 
 				// try to load the requested bucket.
 				$result = $s3_client->getObject( $query );
@@ -290,8 +301,8 @@ class Protocol extends Protocol_Base {
 			return $results;
 		} catch ( S3Exception $e ) {
 			/* translators: %1$s will be replaced by a URL. */
-			Log::get_instance()->create( sprintf( __( 'Error during request of AWS S3 file. <a href="%1$s">Check the log</a> for details.', 'external-files-from-aws-s3' ), esc_url( Settings::get_instance()->get_url( 'eml_logs' ) ) ), $this->get_url(), 'error', 0, Import::get_instance()->get_identifier() );
-			Log::get_instance()->create( __( 'Error during request of AWS S3 file:', 'external-files-from-aws-s3' ) . ' <code>' . $e->getMessage() . '</code>', $this->get_url(), 'error' );
+			Log::get_instance()->create( sprintf( __( 'Error during request of S3 file. <a href="%1$s">Check the log</a> for details.', 'external-files-from-aws-s3' ), esc_url( Settings::get_instance()->get_url( 'eml_logs' ) ) ), $this->get_url(), 'error', 0, Import::get_instance()->get_identifier() );
+			Log::get_instance()->create( __( 'Error during request of S3 file:', 'external-files-from-aws-s3' ) . ' <code>' . $e->getMessage() . '</code>', $this->get_url(), 'error' );
 			return array();
 		}
 	}
@@ -315,15 +326,6 @@ class Protocol extends Protocol_Base {
 	}
 
 	/**
-	 * Return the title of this protocol object.
-	 *
-	 * @return string
-	 */
-	public function get_title(): string {
-		return AwsS3::get_instance()->get_label(); // @phpstan-ignore method.notFound
-	}
-
-	/**
 	 * Return whether this URL could be checked for availability.
 	 *
 	 * @return bool
@@ -341,5 +343,16 @@ class Protocol extends Protocol_Base {
 	 */
 	public function is_url_reachable(): bool {
 		return false;
+	}
+
+	/**
+	 * Return the key of a file by given URL.
+	 *
+	 * @param string $url The URL.
+	 *
+	 * @return string
+	 */
+	protected function get_key_of_file( string $url ): string {
+		return $url;
 	}
 }

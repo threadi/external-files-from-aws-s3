@@ -22,5 +22,6 @@
         <exclude name="WordPress.Files.FileName"/>
         <!-- Exclude base64-warnings for backwards-compatibility with older plugin-version, but it also disabled serialize-warning .. -->
         <exclude name="WordPress.PHP.DiscouragedPHPFunctions"/>
+        <exclude name="Generic.CodeAnalysis.UselessOverridingMethod" />
     </rule>
 </ruleset>
