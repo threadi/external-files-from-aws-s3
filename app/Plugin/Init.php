@@ -92,7 +92,9 @@ class Init {
 	private function get_platforms(): array {
 		return array(
 			'ExternalFilesFromAwsS3\Platforms\AwsS3',
+			'ExternalFilesFromAwsS3\Platforms\BackplazeS3',
 			'ExternalFilesFromAwsS3\Platforms\CloudflareR2',
+			'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces',
 		);
 	}
 

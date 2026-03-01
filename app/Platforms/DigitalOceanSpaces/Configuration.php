@@ -1,16 +1,16 @@
 <?php
 /**
- * File to handle a configuration preset to use only AWS S3.
+ * File to handle a configuration preset to use only DigitalOcean Spaces.
  *
  * @package external-files-in-media-library
  */
 
-namespace ExternalFilesFromAwsS3\Platforms\AwsS3;
+namespace ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use ExternalFilesFromAwsS3\Platforms\AwsS3;
+use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
 use ExternalFilesInMediaLibrary\Plugin\Configuration_Base;
 use ExternalFilesInMediaLibrary\Services\Services;
 
@@ -24,7 +24,7 @@ class Configuration extends Configuration_Base {
 	 *
 	 * @var string
 	 */
-	protected string $name = 'aws_s3';
+	protected string $name = 'digitalocean_spaces';
 
 	/**
 	 * Initialize this object.
@@ -37,7 +37,7 @@ class Configuration extends Configuration_Base {
 	 * @return string
 	 */
 	public function get_title(): string {
-		return __( 'Use only AWS S3', 'external-files-in-media-library' );
+		return __( 'Use only DigitalOcean Spaces', 'external-files-in-media-library' );
 	}
 
 	/**
@@ -47,7 +47,7 @@ class Configuration extends Configuration_Base {
 	 */
 	public function get_dialog_hints(): array {
 		return array(
-			'<p>' . __( 'This will disable all other services except AWS S3.', 'external-files-in-media-library' ) . '<br>' . __( 'After that, you will only be able to see and use AWS S3 for external sources.', 'external-files-in-media-library' ) . '</p>',
+			'<p>' . __( 'This will disable all other services except DigitalOcean Spaces.', 'external-files-in-media-library' ) . '<br>' . __( 'After that, you will only be able to see and use DigitalOcean Spaces for external sources.', 'external-files-in-media-library' ) . '</p>',
 		);
 	}
 
@@ -65,8 +65,8 @@ class Configuration extends Configuration_Base {
 			}
 
 			// bail if this is our service.
-			if ( $service_obj->get_name() === AwsS3::get_instance()->get_name() ) {
-				update_option( 'eml_service_' . $service_obj->get_name() . '_allowed_roles', AwsS3::get_instance()->get_default_roles() );
+			if ( $service_obj->get_name() === DigitalOceanSpaces::get_instance()->get_name() ) {
+				update_option( 'eml_service_' . $service_obj->get_name() . '_allowed_roles', DigitalOceanSpaces::get_instance()->get_default_roles() );
 				continue;
 			}
 
