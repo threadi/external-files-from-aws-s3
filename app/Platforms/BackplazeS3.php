@@ -1,6 +1,6 @@
 <?php
 /**
- * File to handle the DigitalOcean Spaces support as directory listing.
+ * File to handle the Backplaze S3 support as directory listing.
  *
  * @package external-files-from-aws-s3
  */
@@ -14,7 +14,7 @@ use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
 use ExternalFilesFromAwsS3\Platform_Base;
-use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces\Export;
+use ExternalFilesFromAwsS3\Platforms\BackplazeS3\Export;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Number;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Password;
 use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Select;
@@ -35,48 +35,48 @@ use WP_User;
 /**
  * Object to handle support for S3-based directory listing.
  */
-class DigitalOceanSpaces extends Platform_Base implements Service {
+class BackplazeS3 extends Platform_Base implements Service {
 	/**
 	 * The object name.
 	 *
 	 * @var string
 	 */
-	protected string $name = 'digitalocean-spaces';
+	protected string $name = 'backplaze-s3';
 
 	/**
 	 * The public label.
 	 *
 	 * @var string
 	 */
-	protected string $label = 'DigitalOcean Spaces';
+	protected string $label = 'Backplaze S3';
 
 	/**
 	 * The class name of the protocol class.
 	 *
 	 * @var string
 	 */
-	protected string $protocol_class_name = 'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces\Protocol';
+	protected string $protocol_class_name = 'ExternalFilesFromAwsS3\Platforms\BackplazeS3\Protocol';
 
 	/**
 	 * Name of the configuration object.
 	 *
 	 * @var string
 	 */
-	protected string $configuration_object_name = 'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces\Configuration';
+	protected string $configuration_object_name = 'ExternalFilesFromAwsS3\Platforms\BackplazeS3\Configuration';
 
 	/**
 	 * Slug of settings tab.
 	 *
 	 * @var string
 	 */
-	protected string $settings_sub_tab = 'eml_digitalocean_spaces';
+	protected string $settings_sub_tab = 'eml_backplaze_s3';
 
 	/**
 	 * Instance of actual object.
 	 *
-	 * @var ?DigitalOceanSpaces
+	 * @var ?BackplazeS3
 	 */
-	private static ?DigitalOceanSpaces $instance = null;
+	private static ?BackplazeS3 $instance = null;
 
 	/**
 	 * Constructor, not used as this a Singleton object.
@@ -93,9 +93,9 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	/**
 	 * Return instance of this object as singleton.
 	 *
-	 * @return DigitalOceanSpaces
+	 * @return BackplazeS3
 	 */
-	public static function get_instance(): DigitalOceanSpaces {
+	public static function get_instance(): BackplazeS3 {
 		if ( is_null( self::$instance ) ) {
 			self::$instance = new self();
 		}
@@ -120,7 +120,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		parent::init();
 
 		// add settings.
-		add_action( 'init', array( $this, 'init_digital_ocean_spaces' ), 30 );
+		add_action( 'init', array( $this, 'init_backplaze_s3' ), 30 );
 
 		// bail if user has no capability for this service.
 		if ( ! current_user_can( 'efml_cap_' . $this->get_name() ) ) {
@@ -128,11 +128,11 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		}
 
 		// set title.
-		$this->title = __( 'Choose file(s) from your DigitalOcean Spaces bucket', 'external-files-from-aws-s3' ); // @phpstan-ignore property.notFound
+		$this->title = __( 'Choose file(s) from your Backplaze S3 bucket', 'external-files-from-aws-s3' ); // @phpstan-ignore property.notFound
 
 		// use our own hooks.
-		add_filter( 'efmlawss3_service_digitalocean_spaces_hide_file', array( $this, 'prevent_not_allowed_files' ), 10, 3 );
-		add_filter( 'efmlawss3_digitalocean_spaces_query_params', array( $this, 'change_file_query' ) );
+		add_filter( 'efmlawss3_service_backplaze_s3_hide_file', array( $this, 'prevent_not_allowed_files' ), 10, 3 );
+		add_filter( 'efmlawss3_backplaze_s3_query_params', array( $this, 'change_file_query' ) );
 		add_filter( 'efml_http_check_content_type', array( $this, 'allow_content_type' ), 10, 2 );
 		add_filter( 'efml_files_check_content_type', array( $this, 'allow_content_type' ), 10, 2 );
 		add_filter( 'efml_external_file_infos', array( $this, 'set_real_mime_type' ), 10, 2 );
@@ -190,7 +190,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		if ( empty( $this->get_fields() ) ) {
 			// create error object.
 			$error = new WP_Error();
-			$error->add( 'efml_service_digitalocean_spaces', __( 'No credentials set for this DigitalOcean Spaces connection!', 'external-files-from-aws-s3' ) );
+			$error->add( 'efml_service_backplaze_s3', __( 'No credentials set for this Backplaze S3 connection!', 'external-files-from-aws-s3' ) );
 
 			// add it to the list.
 			$this->add_error( $error );
@@ -211,14 +211,14 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			// create error object.
 			$error = new WP_Error();
 			/* translators: %1$d will be replaced by an HTTP-status code like 403. */
-			$error->add( 'efml_service_digitalocean_spaces', sprintf( __( 'Credentials and/or bucket are not valid. DigitalOcean Spaces returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
+			$error->add( 'efml_service_backplaze_s3', sprintf( __( 'Credentials and/or bucket are not valid. Backplaze S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) );
 
 			// add it to the list.
 			$this->add_error( $error );
 
 			// add log entry.
 			/* translators: %1$d will be replaced by an HTTP-status (like 301). */
-			Log::get_instance()->create( sprintf( __( 'Credentials and/or bucket are not valid. DigitalOcean Spaces returns with HTTP-Status %1$d! Error:', 'external-files-from-aws-s3' ), $e->getStatusCode() ) . ' <code>' . $e->getMessage() . '</code>', '', 'error' );
+			Log::get_instance()->create( sprintf( __( 'Credentials and/or bucket are not valid. Backplaze S3 returns with HTTP-Status %1$d! Error:', 'external-files-from-aws-s3' ), $e->getStatusCode() ) . ' <code>' . $e->getMessage() . '</code>', '', 'error' );
 
 			// return false to prevent any further actions.
 			return false;
@@ -226,7 +226,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	}
 
 	/**
-	 * Enable WP CLI for DigitalOcean Spaces tasks.
+	 * Enable WP CLI for Backplaze S3 tasks.
 	 *
 	 * @return void
 	 */
@@ -252,7 +252,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 *
 	 * @return void
 	 */
-	public function init_digital_ocean_spaces(): void {
+	public function init_backplaze_s3(): void {
 		// bail if user has no capability for this service.
 		if ( ! Helper::is_cli() && ! current_user_can( 'efml_cap_' . $this->get_name() ) ) {
 			return;
@@ -296,7 +296,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		// add settings.
 		if ( defined( 'EFML_ACTIVATION_RUNNING' ) || 'global' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
 			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_access_key' );
+			$setting = $settings_obj->add_setting( 'eml_backplaze_s3_access_key' );
 			$setting->set_section( $section );
 			$setting->set_autoload( false );
 			$setting->set_type( 'string' );
@@ -311,7 +311,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			$setting->set_field( $field );
 
 			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_secret_key' );
+			$setting = $settings_obj->add_setting( 'eml_backplaze_s3_secret_key' );
 			$setting->set_section( $section );
 			$setting->set_autoload( false );
 			$setting->set_type( 'string' );
@@ -324,7 +324,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			$setting->set_field( $field );
 
 			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_bucket' );
+			$setting = $settings_obj->add_setting( 'eml_backplaze_s3_bucket' );
 			$setting->set_section( $section );
 			$setting->set_autoload( false );
 			$setting->set_type( 'string' );
@@ -337,7 +337,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 
 		// show hint for user settings.
 		if ( 'user' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
-			$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_credential_location_hint' );
+			$setting = $settings_obj->add_setting( 'eml_backplaze_s3_credential_location_hint' );
 			$setting->set_section( $section );
 			$setting->set_show_in_rest( false );
 			$setting->prevent_export( true );
@@ -349,7 +349,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		}
 
 		// add setting.
-		$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_region' );
+		$setting = $settings_obj->add_setting( 'eml_backplaze_s3_region' );
 		$setting->set_section( $section );
 		$setting->set_type( 'string' );
 		$setting->set_default( $this->get_mapping_region() );
@@ -359,7 +359,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		$setting->set_field( $field );
 
 		// add setting to show also trashed files.
-		$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_import_limit' );
+		$setting = $settings_obj->add_setting( 'eml_backplaze_s3_import_limit' );
 		$setting->set_section( $section );
 		$setting->set_type( 'integer' );
 		$setting->set_default( 10 );
@@ -378,40 +378,34 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function get_user_settings(): array {
 		$list = array(
-			'digital_ocean_spaces_access_key' => array(
+			'backplaze_s3_access_key' => array(
 				'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The access key', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_secret_key' => array(
+			'backplaze_s3_secret_key' => array(
 				'label'       => __( 'Secret key', 'external-files-from-aws-s3' ),
 				'field'       => 'password',
 				'placeholder' => __( 'The secret key', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_bucket'     => array(
+			'backplaze_s3_bucket'     => array(
 				'label'       => __( 'Bucket', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The bucket you want to use', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_region'     => array(
-				'label'   => __( 'Choose your region', 'external-files-from-aws-s3' ),
-				'field'   => 'select',
-				'options' => $this->get_regions(),
-				'default' => $this->get_mapping_region(),
-			),
 		);
 
 		/**
-		 * Filter the list of possible user settings for DigitalOcean Spaces.
+		 * Filter the list of possible user settings for Backplaze S3.
 		 *
 		 * @since 1.0.0 Available since 1.0.0.
 		 * @param array<string,mixed> $list The list of settings.
 		 */
-		return apply_filters( 'efmlawss3_service_digital_ocean_spaces_user_settings', $list );
+		return apply_filters( 'efmlawss3_service_backplaze_s3_user_settings', $list );
 	}
 
 	/**
-	 * Return the URL mark, which identifies DigitalOcean Spaces URLs within this plugin.
+	 * Return the URL mark, which identifies Backplaze S3 URLs within this plugin.
 	 *
 	 * @return string
 	 */
@@ -420,7 +414,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		$fields = $this->get_fields();
 
 		// return the URL.
-		return 'https://' . $fields['bucket']['value'] . '.' . $fields['region']['value'] . '.digitaloceanspaces.com/';
+		return 'https://' . $fields['bucket']['value'] . '.s3.' . $fields['region']['value'] . '.backblazeb2.com/';
 	}
 
 	/**
@@ -486,7 +480,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	public function get_form_title(): string {
 		// bail if credentials are set.
 		if ( $this->has_credentials() ) {
-			return __( 'Connect to your DigitalOcean Spaces bucket', 'external-files-from-aws-s3' );
+			return __( 'Connect to your Backplaze S3 bucket', 'external-files-from-aws-s3' );
 		}
 
 		// return default title.
@@ -533,7 +527,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		}
 
 		/* translators: %1$s will be replaced by a URL. */
-		return sprintf( __( 'Enter your DigitalSpace Ocean credentials in this form. How to get them for DigitalSpace Ocean is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://developers.cloudflare.com/r2/api/tokens/' );
+		return sprintf( __( 'Enter your Backplace S3 credentials in this form. How to get them for Backplaze S3 is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://developers.cloudflare.com/r2/api/tokens/' );
 	}
 
 	/**
@@ -547,15 +541,15 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			'access_key' => '',
 			'secret_key' => '',
 			'bucket'     => '',
-			'region'     => get_option( 'eml_digital_ocean_spaces_region', '' ),
+			'region'     => get_option( 'eml_backplaze_s3_region', '' ),
 		);
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_access_key', '' ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_secret_key', '' ) );
-			$values['bucket']     = get_option( 'eml_digital_ocean_spaces_bucket', '' );
-			$values['region']     = get_option( 'eml_digital_ocean_spaces_region', '' );
+			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_backplaze_s3_access_key', '' ) );
+			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_backplaze_s3_secret_key', '' ) );
+			$values['bucket']     = get_option( 'eml_backplaze_s3_bucket', '' );
+			$values['region']     = get_option( 'eml_backplaze_s3_region', '' );
 		}
 
 		// save it user-specific, if this is enabled.
@@ -569,10 +563,10 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_access_key', true ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_secret_key', true ) );
-			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_bucket', true ) );
-			$values['region']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_region', true ) );
+			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_backplaze_s3_access_key', true ) );
+			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_backplaze_s3_secret_key', true ) );
+			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_backplaze_s3_bucket', true ) );
+			$values['region']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_backplaze_s3_region', true ) );
 		}
 
 		// return the resulting list of values.
@@ -589,7 +583,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	}
 
 	/**
-	 * Allow to use DigitalOcean Spaces URLs.
+	 * Allow to use Backplaze S3 URLs.
 	 *
 	 * @param bool   $return_value The return value (true to check the file type, so we return here false).
 	 * @param string $url The URL to check.
@@ -597,15 +591,15 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 * @return bool
 	 */
 	public function allow_content_type( bool $return_value, string $url ): bool {
-		// bail if this is not a DigitalOcean Spaces URL.
-		if ( ! str_contains( $url, 'digitalocean.com' ) ) {
+		// bail if this is not a Backplaze S3 URL.
+		if ( ! str_contains( $url, 'backplazeb2.com' ) ) {
 			return $return_value;
 		}
 		return false;
 	}
 
 	/**
-	 * Set the real mime type for DigitalOcean Spaces URLs.
+	 * Set the real mime type for Backplaze S3 URLs.
 	 *
 	 * @param array<string,mixed> $results The results.
 	 * @param string              $url The used URL.
@@ -614,7 +608,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function set_real_mime_type( array $results, string $url ): array {
 		// bail if this is not our file URL.
-		if ( ! str_contains( $url, 'digitalocean.com' ) ) {
+		if ( ! str_contains( $url, 'backplazeb2.com' ) ) {
 			return $results;
 		}
 
@@ -638,7 +632,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function get_public_url_of_file( string $key, array $fields ): string {
 		return sprintf(
-			'https://%s.%s.digitaloceanspaces.com/%s',
+			'https://%s.s3.%s.backblazeb2.com/%s',
 			$fields['bucket']['value'],
 			$fields['region']['value'],
 			$key
@@ -655,7 +649,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		$fields = $this->get_fields();
 
 		// get the URL for the endpoint.
-		$endpoint_url = 'https://' . $fields['region']['value'] . '.digitaloceanspaces.com';
+		$endpoint_url = 'https://s3.' . $fields['region']['value'] . '.backblazeb2.com';
 
 		// create the configuration array for the client object.
 		$configuration = array(
@@ -695,7 +689,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		$fields = $this->get_fields();
 
 		// create the URL we want to check.
-		$url = 'https://' . $fields['bucket']['value'] . '.' . $fields['region']['value'] . '.digitaloceanspaces.com/' . $file_key;
+		$url = 'https://' . $fields['bucket']['value'] . '.s3.' . $fields['region']['value'] . '.backblazeb2.com/' . $file_key;
 
 		// request the headers only.
 		$headers_response = wp_remote_head( $url );
@@ -705,37 +699,26 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	}
 
 	/**
-	 * Return list of Digital Ocean Spaces regions for settings.
-	 *
-	 * @source https://docs.digitalocean.com/platform/regional-availability/
+	 * Return list of Backplaze S3 regions for settings.
 	 *
 	 * @return array<string,string>
 	 */
 	private function get_regions(): array {
 		// create the list.
 		$regions = array(
-			'nyc1' => 'NYC1 (New York City, United States)',
-			'nyc2' => 'NYC2 (New York City, United States)',
-			'nyc3' => 'NYC2 (New York City, United States)',
-			'ams3' => 'AMS3 (Amsterdam, the Netherlands)',
-			'sfo2' => 'SFO2 (San Francisco, United States)',
-			'sfo3' => 'SFO3 (San Francisco, United States)',
-			'sgp1' => 'SGP1 (Singapore)',
-			'lon1' => 'LON1 (London, United Kingdom)',
-			'fra1' => 'FRA1 (Frankfurt, Germany)',
-			'tor1' => 'TOR1 (Toronto, Canada)',
-			'blr1' => 'BLR1 (Bangalore, India)',
-			'syd1' => 'SYD1 (Sydney, Australia)',
-			'atl1' => 'ATL1 (Atlanta, United States)',
+			'us-west-004'      => 'us-west-004',
+			'us-east-005'      => 'us-east-005',
+			'eu-central-003'   => 'eu-central-003',
+			'ap-southeast-002' => 'ap-southeast-002',
 		);
 
 		/**
-		 * Filter the possible regions for DigitalOcean Spaces.
+		 * Filter the possible regions for Backplaze S3.
 		 *
 		 * @since 1.0.0 Available since 1.0.0.
 		 * @param array<string,string> $regions List of regions.
 		 */
-		return apply_filters( 'efmlawss3_service_digital_ocean_spaces_regions', $regions );
+		return apply_filters( 'efmlawss3_service_backplaze_s3_regions', $regions );
 	}
 
 	/**
@@ -774,18 +757,18 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		// set nothing as default.
 		$default_region = '';
 
-		// use fra1 for german.
+		// use eu-central-003 for german.
 		if ( Languages::get_instance()->is_german_language() ) {
-			return 'fra1';
+			return 'eu-central-003';
 		}
 
 		/**
-		 * Filter the default DigitalOcean spaces region.
+		 * Filter the default Backplaze S3 region.
 		 *
 		 * @since 1.0.0 Available since 1.0.0.
 		 * @param string $default_region The default region.
 		 * @param string $language The actual language.
 		 */
-		return apply_filters( 'efmlawss3_service_digital_ocean_spaces_default_region', $default_region, $language );
+		return apply_filters( 'efmlawss3_service_backplaze_s3_default_region', $default_region, $language );
 	}
 }
