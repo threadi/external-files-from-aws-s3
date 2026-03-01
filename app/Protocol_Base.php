@@ -78,8 +78,17 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 		$http_protocol_handler = new Http( $url );
 		$http_protocol_handler->set_fields( $this->get_fields() );
 
+		// add a filter.
+		add_filter( 'efml_check_url_before', array( $this, 'replace_spaces' ) );
+
 		// return the results from the HTTP handler.
-		return $http_protocol_handler->get_url_info( $url );
+		$result = $http_protocol_handler->get_url_info( $url );
+
+		// revert the filter.
+		remove_filter( 'efml_check_url_before', array( $this, 'replace_spaces' ) );
+
+		// return the resulting URL info.
+		return $result;
 	}
 
 	/**
@@ -354,5 +363,16 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	 */
 	protected function get_key_of_file( string $url ): string {
 		return $url;
+	}
+
+	/**
+	 * Replace spaces in URL before we check it.
+	 *
+	 * @param string $url The URL.
+	 *
+	 * @return string
+	 */
+	public function replace_spaces( string $url ): string {
+		return str_replace( ' ', '%20', $url );
 	}
 }

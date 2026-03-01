@@ -15,7 +15,7 @@ use ExternalFilesInMediaLibrary\Plugin\Configuration_Base;
 use ExternalFilesInMediaLibrary\Services\Services;
 
 /**
- * Object for the standard mode.
+ * Object for this configuration.
  */
 class Configuration extends Configuration_Base {
 
