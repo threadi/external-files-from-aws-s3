@@ -19,22 +19,22 @@ use Aws\EndpointV2\EndpointDefinitionProvider;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
+use easySettingsForWordPress\Fields\Number;
+use easySettingsForWordPress\Fields\Password;
+use easySettingsForWordPress\Fields\Select;
+use easySettingsForWordPress\Fields\Text;
+use easySettingsForWordPress\Fields\TextInfo;
+use easySettingsForWordPress\Page;
+use easySettingsForWordPress\Section;
+use easySettingsForWordPress\Tab;
 use ExternalFilesFromAwsS3\Platform_Base;
 use ExternalFilesFromAwsS3\Platforms\AwsS3\Export;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Number;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Password;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Select;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\Text;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Fields\TextInfo;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Page;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Section;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Settings;
-use ExternalFilesInMediaLibrary\Dependencies\easySettingsForWordPress\Tab;
 use ExternalFilesInMediaLibrary\ExternalFiles\Export_Base;
 use ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Languages;
 use ExternalFilesInMediaLibrary\Plugin\Log;
+use ExternalFilesInMediaLibrary\Plugin\Settings;
 use ExternalFilesInMediaLibrary\Services\Service;
 use WP_Error;
 use WP_User;
@@ -336,8 +336,13 @@ class AwsS3 extends Platform_Base implements Service {
 			return;
 		}
 
+		// bail if settings object is missing.
+		if( ! class_exists( '\easySettingsForWordPress\Settings' ) ) {
+			return;
+		}
+
 		// get the settings object.
-		$settings_obj = Settings::get_instance();
+		$settings_obj = Settings::get_instance()->get_settings_obj();
 
 		// get the settings page.
 		$settings_page = $settings_obj->get_page( \ExternalFilesInMediaLibrary\Plugin\Settings::get_instance()->get_menu_slug() );
@@ -380,7 +385,7 @@ class AwsS3 extends Platform_Base implements Service {
 			$setting->set_type( 'string' );
 			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
 			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text();
+			$field = new Text( $settings_obj );
 			$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
 			/* translators: %1$s will be replaced by a URL. */
 			$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
@@ -394,7 +399,7 @@ class AwsS3 extends Platform_Base implements Service {
 			$setting->set_type( 'string' );
 			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
 			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Password();
+			$field = new Password( $settings_obj );
 			$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
 			$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
 			$setting->set_field( $field );
@@ -404,7 +409,7 @@ class AwsS3 extends Platform_Base implements Service {
 			$setting->set_section( $section );
 			$setting->set_autoload( false );
 			$setting->set_type( 'string' );
-			$field = new Text();
+			$field = new Text( $settings_obj );
 			$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
 			$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
 			$setting->set_field( $field );
@@ -416,7 +421,7 @@ class AwsS3 extends Platform_Base implements Service {
 			$setting->set_section( $section );
 			$setting->set_show_in_rest( false );
 			$setting->prevent_export( true );
-			$field = new TextInfo();
+			$field = new TextInfo( $settings_obj );
 			$field->set_title( __( 'Hint', 'external-files-from-aws-s3' ) );
 			/* translators: %1$s will be replaced by a URL. */
 			$field->set_description( sprintf( __( 'Each user will find its settings in his own <a href="%1$s">user profile</a>.', 'external-files-from-aws-s3' ), $this->get_config_url() ) );
@@ -428,7 +433,7 @@ class AwsS3 extends Platform_Base implements Service {
 		$setting->set_section( $section );
 		$setting->set_type( 'string' );
 		$setting->set_default( $this->get_mapping_region() );
-		$field = new Select();
+		$field = new Select( $settings_obj );
 		$field->set_title( __( 'Choose the region', 'external-files-from-aws-s3' ) );
 		$field->set_options( $this->get_regions() );
 		$setting->set_field( $field );
@@ -438,7 +443,7 @@ class AwsS3 extends Platform_Base implements Service {
 		$setting->set_section( $section );
 		$setting->set_type( 'integer' );
 		$setting->set_default( 10 );
-		$field = new Number();
+		$field = new Number( $settings_obj );
 		$field->set_title( __( 'Max. files to load during import per iteration', 'external-files-from-aws-s3' ) );
 		$field->set_description( __( 'This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import.', 'external-files-from-aws-s3' ) );
 		$field->set_setting( $setting );
