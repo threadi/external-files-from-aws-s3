@@ -337,7 +337,7 @@ class AwsS3 extends Platform_Base implements Service {
 		}
 
 		// bail if settings object is missing.
-		if( ! class_exists( '\easySettingsForWordPress\Settings' ) ) {
+		if ( ! class_exists( '\easySettingsForWordPress\Settings' ) ) {
 			return;
 		}
 
