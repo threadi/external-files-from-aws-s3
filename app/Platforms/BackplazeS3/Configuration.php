@@ -37,7 +37,7 @@ class Configuration extends Configuration_Base {
 	 * @return string
 	 */
 	public function get_title(): string {
-		return __( 'Use only Backplaze S3', 'external-files-in-media-library' );
+		return __( 'Use only Backplaze S3', 'external-files-from-aws-s3' );
 	}
 
 	/**
@@ -47,7 +47,7 @@ class Configuration extends Configuration_Base {
 	 */
 	public function get_dialog_hints(): array {
 		return array(
-			'<p>' . __( 'This will disable all other services except Backplaze S3.', 'external-files-in-media-library' ) . '<br>' . __( 'After that, you will only be able to see and use Backplaze S3 for external sources.', 'external-files-in-media-library' ) . '</p>',
+			'<p>' . __( 'This will disable all other services except Backplaze S3.', 'external-files-from-aws-s3' ) . '<br>' . __( 'After that, you will only be able to see and use Backplaze S3 for external sources.', 'external-files-from-aws-s3' ) . '</p>',
 		);
 	}
 
