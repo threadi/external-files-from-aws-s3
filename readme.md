@@ -1,8 +1,8 @@
-# External files from AWS S3 in Media Library
+# External files from AWS S3-compatible platforms in Media Library
 
 ## About
 
-This repository provides the features of the WordPress plugin _External Files from AWS S3 in Media Library_. The repository is used as a basis for deploying the plugin to the WordPress repository. It is not intended to run as a plugin as it is, even if that is possible for development.
+This repository provides the features of the WordPress plugin _External files from AWS S3-compatible platforms in Media Library_. The repository is used as a basis for deploying the plugin to the WordPress repository. It is not intended to run as a plugin as it is, even if that is possible for development.
 
 ## Hints
 
