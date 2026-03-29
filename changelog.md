@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Set compatibility with WordPress 7.0
+
 ## [1.0.2] - 29.03.2026
 
 ### Added
