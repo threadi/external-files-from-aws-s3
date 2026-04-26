@@ -1,10 +1,15 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.3]
 
 ### Changed
 
 - Set compatibility with WordPress 7.0
+
+### Fixed
+
+- Fixed error with missing library in release
+- Fixed wrong version to check for updates
 
 ## [1.0.2] - 29.03.2026
 

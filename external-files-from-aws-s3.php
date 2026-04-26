@@ -37,7 +37,7 @@ if ( ! Init::get_instance()->is_parent_plugin_active() ) {
 const EFMLAWSS3_PLUGIN = __FILE__;
 
 // set the version.
-const EFMLAWSS3_PLUGIN_VERSION = '1.0.0';
+const EFMLAWSS3_PLUGIN_VERSION = '@@VersionNumber@@';
 
 // initialize plugin.
 Init::get_instance()->init();
