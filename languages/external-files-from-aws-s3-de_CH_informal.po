@@ -6,8 +6,8 @@ msgstr ""
 "@@VersionNumber@@\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/external-files-"
 "from-aws-s3\n"
-"POT-Creation-Date: 2026-03-29T10:11:15+00:00\n"
-"PO-Revision-Date: 2026-03-29 12:21+0200\n"
+"POT-Creation-Date: 2026-05-06T17:49:24+00:00\n"
+"PO-Revision-Date: 2026-05-06 19:50+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -25,10 +25,10 @@ msgstr "Externe Dateien aus AWS S3-kompatiblen Plattformen in der Mediathek"
 #. Description of the plugin
 #: external-files-from-aws-s3.php
 msgid ""
-"Extends External files in Media Library for usage AWS S3-compatible "
+"Extends External files in the Media Library for use with AWS S3-compatible "
 "platforms."
 msgstr ""
-"Erweitert externe Dateien in der Mediathek für die Verwendung von AWS S3-"
+"Erweitert Externe Dateien in der Mediathek für die Verwendung von AWS S3-"
 "kompatiblen Plattformen."
 
 #. Author of the plugin
