@@ -1,6 +1,16 @@
 # Changelog
 
-## [1.0.3]
+## [1.0.4] - 06.05.2026
+
+### Changed
+
+- Updated dependencies
+
+### Fixed
+
+- Fixed missed running during automatic synchronization
+
+## [1.0.3] - 26.04.2026
 
 ### Changed
 
