@@ -62,10 +62,10 @@
     <!-- check WCS compatibility -->
     <target name="check-wcs" depends="composer-install">
         <exec dir="${src.dir}" failonerror="false" executable="vendor/bin/phpcbf">
-            <arg line="--standard=ruleset.xml ."/>
+            <arg line="."/>
         </exec>
         <exec dir="${src.dir}" failonerror="true" executable="vendor/bin/phpcs">
-            <arg line="--standard=ruleset.xml ."/>
+            <arg line="."/>
         </exec>
     </target>
 
@@ -123,7 +123,6 @@
             <zipfileset dir="${src.dir}/vendor" includes="autoload.php" fullpath="${plugin.slug}/vendor/autoload.php" />
             <zipfileset dir="${src.dir}/vendor/composer" prefix="${plugin.slug}/vendor/composer" />
             <zipfileset dir="${src.dir}/vendor/aws" prefix="${plugin.slug}/vendor/aws" />
-            <zipfileset dir="${src.dir}/vendor/ralouphie" prefix="${plugin.slug}/vendor/ralouphie" />
             <zipfileset dir="${src.dir}/vendor/symfony" prefix="${plugin.slug}/vendor/symfony" />
             <zipfileset dir="${src.dir}/vendor/guzzlehttp" prefix="${plugin.slug}/vendor/guzzlehttp" />
             <zipfileset dir="${src.dir}/vendor/mtdowling" prefix="${plugin.slug}/vendor/mtdowling" />
