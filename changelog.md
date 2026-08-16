@@ -1,9 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.5] - 16.08.2026
 
 ### Changed
 
+- Now requires PHP 8.2 or newer
+- Compatibility with WordPress 7.1
 - Updates translations
 
 ## [1.0.4] - 06.05.2026
