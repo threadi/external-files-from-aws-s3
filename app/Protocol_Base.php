@@ -213,6 +213,11 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 							'mime-type'     => $file['mime-type'],
 						);
 
+						// check for duplicate.
+						if ( $this->is_duplicate( $file['file'] ) ) {
+							continue;
+						}
+
 						// get mime type.
 						$mime_type = wp_check_filetype( $file['title'] );
 
@@ -265,7 +270,7 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 				$wp_filesystem->delete( $tmp_file_name );
 
 				// get the key from given URL.
-				$key = $this->get_key_of_file( $this->get_url() );
+				$key = rawurldecode( $this->get_key_of_file( $this->get_url() ) );
 
 				// set query for the file and save it in tmp dir.
 				$query = array(
@@ -288,10 +293,9 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 
 				// check the public permissions.
 				$public_access_allowed = $s3->is_file_public_available( $key, $s3_client );
-				$url                   = $this->get_url();
-				if ( $public_access_allowed ) {
-					$url = $result->get( '@metadata' )['effectiveUri'];
-				}
+
+				// get the URL depending on the permissions.
+				$url = $public_access_allowed ? $s3->get_public_url_of_file( $key, $fields ) : $this->get_url();
 
 				// create the array for the file data.
 				$entry = array(
@@ -303,6 +307,12 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 					'mime-type'     => $result->get( 'ContentType' ),
 					'tmp-file'      => $tmp_file,
 				);
+
+				// check for duplicate.
+				if ( $this->is_duplicate( $url ) ) {
+					$wp_filesystem->delete( $tmp_file );
+					return array();
+				}
 
 				// add entry to the list of files.
 				$results[] = $entry;
@@ -374,5 +384,25 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	 */
 	public function replace_spaces( string $url ): string {
 		return str_replace( ' ', '%20', $url );
+	}
+
+	/**
+	 * Run check for duplicates for a given URL:
+	 *
+	 * @param string $url The given URL.
+	 *
+	 * @return bool
+	 */
+	private function is_duplicate( string $url ): bool {
+		// check for duplicate.
+		if ( ! $this->check_for_duplicate( $url ) ) {
+			return false;
+		}
+
+		// log this event.
+		Log::get_instance()->create( __( 'Specified URL already exist in your media library.', 'external-files-from-aws-s3' ), $url, 'error', 0, Import::get_instance()->get_identifier() );
+
+		// return true as duplicate has been found.
+		return true;
 	}
 }
