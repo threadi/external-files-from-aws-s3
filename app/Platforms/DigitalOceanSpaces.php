@@ -41,7 +41,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 *
 	 * @var string
 	 */
-	protected string $name = 'digitalocean-spaces';
+	protected string $name = 'digital-ocean-spaces';
 
 	/**
 	 * The public label.

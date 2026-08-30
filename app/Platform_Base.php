@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use ExternalFilesInMediaLibrary\ExternalFiles\File;
 use ExternalFilesInMediaLibrary\ExternalFiles\ImportDialog;
 use ExternalFilesInMediaLibrary\Plugin\Admin\Directory_Listing;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
@@ -55,6 +56,7 @@ class Platform_Base extends Service_Base {
 		add_filter( 'efml_protocols', array( $this, 'add_protocol' ) );
 		add_filter( 'efml_directory_listing', array( $this, 'prepare_tree_building' ), 10, 3 );
 		add_filter( 'efml_http_header_args', array( $this, 'remove_authorization_header' ), 10, 2 );
+		add_action( 'efml_after_file_save', array( $this, 'change_service_name' ) );
 
 		// misc.
 		add_action( 'show_user_profile', array( $this, 'add_user_settings' ) );
@@ -581,9 +583,36 @@ class Platform_Base extends Service_Base {
 	/**
 	 * Return global actions.
 	 *
+	 * Hint: helper to PHPStan to not warn about not existing functions as they are in the main plugin.
+	 *
 	 * @return array<int,array<string,string>>
 	 */
 	protected function get_global_actions(): array {
 		return parent::get_global_actions();
+	}
+
+	/**
+	 * Change the used service name if multisite import has been used.
+	 *
+	 * @param File $external_file_obj The external file object.
+	 *
+	 * @return void
+	 */
+	public function change_service_name( File $external_file_obj ): void {
+		// get service from request.
+		$service = filter_input( INPUT_POST, 'service', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+
+		// bail if it is not set.
+		if ( is_null( $service ) ) {
+			return;
+		}
+
+		// bail if service is not ours.
+		if ( $this->get_name() !== $service ) {
+			return;
+		}
+
+		// set the service name.
+		$external_file_obj->set_service_name( $service );
 	}
 }

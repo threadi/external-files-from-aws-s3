@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Use your custom domain for Cloudflare R2 to use external hosted files there
+- Allow switching hostings for Cloudflare R2 if custom domain is used for the files
+
+### Fixed
+
+- Fixed missing crypt for global Cloudflare R2 bucket setting
+- Fixed wrong internal names for Digital Ocean Spaces and Cloudflare R2
+
 ## [1.0.5] - 16.08.2026
 
 ### Changed

@@ -358,9 +358,23 @@ class CloudflareR2 extends Platform_Base implements Service {
 			$setting->set_autoload( false );
 			$setting->set_type( 'string' );
 			$setting->set_default( '' );
+			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
 			$field = new Text( $settings_obj );
 			$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
 			$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
+			$setting->set_field( $field );
+
+			// add setting.
+			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_public_domain' );
+			$setting->set_section( $section );
+			$setting->set_autoload( false );
+			$setting->set_type( 'string' );
+			$setting->set_default( '' );
+			$field = new Text( $settings_obj );
+			$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
+			$field->set_description( __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ) );
+			$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
 			$setting->set_field( $field );
 		}
 
@@ -397,29 +411,34 @@ class CloudflareR2 extends Platform_Base implements Service {
 	 */
 	public function get_user_settings(): array {
 		$list = array(
-			'cloudflare_r2_account_id' => array(
+			'cloudflare_r2_account_id'    => array(
 				'label'       => __( 'Account ID', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The access key', 'external-files-from-aws-s3' ),
 			),
-			'cloudflare_r2_eu'         => array(
+			'cloudflare_r2_eu'            => array(
 				'label' => __( 'EU-storage', 'external-files-from-aws-s3' ),
 				'field' => 'checkbox',
 			),
-			'cloudflare_r2_access_key' => array(
+			'cloudflare_r2_access_key'    => array(
 				'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The access key', 'external-files-from-aws-s3' ),
 			),
-			'cloudflare_r2_secret_key' => array(
+			'cloudflare_r2_secret_key'    => array(
 				'label'       => __( 'Secret key', 'external-files-from-aws-s3' ),
 				'field'       => 'password',
 				'placeholder' => __( 'The secret key', 'external-files-from-aws-s3' ),
 			),
-			'cloudflare_r2_bucket'     => array(
+			'cloudflare_r2_bucket'        => array(
 				'label'       => __( 'Bucket', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The bucket you want to use', 'external-files-from-aws-s3' ),
+			),
+			'cloudflare_r2_public_domain' => array(
+				'label'       => __( 'Custom domain (optional)', 'external-files-from-aws-s3' ),
+				'field'       => 'text',
+				'placeholder' => __( 'example.com', 'external-files-from-aws-s3' ),
 			),
 		);
 
@@ -454,7 +473,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 
 			// set the fields.
 			$this->fields = array( // @phpstan-ignore property.notFound
-				'account_id' => array(
+				'account_id'    => array(
 					'name'        => 'account_id',
 					'type'        => 'text',
 					'label'       => __( 'Account ID', 'external-files-from-aws-s3' ),
@@ -463,7 +482,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 					'value'       => $values['account_id'],
 					'readonly'    => ! empty( $values['account_id'] ),
 				),
-				'eu'         => array(
+				'eu'            => array(
 					'name'         => 'eu',
 					'type'         => 'checkbox',
 					'label'        => __( 'EU-storage', 'external-files-from-aws-s3' ),
@@ -471,7 +490,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 					'readonly'     => ! empty( $values['eu'] ),
 					'not_required' => true,
 				),
-				'access_key' => array(
+				'access_key'    => array(
 					'name'        => 'access_key',
 					'type'        => 'text',
 					'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
@@ -480,7 +499,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 					'value'       => $values['access_key'],
 					'readonly'    => ! empty( $values['access_key'] ),
 				),
-				'secret'     => array(
+				'secret'        => array(
 					'name'        => 'secret',
 					'type'        => 'password',
 					'label'       => __( 'Secret key', 'external-files-from-aws-s3' ),
@@ -489,13 +508,22 @@ class CloudflareR2 extends Platform_Base implements Service {
 					'value'       => $values['secret_key'],
 					'readonly'    => ! empty( $values['secret_key'] ),
 				),
-				'bucket'     => array(
+				'bucket'        => array(
 					'name'        => 'bucket',
 					'type'        => 'text',
 					'label'       => __( 'Bucket', 'external-files-from-aws-s3' ),
 					'placeholder' => __( 'The bucket you want to use', 'external-files-from-aws-s3' ),
 					'value'       => $values['bucket'],
 					'readonly'    => ! empty( $values['bucket'] ),
+				),
+				'public_domain' => array(
+					'name'         => 'public_domain',
+					'type'         => 'text',
+					'label'        => __( 'Custom domain (optional)', 'external-files-from-aws-s3' ),
+					'placeholder'  => __( 'example.com', 'external-files-from-aws-s3' ),
+					'description'  => __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ),
+					'value'        => $values['public_domain'],
+					'not_required' => true,
 				),
 			);
 		}
@@ -570,20 +598,22 @@ class CloudflareR2 extends Platform_Base implements Service {
 	private function get_field_values(): array {
 		// prepare the return array.
 		$values = array(
-			'account_id' => '',
-			'eu'         => '',
-			'access_key' => '',
-			'secret_key' => '',
-			'bucket'     => '',
+			'account_id'    => '',
+			'eu'            => '',
+			'access_key'    => '',
+			'secret_key'    => '',
+			'bucket'        => '',
+			'public_domain' => '',
 		);
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['account_id'] = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_account_id', '' ) );
-			$values['eu']         = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_eu', '' ) );
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_access_key', '' ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_secret_key', '' ) );
-			$values['bucket']     = get_option( 'eml_cloudflare_r2_bucket', '' );
+			$values['account_id']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_account_id', '' ) );
+			$values['eu']            = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_eu', '' ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_access_key', '' ) );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_secret_key', '' ) );
+			$values['bucket']        = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_bucket', '' ) );
+			$values['public_domain'] = get_option( 'eml_cloudflare_r2_public_domain', '' );
 		}
 
 		// save it user-specific, if this is enabled.
@@ -597,11 +627,12 @@ class CloudflareR2 extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['account_id'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_account_id', true ) );
-			$values['eu']         = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_eu', true ) );
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_access_key', true ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_secret_key', true ) );
-			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_bucket', true ) );
+			$values['account_id']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_account_id', true ) );
+			$values['eu']            = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_eu', true ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_access_key', true ) );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_secret_key', true ) );
+			$values['bucket']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_bucket', true ) );
+			$values['public_domain'] = get_user_meta( $user->ID, 'efml_cloudflare_r2_public_domain', true );
 		}
 
 		// return the resulting list of values.
@@ -666,6 +697,14 @@ class CloudflareR2 extends Platform_Base implements Service {
 	 * @return string
 	 */
 	public function get_public_url_of_file( string $key, array $fields ): string {
+		$domain = trim( (string) $fields['public_domain']['value'] );
+
+		// use the public URL if a domain is configured and the file actually resolves there.
+		if ( '' !== $domain && $this->is_file_public_available( $key, $this->get_s3_client() ) ) {
+			return $this->build_public_url( $domain, $key );
+		}
+
+		// fall back to the dashboard link.
 		return sprintf(
 			'https://dash.cloudflare.com/%s/r2/%sbuckets/%s/objects/%s',
 			$fields['account_id']['value'],
@@ -720,21 +759,53 @@ class CloudflareR2 extends Platform_Base implements Service {
 	 * Return whether given file in the bucket is public available.
 	 *
 	 * @param string   $file_key The file key.
-	 * @param S3Client $s3 The S3 client object.
+	 * @param S3Client $s3 The S3 client object (kept for interface compatibility, not used here).
 	 *
 	 * @return bool
 	 */
 	public function is_file_public_available( string $file_key, S3Client $s3 ): bool {
 		// get the fields.
 		$fields = $this->get_fields();
+		$domain = trim( (string) $fields['public_domain']['value'] );
 
-		// create the URL we want to check.
-		$url = 'https://' . $fields['account_id']['value'] . '.r2.cloudflarestorage.com/' . $fields['bucket']['value'] . '/' . $file_key;
+		// bail if no public domain is configured for this connection.
+		if ( '' === $domain ) {
+			return false;
+		}
+
+		// build the URL to check.
+		$url = $this->build_public_url( $domain, $file_key );
 
 		// request the headers only.
 		$headers_response = wp_remote_head( $url );
 
+		// log a warning if the configured domain does not serve the file.
+		if ( 200 !== wp_remote_retrieve_response_code( $headers_response ) ) {
+			/* translators: %1$s will be replaced by the checked URL. */
+			Log::get_instance()->create( sprintf( __( 'Configured public domain for Cloudflare R2 did not return the file at %1$s. Check whether the domain is correct and public access is actually enabled for this bucket in Cloudflare.', 'external-files-from-aws-s3' ), '<code>' . $url . '</code>' ), $url, 'error' );
+			return false;
+		}
+
 		// return true, if we got HTTP status 200.
-		return 200 === wp_remote_retrieve_response_code( $headers_response );
+		return true;
+	}
+
+	/**
+	 * Build the public URL for a file from a configured public domain.
+	 *
+	 * @param string $domain The public domain (as entered by the user, with or without scheme/trailing slash).
+	 * @param string $key The file key.
+	 *
+	 * @return string
+	 */
+	private function build_public_url( string $domain, string $key ): string {
+		// strip any scheme and trailing slash the user might have entered.
+		$domain = preg_replace( '/^https?:\/\//i', '', trim( $domain ) );
+		$domain = rtrim( (string) $domain, '/' );
+
+		// percent-encode each path segment of the key separately, keeping "/" as separator.
+		$encoded_key = implode( '/', array_map( 'rawurlencode', explode( '/', ltrim( $key, '/' ) ) ) );
+
+		return 'https://' . $domain . '/' . $encoded_key;
 	}
 }
