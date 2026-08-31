@@ -291,11 +291,29 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 				// try to load the requested bucket.
 				$result = $s3_client->getObject( $query );
 
+				// log the complete response for debugging.
+				Log::get_instance()->create( __( 'Response from S3 for this file:', 'external-files-from-aws-s3' ) . ' <code>' . Helper::get_json( $result->toArray() ) . '</code>', $this->get_url(), 'info', 2, Import::get_instance()->get_identifier() );
+
 				// check the public permissions.
 				$public_access_allowed = $s3->is_file_public_available( $key, $s3_client );
 
 				// get the URL depending on the permissions.
 				$url = $public_access_allowed ? $s3->get_public_url_of_file( $key, $fields ) : $this->get_url();
+
+				// get the mime type from the response.
+				$mime_type_from_response = (string) $result->get( 'ContentType' );
+
+				// fall back to the file extension if the storage returns a generic type.
+				// Some S3-compatible platforms, e.g. Cloudflare R2, store objects as
+				// "application/octet-stream" if no type has been set during the upload.
+				if ( in_array( $mime_type_from_response, array( '', 'application/octet-stream', 'application/binary', 'binary/octet-stream' ), true ) ) {
+					$mime_type_by_name = wp_check_filetype( basename( $key ) );
+
+					// get the detected file type.
+					if ( ! empty( $mime_type_by_name['type'] ) ) {
+						$mime_type_from_response = $mime_type_by_name['type'];
+					}
+				}
 
 				// create the array for the file data.
 				$entry = array(
@@ -304,7 +322,7 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 					'url'           => $url,
 					'last-modified' => Helper::get_format_date_time( gmdate( 'Y-m-d H:i:s', absint( $result->get( 'LastModified' )->format( 'U' ) ) ) ),
 					'filesize'      => $result->get( 'ContentLength' ),
-					'mime-type'     => $result->get( 'ContentType' ),
+					'mime-type'     => $mime_type_from_response,
 					'tmp-file'      => $tmp_file,
 				);
 

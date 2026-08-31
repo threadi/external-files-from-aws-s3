@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Detect the real mime-type if some octet-stream is coming from the platform
+
 ## [1.1.0] - 30.08.2026
 
 ### Changed
