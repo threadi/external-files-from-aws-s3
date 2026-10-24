@@ -92,6 +92,30 @@ Hint: this check runs against the VIP-GO-platform, that is not our target for th
 
 `vendor/bin/phpstan analyse`
 
+## PHP Unit tests
+
+The tests need the plugin _External files in Media Library_ in the directory _external-files-in-media-library_ beside this plugin (like in _wp-content/plugins/_) with its dependencies installed via `composer install`. Alternatively set its path in the environment variable `EFML_PLUGIN_DIR`.
+
+The tests do not connect to any S3 platform: the S3 client and all HTTP requests are answered locally.
+
+### Initialize the test environment
+
+`composer test-install`
+
+### Run them
+
+`composer test`
+
+### Tests for multisite
+
+`composer test-multisite`
+
+### Tests for known bugs
+
+Tests for known bugs, which are not fixed yet, are in the group _known-bug_. They are excluded by default. Run them with:
+
+`vendor/bin/phpunit --group known-bug`
+
 ## Check with the plugin "Plugin Check"
 
 `wp plugin check --error-severity=7 --warning-severity=6 --include-low-severity-errors --categories=plugin_repo --format=json --slug=external-files-in-media-library .`

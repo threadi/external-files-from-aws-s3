@@ -1,17 +1,17 @@
 <?php
 /**
- * File, which handles the Backplaze S3 support as own protocol.
+ * File, which handles the Backblaze S3 support as own protocol.
  *
  * @package external-files-from-aws-s3
  */
 
-namespace ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+namespace ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
 use ExternalFilesFromAwsS3\Platform_Base;
-use ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesFromAwsS3\Protocol_Base;
 
 /**
@@ -23,7 +23,7 @@ class Protocol extends Protocol_Base {
 	 *
 	 * @var string
 	 */
-	protected string $name = 'backplaze-s3';
+	protected string $name = 'backblaze-s3';
 
 	/**
 	 * Return the title of this protocol object.
@@ -31,7 +31,7 @@ class Protocol extends Protocol_Base {
 	 * @return string
 	 */
 	public function get_title(): string {
-		return BackplazeS3::get_instance()->get_label(); // @phpstan-ignore method.notFound
+		return BackblazeS3::get_instance()->get_label(); // @phpstan-ignore method.notFound
 	}
 
 	/**
@@ -50,7 +50,7 @@ class Protocol extends Protocol_Base {
 	 * @return Platform_Base|false
 	 */
 	protected function get_directory_listing_object(): Platform_Base|false {
-		return BackplazeS3::get_instance();
+		return BackblazeS3::get_instance();
 	}
 
 	/**

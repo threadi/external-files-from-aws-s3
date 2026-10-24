@@ -609,7 +609,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
 			$values['account_id']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_account_id', '' ) );
-			$values['eu']            = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_eu', '' ) );
+			$values['eu']            = absint( get_option( 'eml_cloudflare_r2_eu', 0 ) );
 			$values['access_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_access_key', '' ) );
 			$values['secret_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_secret_key', '' ) );
 			$values['bucket']        = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_bucket', '' ) );
@@ -646,6 +646,36 @@ class CloudflareR2 extends Platform_Base implements Service {
 	 */
 	public function get_export_object(): Export_Base|false {
 		return Export::get_instance();
+	}
+
+	/**
+	 * Return whether the given URL is a URL of Cloudflare R2: the dashboard, the storage or the custom domain.
+	 *
+	 * @param string $url The URL to check.
+	 *
+	 * @return bool
+	 */
+	public function is_platform_url( string $url ): bool {
+		// check the dashboard and the storage.
+		$host = (string) wp_parse_url( $url, PHP_URL_HOST );
+		if ( 'dash.cloudflare.com' === $host || str_ends_with( $host, '.r2.cloudflarestorage.com' ) ) {
+			return true;
+		}
+
+		// get the custom domain.
+		$fields = $this->get_fields();
+		$domain = ! empty( $fields['public_domain']['value'] ) ? trim( (string) $fields['public_domain']['value'] ) : '';
+
+		// bail if no custom domain is set.
+		if ( '' === $domain ) {
+			return false;
+		}
+
+		// normalize the domain like build_public_url() does it.
+		$domain = rtrim( (string) preg_replace( '/^https?:\/\//i', '', $domain ), '/' );
+
+		// return whether the URL is on the custom domain.
+		return strtolower( $domain ) === strtolower( $host );
 	}
 
 	/**

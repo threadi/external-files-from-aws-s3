@@ -49,7 +49,7 @@ class Helper {
 			return (string) filemtime( $filepath );
 		}
 
-		$plugin_version = EFMLAWSS3_PLUGIN;
+		$plugin_version = EFMLAWSS3_PLUGIN_VERSION;
 
 		/**
 		 * Filter the used file version (for JS- and CSS-files, which get enqueued).
