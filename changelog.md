@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Optimized the option for use auto-updates for this plugin
+
 ## [1.2.1] - 24.10.2026
 
 ### Changed

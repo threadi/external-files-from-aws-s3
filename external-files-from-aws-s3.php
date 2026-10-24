@@ -10,6 +10,7 @@
  * Author URI:        https://www.thomaszwirner.de
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI:        https://github.com/threadi/external-files-from-aws-s3
  * Text Domain:       external-files-from-aws-s3
  *
  * @package external-files-from-aws-s3

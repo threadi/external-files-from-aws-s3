@@ -50,14 +50,11 @@ class Uninstall {
 	/**
 	 * Run uninstallation of this plugin.
 	 *
-	 * Hint:
-	 * First set all settings as if the plugin is active.
-	 * Then delete all these settings from DB and disable all.
-	 *
 	 * @return void
 	 */
 	public function run(): void {
-		// remove custom transient.
+		// remove custom transients.
 		delete_transient( 'efml_aws_s3_regions' );
+		delete_site_transient( 'efmlawss3_latest_release' );
 	}
 }
