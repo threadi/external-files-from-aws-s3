@@ -538,7 +538,7 @@ class BackblazeS3 extends Platform_Base implements Service {
 		}
 
 		/* translators: %1$s will be replaced by a URL. */
-		return sprintf( __( 'Enter your Backplace S3 credentials in this form. How to get them for Backblaze S3 is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://www.backblaze.com/docs/cloud-storage-create-and-manage-app-keys' );
+		return sprintf( __( 'Enter your Backblaze S3 credentials in this form. How to get them for Backblaze S3 is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://www.backblaze.com/docs/cloud-storage-create-and-manage-app-keys' );
 	}
 
 	/**
