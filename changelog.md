@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2] - 24.20.2026
+
+### Added
+
+- Added logo for Backblaze and Digital Ocean Spaces
+
+### Changed
+
+- Renamed all "backplaze" to "backblaze"
+- Mark as compatible with WordPress 7.2
+
 ## [1.1.1] - 22.10.2026
 
 ### Changed

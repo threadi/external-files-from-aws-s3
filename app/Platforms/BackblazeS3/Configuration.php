@@ -1,16 +1,16 @@
 <?php
 /**
- * File to handle a configuration preset to use only Backplaze S3.
+ * File to handle a configuration preset to use only Backblaze S3.
  *
  * @package external-files-in-media-library
  */
 
-namespace ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+namespace ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesInMediaLibrary\Plugin\Configuration_Base;
 use ExternalFilesInMediaLibrary\Services\Services;
 
@@ -24,7 +24,7 @@ class Configuration extends Configuration_Base {
 	 *
 	 * @var string
 	 */
-	protected string $name = 'backplaze-s3';
+	protected string $name = 'backblaze-s3';
 
 	/**
 	 * Initialize this object.
@@ -37,7 +37,7 @@ class Configuration extends Configuration_Base {
 	 * @return string
 	 */
 	public function get_title(): string {
-		return __( 'Use only Backplaze S3', 'external-files-from-aws-s3' );
+		return __( 'Use only Backblaze S3', 'external-files-from-aws-s3' );
 	}
 
 	/**
@@ -47,7 +47,7 @@ class Configuration extends Configuration_Base {
 	 */
 	public function get_dialog_hints(): array {
 		return array(
-			'<p>' . __( 'This will disable all other services except Backplaze S3.', 'external-files-from-aws-s3' ) . '<br>' . __( 'After that, you will only be able to see and use Backplaze S3 for external sources.', 'external-files-from-aws-s3' ) . '</p>',
+			'<p>' . __( 'This will disable all other services except Backblaze S3.', 'external-files-from-aws-s3' ) . '<br>' . __( 'After that, you will only be able to see and use Backblaze S3 for external sources.', 'external-files-from-aws-s3' ) . '</p>',
 		);
 	}
 
@@ -65,8 +65,8 @@ class Configuration extends Configuration_Base {
 			}
 
 			// bail if this is our service.
-			if ( $service_obj->get_name() === BackplazeS3::get_instance()->get_name() ) {
-				update_option( 'eml_service_' . $service_obj->get_name() . '_allowed_roles', BackplazeS3::get_instance()->get_default_roles() );
+			if ( $service_obj->get_name() === BackblazeS3::get_instance()->get_name() ) {
+				update_option( 'eml_service_' . $service_obj->get_name() . '_allowed_roles', BackblazeS3::get_instance()->get_default_roles() );
 				continue;
 			}
 

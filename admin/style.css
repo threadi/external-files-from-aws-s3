@@ -7,3 +7,22 @@
 	height: 32px;
 	width: 92px;
 }
+
+.efml-backblaze-s3:before {
+	background-image: url(../gfx/backblaze.svg);
+	background-repeat: no-repeat;
+	background-size: contain;
+	filter: brightness(0) saturate(100%) invert(38%) sepia(50%) saturate(1478%) hue-rotate(176deg) brightness(83%) contrast(81%);
+	content: '';
+	height: 32px;
+	width: 32px;
+}
+
+.efml-digital-ocean-spaces:before {
+	background-image: url(../gfx/digitalocean-spaces.png);
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 32px;
+	width: 32px;
+}

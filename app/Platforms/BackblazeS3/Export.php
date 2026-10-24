@@ -1,18 +1,18 @@
 <?php
 /**
- * File to handle export tasks for Backplaze S3.
+ * File to handle export tasks for Backblaze S3.
  *
  * @package external-files-from-aws-s3
  */
 
-namespace ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+namespace ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
 use ExternalFilesFromAwsS3\Export_Base;
 use ExternalFilesFromAwsS3\Platform_Base;
-use ExternalFilesFromAwsS3\Platforms\BackplazeS3;
+use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 
 /**
  * Object for export files to Cloudflare R2.
@@ -56,6 +56,6 @@ class Export extends Export_Base {
 	 * @return Platform_Base|false
 	 */
 	protected function get_directory_listing_object(): Platform_Base|false {
-		return BackplazeS3::get_instance();
+		return BackblazeS3::get_instance();
 	}
 }
