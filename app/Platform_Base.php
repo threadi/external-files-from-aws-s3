@@ -205,9 +205,6 @@ class Platform_Base extends Service_Base {
 	 * @return array<string,mixed>
 	 */
 	private function get_real_tree( array $tree, string $directory ): array {
-		// create the return value.
-		$real_tree = array();
-
 		// loop through the tree.
 		foreach ( $tree as $key => $value ) {
 			// bail if directory has been found.
@@ -215,12 +212,22 @@ class Platform_Base extends Service_Base {
 				return array( $key => $value );
 			}
 
+			// bail if this entry does not have any sub-directories.
+			if ( empty( $value['dirs'] ) || ! is_array( $value['dirs'] ) ) {
+				continue;
+			}
+
 			// check the deeper tree entries.
 			$real_tree = $this->get_real_tree( $value['dirs'], $directory );
+
+			// return the result if the directory has been found there.
+			if ( ! empty( $real_tree ) ) {
+				return $real_tree;
+			}
 		}
 
-		// return the found directory.
-		return $real_tree;
+		// return empty array as the directory has not been found.
+		return array();
 	}
 
 	/**
@@ -242,11 +249,12 @@ class Platform_Base extends Service_Base {
 		}
 
 		// get the requested directory.
+		// Hint: the longest URL must be removed first, as the URL mark without bucket is part of the URL with bucket.
 		$directory = str_replace(
 			array(
-				$this->get_url_mark( '' ),
-				$this->get_url_mark( $this->get_bucket_name() ),
 				$this->get_directory(),
+				$this->get_url_mark( $this->get_bucket_name() ),
+				$this->get_url_mark( '' ),
 				'//',
 			),
 			array( '', '', '', '/' ),
@@ -549,17 +557,35 @@ class Platform_Base extends Service_Base {
 	 * Remove the authorization header for requests on public S3 files as their usage
 	 * would result in HTTP status 400 from S3.
 	 *
+	 * This is only done for URLs of this platform, as the hook is used for each HTTP request of the main plugin.
+	 *
 	 * @param array<string,mixed>                                      $args The arguments.
 	 * @param \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base $http The used protocol.
 	 *
 	 * @return array<string,mixed>
 	 */
 	public function remove_authorization_header( array $args, \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base $http ): array {
+		// bail if URL on protocol is not from this platform.
+		if ( ! $this->is_platform_url( $http->get_url() ) ) {
+			return $args;
+		}
+
 		// remove the authorization header.
 		unset( $args['headers']['Authorization'] );
 
 		// remove resulting arguments.
 		return $args;
+	}
+
+	/**
+	 * Return whether the given URL is a URL of this platform.
+	 *
+	 * @param string $url The URL to check.
+	 *
+	 * @return bool
+	 */
+	public function is_platform_url( string $url ): bool {
+		return false;
 	}
 
 	/**

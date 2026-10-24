@@ -398,6 +398,12 @@ class BackblazeS3 extends Platform_Base implements Service {
 				'field'       => 'text',
 				'placeholder' => __( 'The bucket you want to use', 'external-files-from-aws-s3' ),
 			),
+			'backblaze_s3_region'     => array(
+				'label'   => __( 'Choose your region', 'external-files-from-aws-s3' ),
+				'field'   => 'select',
+				'options' => $this->get_regions(),
+				'default' => $this->get_mapping_region(),
+			),
 		);
 
 		/**
@@ -585,6 +591,17 @@ class BackblazeS3 extends Platform_Base implements Service {
 	 */
 	public function get_export_object(): Export_Base|false {
 		return Export::get_instance();
+	}
+
+	/**
+	 * Return whether the given URL is a URL of Backblaze S3.
+	 *
+	 * @param string $url The URL to check.
+	 *
+	 * @return bool
+	 */
+	public function is_platform_url( string $url ): bool {
+		return str_contains( $url, '.backblazeb2.com' );
 	}
 
 	/**

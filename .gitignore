@@ -4,3 +4,4 @@ languages/*.json
 /vendor/
 /build/build.properties
 
+.phpunit.result.cache

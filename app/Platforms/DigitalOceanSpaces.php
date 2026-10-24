@@ -538,7 +538,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		}
 
 		/* translators: %1$s will be replaced by a URL. */
-		return sprintf( __( 'Enter your DigitalSpace Ocean credentials in this form. How to get them for DigitalSpace Ocean is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://developers.cloudflare.com/r2/api/tokens/' );
+		return sprintf( __( 'Enter your DigitalSpace Ocean credentials in this form. How to get them for DigitalSpace Ocean is described <a href="%1$s">here</a>.', 'external-files-from-aws-s3' ), 'https://docs.digitalocean.com/products/spaces/how-to/manage-access/' );
 	}
 
 	/**
@@ -594,6 +594,17 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	}
 
 	/**
+	 * Return whether the given URL is a URL of DigitalOcean Spaces.
+	 *
+	 * @param string $url The URL to check.
+	 *
+	 * @return bool
+	 */
+	public function is_platform_url( string $url ): bool {
+		return str_contains( $url, '.digitaloceanspaces.com' );
+	}
+
+	/**
 	 * Allow to use DigitalOcean Spaces URLs.
 	 *
 	 * @param bool   $return_value The return value (true to check the file type, so we return here false).
@@ -603,7 +614,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function allow_content_type( bool $return_value, string $url ): bool {
 		// bail if this is not a DigitalOcean Spaces URL.
-		if ( ! str_contains( $url, 'digitalocean.com' ) ) {
+		if ( ! $this->is_platform_url( $url ) ) {
 			return $return_value;
 		}
 		return false;
@@ -619,7 +630,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function set_real_mime_type( array $results, string $url ): array {
 		// bail if this is not our file URL.
-		if ( ! str_contains( $url, 'digitalocean.com' ) ) {
+		if ( ! $this->is_platform_url( $url ) ) {
 			return $results;
 		}
 
@@ -721,7 +732,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		$regions = array(
 			'nyc1' => 'NYC1 (New York City, United States)',
 			'nyc2' => 'NYC2 (New York City, United States)',
-			'nyc3' => 'NYC2 (New York City, United States)',
+			'nyc3' => 'NYC3 (New York City, United States)',
 			'ams3' => 'AMS3 (Amsterdam, the Netherlands)',
 			'sfo2' => 'SFO2 (San Francisco, United States)',
 			'sfo3' => 'SFO3 (San Francisco, United States)',

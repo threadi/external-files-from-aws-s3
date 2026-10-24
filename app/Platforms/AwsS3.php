@@ -30,7 +30,6 @@ use easySettingsForWordPress\Tab;
 use ExternalFilesFromAwsS3\Platform_Base;
 use ExternalFilesFromAwsS3\Platforms\AwsS3\Export;
 use ExternalFilesInMediaLibrary\ExternalFiles\Export_Base;
-use ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Languages;
 use ExternalFilesInMediaLibrary\Plugin\Log;
@@ -640,22 +639,14 @@ class AwsS3 extends Platform_Base implements Service {
 	}
 
 	/**
-	 * Remove the authorization header for requests on public S3 files as their usage
-	 * would result in HTTP status 400 from S3.
+	 * Return whether the given URL is a URL of AWS S3.
 	 *
-	 * @param array<string,mixed> $args The arguments.
-	 * @param Protocol_Base       $http The used protocol.
+	 * @param string $url The URL to check.
 	 *
-	 * @return array<string,mixed>
+	 * @return bool
 	 */
-	public function remove_authorization_header( array $args, Protocol_Base $http ): array {
-		// bail if URL on protocol is not ours.
-		if ( ! str_contains( $http->get_url(), '.amazonaws.com' ) ) {
-			return $args;
-		}
-
-		// return the cleaned header.
-		return parent::remove_authorization_header( $args, $http );
+	public function is_platform_url( string $url ): bool {
+		return str_contains( $url, '.amazonaws.com' );
 	}
 
 	/**
