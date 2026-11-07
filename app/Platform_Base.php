@@ -39,6 +39,15 @@ class Platform_Base extends Service_Base {
 	protected string $configuration_object_name = '';
 
 	/**
+	 * Allow to define the values of the fields via constants, e.g. "EFML_AWS_S3_ACCESS_KEY".
+	 *
+	 * Requires "External Files in Media Library" 5.7.0 or newer.
+	 *
+	 * @var bool
+	 */
+	protected bool $fields_via_constants = true;
+
+	/**
 	 * Initialize this object.
 	 *
 	 * @return void

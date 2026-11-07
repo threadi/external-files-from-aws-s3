@@ -7,6 +7,9 @@
 - Added optional Amazon CloudFront domain for AWS S3 to deliver files via CloudFront, also from private buckets
 - Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
 - Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront
+- Added possibility to define credentials and settings of each platform via constants, e.g. in wp-config.php (requires External Files in Media Library 5.7.0)
+- Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 5.7.0)
+- Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
 
 ### Changed
 
@@ -16,6 +19,9 @@
 
 - Fixed import and export of AWS S3 files if the access key is not allowed to read object ACLs
 - Fixed usage of the custom domain for Cloudflare R2 in user-specific mode
+- Fixed missing content type of exported files, which resulted in "binary/octet-stream" for every file
+- Fixed high memory usage during the export of large files, they are now uploaded as stream (and in parts for files with more than 16 MB)
+- Fixed missing error handling if the upload of a file fails
 
 ## [1.2.1] - 24.10.2026
 

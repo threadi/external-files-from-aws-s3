@@ -65,11 +65,8 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			return false;
 		}
 
-		// set the key for the file to its filename.
-		$key = basename( $file_path );
-
-		// prepend the directory from credentials to the key.
-		$key = str_replace( $s3_obj->get_directory(), '', $credentials['directory'] ) . $key;
+		// get the key for this file.
+		$key = $this->get_key_for_filename( basename( $file_path ), $credentials, $s3_obj );
 
 		// get the S3Client.
 		$s3_client = $s3_obj->get_s3_client();
@@ -89,8 +86,42 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			}
 		}
 
+		// open the file as stream, so it is not loaded completely in the memory.
+		// the SDK uses a multipart upload for larger files automatically.
+		$handle = fopen( $file_path, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		// bail if file could not be opened.
+		if ( ! $handle ) {
+			// log this event.
+			Log::get_instance()->create( __( 'File could not be opened for the export.', 'external-files-from-aws-s3' ), $target, 'error' );
+
+			// do nothing more.
+			return false;
+		}
+
 		// upload the file.
-		$result = $s3_client->upload( $s3_obj->get_bucket_name(), $key, $wp_filesystem_local->get_contents( $file_path ) );
+		try {
+			$result = $s3_client->upload(
+				$s3_obj->get_bucket_name(),
+				$key,
+				$handle,
+				'private',
+				array(
+					'params' => $this->get_upload_params( $attachment_id, $file_path, $key, $s3_obj ),
+				)
+			);
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'File could not be uploaded to the S3 bucket. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+
+			// do nothing more.
+			return false;
+		} finally {
+			// close the stream, if the SDK has not done it already.
+			if ( is_resource( $handle ) ) {
+				fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			}
+		}
 
 		// bail if result is not the expected type.
 		if ( ! $result instanceof Result ) {
@@ -182,6 +213,101 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 
 		// return true as file has been deleted.
 		return true;
+	}
+
+	/**
+	 * Return whether a file with the given target path already exists in the bucket.
+	 *
+	 * Used by "External Files in Media Library" to get a unique filename before a new file is exported,
+	 * so an existing file in the bucket is never overwritten.
+	 *
+	 * @param string              $target The target path of the file.
+	 * @param array<string,mixed> $credentials The credentials to use.
+	 *
+	 * @return bool
+	 */
+	public function file_exists_on_target( string $target, array $credentials ): bool {
+		// get our own service object.
+		$s3_obj = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3_obj instanceof Platform_Base ) {
+			return false;
+		}
+
+		// set the credentials.
+		$s3_obj->set_fields( isset( $credentials['fields'] ) ? $credentials['fields'] : array() );
+
+		// bail if the given URL is not an S3 URL.
+		if ( ! str_starts_with( $target, $s3_obj->get_directory() ) ) {
+			return false;
+		}
+
+		// get the key for this file.
+		$key = $this->get_key_for_filename( basename( $target ), $credentials, $s3_obj );
+
+		// return whether the object exists in the bucket.
+		// (errors other than "not found" result in an exception, which is handled by the caller).
+		return $s3_obj->get_s3_client()->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
+	}
+
+	/**
+	 * Return the key in the bucket for a given filename.
+	 *
+	 * The key contains the directory of the external source and the filename.
+	 *
+	 * @param string              $filename The filename.
+	 * @param array<string,mixed> $credentials The credentials of the external source.
+	 * @param Platform_Base       $s3_obj The platform object.
+	 *
+	 * @return string
+	 */
+	protected function get_key_for_filename( string $filename, array $credentials, Platform_Base $s3_obj ): string {
+		// get the directory from the credentials.
+		$directory = isset( $credentials['directory'] ) && is_string( $credentials['directory'] ) ? $credentials['directory'] : '';
+
+		// prepend the directory (without the URL mark of the bucket) to the filename.
+		return str_replace( $s3_obj->get_directory(), '', $directory ) . $filename;
+	}
+
+	/**
+	 * Return the parameters for the upload of a file, e.g., its content type.
+	 *
+	 * @param int           $attachment_id The attachment ID.
+	 * @param string        $file_path The absolute path to the local file.
+	 * @param string        $key The key of the file in the bucket.
+	 * @param Platform_Base $s3_obj The platform object.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function get_upload_params( int $attachment_id, string $file_path, string $key, Platform_Base $s3_obj ): array {
+		// get the content type from the attachment.
+		$content_type = (string) get_post_mime_type( $attachment_id );
+
+		// use the file extension as fallback.
+		if ( empty( $content_type ) ) {
+			$file_type    = wp_check_filetype( basename( $file_path ) );
+			$content_type = is_string( $file_type['type'] ) ? $file_type['type'] : '';
+		}
+
+		// set the params.
+		$params = array();
+		if ( ! empty( $content_type ) ) {
+			$params['ContentType'] = $content_type;
+		}
+
+		/**
+		 * Filter the parameters for the upload of a file to the S3 bucket.
+		 *
+		 * Could be used to add e.g. "CacheControl" or "ContentDisposition".
+		 *
+		 * @since 1.3.0 Available since 1.3.0.
+		 * @param array<string,mixed> $params The parameters.
+		 * @param int $attachment_id The attachment ID.
+		 * @param string $key The key of the file in the bucket.
+		 * @param Platform_Base $s3_obj The platform object.
+		 */
+		return apply_filters( 'efmlawss3_upload_params', $params, $attachment_id, $key, $s3_obj );
 	}
 
 	/**
