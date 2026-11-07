@@ -119,4 +119,42 @@ class Protocol extends externalFilesFromAwsS3Tests {
 		$this->assertTrue( $protocol->should_be_saved_local() );
 		$this->assertFalse( $protocol->can_change_hosting() );
 	}
+
+	/**
+	 * Test the detection of URLs of the CloudFront domain.
+	 *
+	 * @return void
+	 */
+	public function test_is_url_compatible_with_cloudfront(): void {
+		$values = array( 'cloudfront_domain' => 'cdn.example.com' );
+		$this->assertTrue( $this->get_protocol( 'https://cdn.example.com/dir/example.jpg', $values )->is_url_compatible() );
+		$this->assertFalse( $this->get_protocol( 'https://other.example.com/dir/example.jpg', $values )->is_url_compatible() );
+
+		// without a bucket the URL is handled by the HTTP protocol of the main plugin.
+		$this->assertFalse( $this->get_protocol( 'https://cdn.example.com/dir/example.jpg', array_merge( $values, array( 'bucket' => '' ) ) )->is_url_compatible() );
+	}
+
+	/**
+	 * Test the key of a file with a CloudFront URL.
+	 *
+	 * @return void
+	 */
+	public function test_get_key_of_file_with_cloudfront(): void {
+		$protocol = $this->get_protocol( 'https://cdn.example.com/dir/my%20file.jpg', array( 'cloudfront_domain' => 'cdn.example.com' ) );
+		$this->assertEquals( 'dir/my%20file.jpg', $this->call_method( $protocol, 'get_key_of_file', array( 'https://cdn.example.com/dir/my%20file.jpg' ) ) );
+
+		// the S3 URL still works.
+		$this->assertEquals( 'dir/example.jpg', $this->call_method( $protocol, 'get_key_of_file', array( 'https://my-bucket.s3.eu-central-1.amazonaws.com/dir/example.jpg' ) ) );
+	}
+
+	/**
+	 * Test if files delivered via CloudFront are not saved local and could change their hosting.
+	 *
+	 * @return void
+	 */
+	public function test_hosting_with_cloudfront(): void {
+		$protocol = $this->get_protocol( 'https://cdn.example.com/dir/example.jpg', array( 'cloudfront_domain' => 'cdn.example.com' ) );
+		$this->assertFalse( $protocol->should_be_saved_local() );
+		$this->assertTrue( $protocol->can_change_hosting() );
+	}
 }

@@ -143,7 +143,12 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 	public function test_get_fields(): void {
 		$fields = $this->get_platform()->get_fields();
 		$this->assertIsArray( $fields );
-		$this->assertEquals( array( 'access_key', 'secret', 'bucket', 'region' ), array_keys( $fields ) );
+		$this->assertEquals( array( 'access_key', 'secret', 'bucket', 'region', 'cloudfront_domain', 'cloudfront_distribution_id' ), array_keys( $fields ) );
+
+		// the CloudFront settings are optional.
+		$this->assertTrue( $fields['cloudfront_domain']['not_required'] );
+		$this->assertTrue( $fields['cloudfront_distribution_id']['not_required'] );
+		$this->assertEquals( '', $fields['cloudfront_domain']['value'] );
 
 		// the credentials must be marked as credentials.
 		$this->assertTrue( $fields['access_key']['credential'] );
@@ -276,7 +281,7 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 	public function test_get_user_settings(): void {
 		$settings = $this->get_platform()->get_user_settings();
 		$this->assertIsArray( $settings );
-		$this->assertEquals( array( 's3_access_key', 's3_secret_key', 's3_bucket', 's3_region' ), array_keys( $settings ) );
+		$this->assertEquals( array( 's3_access_key', 's3_secret_key', 's3_bucket', 's3_region', 's3_cloudfront_domain', 's3_cloudfront_distribution_id' ), array_keys( $settings ) );
 		$this->assertEquals( 'password', $settings['s3_secret_key']['field'] );
 		$this->assertEquals( 'select', $settings['s3_region']['field'] );
 
@@ -739,7 +744,7 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 		// test 2: with the capability.
 		$this->do_login();
 		$this->get_platform()->init_aws_s3();
-		foreach ( array( 'eml_s3_access_key', 'eml_s3_secret_key', 'eml_s3_bucket', 'eml_s3_region', 'eml_s3_import_limit' ) as $setting_name ) {
+		foreach ( array( 'eml_s3_access_key', 'eml_s3_secret_key', 'eml_s3_bucket', 'eml_s3_cloudfront_domain', 'eml_s3_cloudfront_distribution_id', 'eml_s3_region', 'eml_s3_import_limit' ) as $setting_name ) {
 			$this->assertInstanceOf( \easySettingsForWordPress\Setting::class, $settings_obj->get_setting( $setting_name ), 'Setting ' . $setting_name . ' is missing.' );
 		}
 		$this->assertEquals( 10, $settings_obj->get_setting( 'eml_s3_import_limit' )->get_default() );
@@ -778,5 +783,275 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 	public function test_is_platform_url(): void {
 		$this->assertTrue( $this->get_platform()->is_platform_url( 'https://my-bucket.s3.eu-central-1.amazonaws.com/example.jpg' ) );
 		$this->assertFalse( $this->get_platform()->is_platform_url( 'https://example.com/example.jpg' ) );
+	}
+
+	/**
+	 * Test the public URL of a file with a CloudFront domain.
+	 *
+	 * @return void
+	 */
+	public function test_get_public_url_of_file_with_cloudfront(): void {
+		// the domain is used with or without scheme, upper case and trailing slash, and the key is encoded per path segment.
+		foreach ( array( 'cdn.example.com', 'https://cdn.example.com/', ' HTTP://CDN.example.com ' ) as $domain ) {
+			$fields = $this->set_platform_fields( $this->get_platform(), array_merge( $this->field_values, array( 'cloudfront_domain' => $domain ) ) );
+			$this->assertEquals( 'https://cdn.example.com/dir/my%20file.jpg', $this->get_platform()->get_public_url_of_file( 'dir/my file.jpg', $fields ), 'Wrong URL for domain ' . $domain );
+		}
+
+		// no HTTP request is necessary to build the URL.
+		$this->assertEmpty( $this->get_http_requests() );
+	}
+
+	/**
+	 * Test if the CloudFront settings are used in the global mode.
+	 *
+	 * @return void
+	 */
+	public function test_get_fields_with_cloudfront_in_global_mode(): void {
+		update_option( 'eml_aws-s3_credentials_vault', 'global' );
+		update_option( 'eml_s3_bucket', 'global-bucket' );
+		update_option( 'eml_s3_cloudfront_domain', 'd111111abcdef8.cloudfront.net' );
+		update_option( 'eml_s3_cloudfront_distribution_id', 'E2QWRUHAPOMQZL' );
+
+		$fields = $this->get_platform()->get_fields();
+		$this->assertEquals( 'd111111abcdef8.cloudfront.net', $fields['cloudfront_domain']['value'] );
+		$this->assertEquals( 'E2QWRUHAPOMQZL', $fields['cloudfront_distribution_id']['value'] );
+		$this->assertTrue( $this->get_platform()->is_cache_invalidation_enabled() );
+	}
+
+	/**
+	 * Test if the CloudFront settings are used in the user mode.
+	 *
+	 * @return void
+	 */
+	public function test_get_fields_with_cloudfront_in_user_mode(): void {
+		update_option( 'eml_aws-s3_credentials_vault', 'user' );
+		$this->do_login();
+		update_user_meta( 1, 'efml_s3_cloudfront_domain', $this->get_platform()->encrypt_value( 'cdn.example.com' ) );
+		update_user_meta( 1, 'efml_s3_cloudfront_distribution_id', $this->get_platform()->encrypt_value( 'E2QWRUHAPOMQZL' ) );
+
+		$fields = $this->get_platform()->get_fields();
+		$this->assertEquals( 'cdn.example.com', $fields['cloudfront_domain']['value'] );
+		$this->assertEquals( 'E2QWRUHAPOMQZL', $fields['cloudfront_distribution_id']['value'] );
+	}
+
+	/**
+	 * Test if the public availability is checked via CloudFront without any S3 command.
+	 *
+	 * @return void
+	 */
+	public function test_is_file_public_available_via_cloudfront(): void {
+		$s3 = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array() );
+		$this->set_platform_fields( $s3, array_merge( $this->field_values, array( 'cloudfront_domain' => 'cdn.example.com' ) ) );
+
+		// test 1: CloudFront delivers the file.
+		$this->add_http_response( 'https://cdn.example.com/dir/example.jpg', 200 );
+		$this->assertTrue( $s3->is_file_public_available( 'dir/example.jpg', $s3->get_s3_client() ) );
+		$this->assertEquals( 'HEAD', $this->get_http_requests()[0]['method'] );
+		$this->assertEmpty( $this->get_s3_commands() );
+
+		// test 2: CloudFront does not deliver the file.
+		$this->add_http_response( 'https://cdn.example.com/dir/example.jpg', 403 );
+		$this->assertFalse( $s3->is_file_public_available( 'dir/example.jpg', $s3->get_s3_client() ) );
+
+		// the problem must be logged.
+		$log = $this->get_log_entries( 'https://cdn.example.com/dir/example.jpg' );
+		$this->assertNotEmpty( $log );
+		$this->assertEquals( 'error', $log[0]['state'] );
+	}
+
+	/**
+	 * Test if the public availability is checked via HTTP if the ACL could not be read.
+	 *
+	 * @return void
+	 */
+	public function test_is_file_public_available_without_acl_permission(): void {
+		$s3 = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array( 'GetObjectAcl' => $this->get_s3_exception( 'GetObjectAcl', 403 ) ) );
+		$this->set_platform_fields( $s3, $this->field_values );
+
+		$this->add_http_response( 'https://my-bucket.s3.eu-central-1.amazonaws.com/example.jpg', 200 );
+		$this->assertTrue( $s3->is_file_public_available( 'example.jpg', $s3->get_s3_client() ) );
+	}
+
+	/**
+	 * Test if URLs of the CloudFront domain are detected as URLs of AWS S3.
+	 *
+	 * @return void
+	 */
+	public function test_is_platform_url_with_cloudfront(): void {
+		$this->set_platform_fields( $this->get_platform(), array_merge( $this->field_values, array( 'cloudfront_domain' => 'cdn.example.com' ) ) );
+		$this->assertTrue( $this->get_platform()->is_platform_url( 'https://cdn.example.com/example.jpg' ) );
+		$this->assertTrue( $this->get_platform()->is_platform_url( 'https://my-bucket.s3.eu-central-1.amazonaws.com/example.jpg' ) );
+		$this->assertFalse( $this->get_platform()->is_platform_url( 'https://other.example.com/example.jpg' ) );
+		$this->assertFalse( $this->get_platform()->allow_content_type( true, 'https://cdn.example.com/example.jpg' ) );
+		$this->assertTrue( $this->get_platform()->allow_content_type( true, 'https://other.example.com/example.jpg' ) );
+	}
+
+	/**
+	 * Test if the CloudFront cache is only invalidated if domain and distribution ID are set.
+	 *
+	 * @return void
+	 */
+	public function test_invalidate_cache(): void {
+		$s3 = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array(), array( 'CreateInvalidation' => array() ) );
+
+		// test 1: without CloudFront settings nothing happens.
+		$this->set_platform_fields( $s3, $this->field_values );
+		$this->assertFalse( $s3->is_cache_invalidation_enabled() );
+		$this->assertFalse( $s3->invalidate_cache( array( 'example.jpg' ) ) );
+		$this->assertEmpty( $this->get_cloudfront_commands() );
+
+		// test 2: with domain, but without distribution ID nothing happens.
+		$this->set_platform_fields( $s3, array_merge( $this->field_values, array( 'cloudfront_domain' => 'cdn.example.com' ) ) );
+		$this->assertFalse( $s3->invalidate_cache( array( 'example.jpg' ) ) );
+		$this->assertEmpty( $this->get_cloudfront_commands() );
+
+		// test 3: with domain and distribution ID the invalidation is requested.
+		$this->set_platform_fields(
+			$s3,
+			array_merge(
+				$this->field_values,
+				array(
+					'cloudfront_domain'          => 'cdn.example.com',
+					'cloudfront_distribution_id' => 'E2QWRUHAPOMQZL',
+				)
+			)
+		);
+		$this->assertTrue( $s3->invalidate_cache( array( 'dir/my file.jpg' ) ) );
+		$commands = $this->get_cloudfront_commands();
+		$this->assertCount( 1, $commands );
+		$this->assertEquals( 'CreateInvalidation', $commands[0]->getName() );
+		$this->assertEquals( 'E2QWRUHAPOMQZL', $commands[0]['DistributionId'] );
+		$this->assertEquals( array( '/dir/my%20file.jpg' ), $commands[0]['InvalidationBatch']['Paths']['Items'] );
+		$this->assertEquals( 1, $commands[0]['InvalidationBatch']['Paths']['Quantity'] );
+	}
+
+	/**
+	 * Test if an error during the invalidation is logged.
+	 *
+	 * @return void
+	 */
+	public function test_invalidate_cache_with_error(): void {
+		$exception = new \Aws\Exception\AwsException( 'AccessDenied', new \Aws\Command( 'CreateInvalidation' ) );
+		$s3        = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array(), array( 'CreateInvalidation' => $exception ) );
+		$this->set_platform_fields(
+			$s3,
+			array_merge(
+				$this->field_values,
+				array(
+					'cloudfront_domain'          => 'cdn.example.com',
+					'cloudfront_distribution_id' => 'E2QWRUHAPOMQZL',
+				)
+			)
+		);
+
+		$this->assertFalse( $s3->invalidate_cache( array( 'example.jpg' ) ) );
+		$log = $this->get_log_entries();
+		$this->assertNotEmpty( $log );
+		$this->assertStringContainsString( 'could not be invalidated', $log[0]['log'] );
+	}
+
+	/**
+	 * Test if the cache of a deleted file is invalidated during the deletion of an exported file.
+	 *
+	 * @return void
+	 */
+	public function test_delete_exported_file_with_cloudfront(): void {
+		$attachment_id = self::factory()->attachment->create( array( 'post_mime_type' => 'image/jpeg' ) );
+		update_post_meta( $attachment_id, 'efml_s3_key', 'uploads/example.jpg' );
+
+		$s3     = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array( 'DeleteObject' => array() ), array( 'CreateInvalidation' => array() ) );
+		$fields = $this->set_platform_fields(
+			$s3,
+			array_merge(
+				$this->field_values,
+				array(
+					'cloudfront_domain'          => 'cdn.example.com',
+					'cloudfront_distribution_id' => 'E2QWRUHAPOMQZL',
+				)
+			)
+		);
+
+		$directory = 'https://console.aws.amazon.com/s3/buckets/my-bucket/';
+		$this->assertTrue(
+			Export::get_instance()->delete_exported_file(
+				$directory . 'uploads/example.jpg',
+				array(
+					'fields'    => $fields,
+					'directory' => $directory,
+				),
+				$attachment_id
+			)
+		);
+
+		// the cache must be invalidated for the deleted file.
+		$commands = $this->get_cloudfront_commands();
+		$this->assertCount( 1, $commands );
+		$this->assertEquals( array( '/uploads/example.jpg' ), $commands[0]['InvalidationBatch']['Paths']['Items'] );
+	}
+
+	/**
+	 * Test the export of a file to a private bucket with CloudFront, incl. the invalidation for an overwritten file.
+	 *
+	 * @return void
+	 */
+	public function test_export_file_with_cloudfront(): void {
+		$directory = 'https://console.aws.amazon.com/s3/buckets/my-bucket/';
+		$values    = array_merge(
+			$this->field_values,
+			array(
+				'cloudfront_domain'          => 'cdn.example.com',
+				'cloudfront_distribution_id' => 'E2QWRUHAPOMQZL',
+			)
+		);
+
+		// test 1: a new file is exported and returned with the CloudFront URL, without invalidation.
+		$attachment_id = $this->create_local_attachment();
+		$key           = 'uploads/' . basename( (string) get_attached_file( $attachment_id, true ) );
+		$s3            = $this->use_s3_mock(
+			\ExternalFilesFromAwsS3\Platforms\AwsS3::class,
+			array(
+				'HeadObject' => $this->get_s3_exception( 'HeadObject', 404, 'NotFound' ),
+				'PutObject'  => array(),
+			),
+			array( 'CreateInvalidation' => array() )
+		);
+		$fields        = $this->set_platform_fields( $s3, $values );
+		$this->add_http_response( 'https://cdn.example.com/' . $key, 200 );
+
+		$url = Export::get_instance()->export_file(
+			$attachment_id,
+			$directory,
+			array(
+				'fields'    => $fields,
+				'directory' => $directory . 'uploads/',
+			)
+		);
+		$this->assertEquals( 'https://cdn.example.com/' . $key, $url );
+		$this->assertNotContains( 'GetObjectAcl', $this->get_s3_command_names() );
+		$this->assertEmpty( $this->get_cloudfront_commands() );
+
+		// test 2: an existing file is overwritten, so the cache must be invalidated.
+		$s3     = $this->use_s3_mock(
+			\ExternalFilesFromAwsS3\Platforms\AwsS3::class,
+			array(
+				'HeadObject' => array(),
+				'PutObject'  => array(),
+			),
+			array( 'CreateInvalidation' => array() )
+		);
+		$fields = $this->set_platform_fields( $s3, $values );
+
+		$url = Export::get_instance()->export_file(
+			$attachment_id,
+			$directory,
+			array(
+				'fields'    => $fields,
+				'directory' => $directory . 'uploads/',
+			)
+		);
+		$this->assertEquals( 'https://cdn.example.com/' . $key, $url );
+		$commands = $this->get_cloudfront_commands();
+		$this->assertCount( 1, $commands );
+		$this->assertEquals( array( '/' . $key ), $commands[0]['InvalidationBatch']['Paths']['Items'] );
 	}
 }

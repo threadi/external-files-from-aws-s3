@@ -451,4 +451,18 @@ class CloudflareR2 extends externalFilesFromAwsS3Tests {
 		$this->assertEquals( 1, absint( $fields['eu']['value'] ) );
 		$this->assertEquals( 'user-account', $fields['account_id']['value'] );
 	}
+
+	/**
+	 * Test if the custom domain is used from the user settings in the user mode.
+	 *
+	 * @return void
+	 */
+	public function test_get_fields_with_public_domain_in_user_mode(): void {
+		update_option( 'eml_cloudflare-r2_credentials_vault', 'user' );
+		$this->do_login();
+		update_user_meta( 1, 'efml_cloudflare_r2_public_domain', $this->get_platform()->encrypt_value( 'cdn.example.com' ) );
+
+		$fields = $this->get_platform()->get_fields();
+		$this->assertEquals( 'cdn.example.com', $fields['public_domain']['value'] );
+	}
 }

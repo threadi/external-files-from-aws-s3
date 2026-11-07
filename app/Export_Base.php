@@ -78,6 +78,17 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		/* translators: %1$s will be replaced by the attachment ID, %2$s by the bucket name. */
 		Log::get_instance()->create( sprintf( __( 'Exporting attachment ID %1$s to S3 bucket %2$s.', 'external-files-from-aws-s3' ), '<em>' . $attachment_id . '</em>', '<em>' . $s3_obj->get_bucket_name() . '</em>' ), $target, 'info', 2 );
 
+		// check whether a file with this key already exists, which would be overwritten (only if a cache must be invalidated then).
+		$file_exists = false;
+		if ( $s3_obj->is_cache_invalidation_enabled() ) {
+			try {
+				$file_exists = $s3_client->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
+			} catch ( AwsException | Exception $e ) {
+				// if the check fails, we assume the file exists to invalidate the cache for safety.
+				$file_exists = true;
+			}
+		}
+
 		// upload the file.
 		$result = $s3_client->upload( $s3_obj->get_bucket_name(), $key, $wp_filesystem_local->get_contents( $file_path ) );
 
@@ -93,6 +104,11 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 
 			// return false to prevent to save this file as external file.
 			return false;
+		}
+
+		// invalidate the cache for an overwritten file.
+		if ( $file_exists ) {
+			$s3_obj->invalidate_cache( array( $key ) );
 		}
 
 		// save the used key.
@@ -157,6 +173,11 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 
 			// do nothing more.
 			return false;
+		}
+
+		// invalidate the cache for the deleted file.
+		if ( $s3_obj->is_cache_invalidation_enabled() ) {
+			$s3_obj->invalidate_cache( array( (string) $key ) );
 		}
 
 		// return true as file has been deleted.

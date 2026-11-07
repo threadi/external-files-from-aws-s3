@@ -589,6 +589,26 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return whether a cache in front of the bucket (e.g., a CDN) should be invalidated after changes.
+	 *
+	 * @return bool
+	 */
+	public function is_cache_invalidation_enabled(): bool {
+		return false;
+	}
+
+	/**
+	 * Invalidate the given file keys in a cache in front of the bucket (e.g., a CDN).
+	 *
+	 * @param array<int,string> $keys List of file keys.
+	 *
+	 * @return bool
+	 */
+	public function invalidate_cache( array $keys ): bool {
+		return false;
+	}
+
+	/**
 	 * Return the directory.
 	 *
 	 * @return string

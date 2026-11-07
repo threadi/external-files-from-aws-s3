@@ -1,10 +1,21 @@
 # Changelog
 
-## [Unreleased]
+## [1.3.0] - 07.11.2026
+
+### Added
+
+- Added optional Amazon CloudFront domain for AWS S3 to deliver files via CloudFront, also from private buckets
+- Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
+- Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront
 
 ### Changed
 
 - Optimized the option for use auto-updates for this plugin
+
+### Fixed
+
+- Fixed import and export of AWS S3 files if the access key is not allowed to read object ACLs
+- Fixed usage of the custom domain for Cloudflare R2 in user-specific mode
 
 ## [1.2.1] - 24.10.2026
 

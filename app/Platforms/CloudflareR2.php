@@ -632,7 +632,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 			$values['access_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_access_key', true ) );
 			$values['secret_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_secret_key', true ) );
 			$values['bucket']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_bucket', true ) );
-			$values['public_domain'] = get_user_meta( $user->ID, 'efml_cloudflare_r2_public_domain', true );
+			$values['public_domain'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_public_domain', true ) );
 		}
 
 		// return the resulting list of values.
