@@ -12,6 +12,7 @@
             "Aws\\Script\\Composer\\Composer::removeUnusedServices"
         ],
         "test": "phpunit",
+        "test-integration": "phpunit -c phpunit-integration.xml.dist",
         "test-multisite": [
             "@putenv WP_MULTISITE=1",
             "phpunit --filter Multisite"

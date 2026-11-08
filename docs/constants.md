@@ -56,6 +56,36 @@ define( 'EFML_BACKBLAZE_S3_BUCKET', 'your-bucket' );
 define( 'EFML_BACKBLAZE_S3_REGION', 'eu-central-003' );
 ```
 
+## S3-compatible storage (own endpoint)
+
+The constants are only used for sources with the same endpoint and the same bucket.
+
+```php
+define( 'EFML_S3_COMPATIBLE_ENDPOINT', 'https://s3.example.com' );
+define( 'EFML_S3_COMPATIBLE_REGION', 'us-east-1' );
+define( 'EFML_S3_COMPATIBLE_ACCESS_KEY', 'your-access-key' );
+define( 'EFML_S3_COMPATIBLE_SECRET', 'your-secret-key' );
+define( 'EFML_S3_COMPATIBLE_BUCKET', 'your-bucket' );
+define( 'EFML_S3_COMPATIBLE_PATH_STYLE', 1 ); // optional, 1 = path-style URLs (default), 0 = virtual-hosted URLs
+define( 'EFML_S3_COMPATIBLE_PUBLIC_URL', 'https://cdn.example.com' ); // optional
+define( 'EFML_S3_COMPATIBLE_CHECKSUM_WHEN_REQUIRED', 1 ); // optional, only if your provider needs it
+```
+
+## Hetzner, IONOS, OVHcloud, Scaleway and Wasabi
+
+These presets use the same constants as the S3-compatible storage, but without endpoint and path-style. The constants are only used for sources with the same region and the same bucket. The names start with `EFML_HETZNER_OBJECT_STORAGE_`, `EFML_IONOS_OBJECT_STORAGE_`, `EFML_OVHCLOUD_OBJECT_STORAGE_`, `EFML_SCALEWAY_OBJECT_STORAGE_` or `EFML_WASABI_`.
+
+```php
+define( 'EFML_HETZNER_OBJECT_STORAGE_REGION', 'fsn1' );
+define( 'EFML_HETZNER_OBJECT_STORAGE_ACCESS_KEY', 'your-access-key' );
+define( 'EFML_HETZNER_OBJECT_STORAGE_SECRET', 'your-secret-key' );
+define( 'EFML_HETZNER_OBJECT_STORAGE_BUCKET', 'your-bucket' );
+define( 'EFML_HETZNER_OBJECT_STORAGE_PUBLIC_URL', 'https://cdn.example.com' ); // optional
+define( 'EFML_HETZNER_OBJECT_STORAGE_CHECKSUM_WHEN_REQUIRED', 1 ); // optional
+```
+
+The possible regions are listed in [the documentation of the S3-compatible storage](s3-compatible.md#presets).
+
 ## Hooks
 
 * `efml_service_field_constant_name` - change the name of the constant for a field.

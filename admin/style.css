@@ -26,3 +26,17 @@
 	height: 32px;
 	width: 32px;
 }
+
+.efml-s3-compatible:before,
+.efml-hetzner-object-storage:before,
+.efml-ionos-object-storage:before,
+.efml-ovhcloud-object-storage:before,
+.efml-scaleway-object-storage:before,
+.efml-wasabi:before {
+	content: "\f176";
+	font-family: dashicons;
+	font-size: 32px;
+	height: 32px;
+	line-height: 1;
+	width: 32px;
+}

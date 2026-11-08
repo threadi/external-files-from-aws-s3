@@ -13,10 +13,19 @@
 - Saved external sources for other buckets than the one defined via constants are not usable as long as the constants are defined, files imported before are still delivered
 - Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 5.7.0)
 - Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
+- Added S3-compatible storage with own endpoint for any provider or self-hosted storage with S3 API (e.g. MinIO, Garage or Ceph)
+- Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
+- Added optional public URL (own domain or CDN) for the S3-compatible storage and its presets
+- Added optional setting to send checksums only if required for S3-compatible providers, which do not support the checksums of the AWS SDK
+- Added complete connection test for the S3-compatible storage and its presets: list, upload, public availability and deletion of a test file
+- Added detailed log entries for failed requests to S3-compatible storages incl. HTTP status, error code, request IDs and connection details (without credentials)
+- Added capabilities for new platforms after an update of this plugin
+- Added integration tests against a real S3 server and a GitHub workflow for them
 
 ### Changed
 
 - Optimized the option for use auto-updates for this plugin
+- The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
 
 ### Fixed
 
@@ -25,6 +34,8 @@
 - Fixed missing content type of exported files, which resulted in "binary/octet-stream" for every file
 - Fixed high memory usage during the export of large files, they are now uploaded as stream (and in parts for files with more than 16 MB)
 - Fixed missing error handling if the upload of a file fails
+- Fixed the directory listing of Backblaze S3, Cloudflare R2 and DigitalOcean Spaces, which used the hooks of AWS S3: not supported file types were not hidden and subdirectories were not loaded separately
+- Fixed the heading of the settings in the user profile, which showed "AWS S3" for each platform
 
 ## [1.2.1] - 24.10.2026
 

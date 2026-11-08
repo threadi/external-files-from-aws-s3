@@ -823,4 +823,47 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		 */
 		return apply_filters( 'efmlawss3_service_digital_ocean_spaces_default_region', $default_region, $language );
 	}
+
+	/**
+	 * Return the filtered query for the list of files in the bucket.
+	 *
+	 * @param array<string,mixed> $query The query.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function filter_query_params( array $query, string $directory ): array {
+		/**
+		 * Filter the query for files in DigitalOcean Spaces.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param array<string,mixed> $query The query.
+		 * @param string $directory The URL.
+		 */
+		return apply_filters( 'efmlawss3_digitalocean_spaces_query_params', $query, $directory );
+	}
+
+	/**
+	 * Return whether the given file from the bucket should be hidden in the directory listing.
+	 *
+	 * @param array<string,mixed> $file The array with the file data.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return bool
+	 */
+	protected function is_file_hidden( array $file, string $directory ): bool {
+		$false = false;
+		/**
+		 * Filter whether given DigitalOcean Spaces file should be hidden.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 *
+		 * @param bool $false True if it should be hidden.
+		 * @param array<string,mixed> $file The array with the file data.
+		 * @param string $directory The requested directory.
+		 *
+		 * @noinspection PhpConditionAlreadyCheckedInspection
+		 */
+		return (bool) apply_filters( 'efmlawss3_service_digitalocean_spaces_hide_file', $false, $file, $directory );
+	}
 }

@@ -18,6 +18,12 @@ use ExternalFilesFromAwsS3\Platforms\AwsS3;
 use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesFromAwsS3\Platforms\CloudflareR2;
 use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
+use ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\IonosObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\OvhcloudObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\S3Compatible;
+use ExternalFilesFromAwsS3\Platforms\ScalewayObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\Wasabi;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -40,6 +46,12 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		BackblazeS3::class,
 		CloudflareR2::class,
 		DigitalOceanSpaces::class,
+		S3Compatible::class,
+		HetznerObjectStorage::class,
+		IonosObjectStorage::class,
+		OvhcloudObjectStorage::class,
+		ScalewayObjectStorage::class,
+		Wasabi::class,
 	);
 
 	/**
@@ -388,6 +400,84 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 
 		// return the mock.
 		return $mock;
+	}
+
+	/**
+	 * Replace the singleton of the given platform with a mock, whose S3 client sends no HTTP requests.
+	 *
+	 * In contrast to @use_s3_mock() the requests are built completely by the SDK (incl. signature and checksums),
+	 * so the HTTP requests could be checked. Each request is answered by the given callback with a PSR-7 response.
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param callable                    $responder           Callback, which gets the request and returns the response.
+	 * @param array<int,RequestInterface> $requests            List of the sent requests (as reference).
+	 *
+	 * @return Platform_Base
+	 */
+	protected function use_s3_http_mock( string $platform_class_name, callable $responder, array &$requests ): Platform_Base {
+		// create the mock, which uses the original methods except for the creation of the client.
+		$mock = $this->getMockBuilder( $platform_class_name )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+
+		// create the S3 client with an HTTP handler, which answers the requests locally.
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ) use ( $responder, &$requests ): S3Client {
+				// save the configuration for checks in the tests.
+				self::$s3_configurations[] = $configuration;
+
+				// set the handler for the HTTP requests.
+				$configuration['http_handler'] = static function ( RequestInterface $request ) use ( $responder, &$requests ) {
+					$requests[] = $request;
+					return Create::promiseFor( $responder( $request ) );
+				};
+
+				// return the S3 client.
+				return new S3Client( $configuration );
+			}
+		);
+
+		// save the original object to restore it after the test.
+		if ( ! isset( $this->replaced_platforms[ $platform_class_name ] ) ) {
+			$this->replaced_platforms[ $platform_class_name ] = $platform_class_name::get_instance();
+		}
+
+		// use the mock as singleton.
+		$this->set_platform_instance( $platform_class_name, $mock );
+
+		// return the mock.
+		return $mock;
+	}
+
+	/**
+	 * Answer the HTTP requests to all URLs, which start with the given prefix, with the given status
+	 * (e.g. for URLs with random parts).
+	 *
+	 * @param string $prefix      The prefix of the URLs.
+	 * @param int    $status_code The HTTP status code.
+	 *
+	 * @return callable The callback for the hook "pre_http_request" to remove it after the test.
+	 */
+	protected function add_http_response_for_prefix( string $prefix, int $status_code ): callable {
+		$callback = static function ( false|array|WP_Error $response, array $parsed_args, string $url ) use ( $prefix, $status_code ): false|array|WP_Error {
+			// bail if the URL does not start with the prefix.
+			if ( ! str_starts_with( $url, $prefix ) ) {
+				return $response;
+			}
+
+			// log the request.
+			self::$http_requests[] = array(
+				'url'    => $url,
+				'method' => isset( $parsed_args['method'] ) ? (string) $parsed_args['method'] : 'GET',
+				'args'   => $parsed_args,
+			);
+
+			// return the response.
+			return self::get_http_response( $url, $status_code );
+		};
+		add_filter( 'pre_http_request', $callback, 5, 3 );
+		return $callback;
 	}
 
 	/**

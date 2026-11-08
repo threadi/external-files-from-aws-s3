@@ -75,12 +75,18 @@ class Init extends externalFilesFromAwsS3Tests {
 	public function test_add_service(): void {
 		$services = \ExternalFilesFromAwsS3\Plugin\Init::get_instance()->add_service( array( 'Example\Service' ) );
 		$this->assertIsArray( $services );
-		$this->assertCount( 5, $services );
+		$this->assertCount( 11, $services );
 		$this->assertContains( 'Example\Service', $services );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\AwsS3', $services );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\BackblazeS3', $services );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\CloudflareR2', $services );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\S3Compatible', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\IonosObjectStorage', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\OvhcloudObjectStorage', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\ScalewayObjectStorage', $services );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\Wasabi', $services );
 
 		// each entry must be an existing class.
 		foreach ( $services as $service ) {
@@ -128,12 +134,15 @@ class Init extends externalFilesFromAwsS3Tests {
 	public function test_add_configurations(): void {
 		$configurations = \ExternalFilesFromAwsS3\Plugin\Init::get_instance()->add_configurations( array( 'Example\Configuration' ) );
 		$this->assertIsArray( $configurations );
-		$this->assertCount( 5, $configurations );
+		$this->assertCount( 11, $configurations );
 		$this->assertContains( 'Example\Configuration', $configurations );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\AwsS3\Configuration', $configurations );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\BackblazeS3\Configuration', $configurations );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\CloudflareR2\Configuration', $configurations );
 		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces\Configuration', $configurations );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\S3Compatible\Configuration', $configurations );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage\Configuration', $configurations );
+		$this->assertContains( 'ExternalFilesFromAwsS3\Platforms\Wasabi\Configuration', $configurations );
 	}
 
 	/**
@@ -160,6 +169,57 @@ class Init extends externalFilesFromAwsS3Tests {
 			$this->assertTrue( get_role( 'editor' )->has_cap( $cap ), 'Editor has not the capability ' . $cap );
 			$this->assertFalse( get_role( 'subscriber' )->has_cap( $cap ), 'Subscriber has the capability ' . $cap );
 		}
+	}
+
+	/**
+	 * Test if the capabilities for platforms, which have been added with an update, are set.
+	 *
+	 * @return void
+	 */
+	public function test_add_missing_capabilities(): void {
+		$init = \ExternalFilesFromAwsS3\Plugin\Init::get_instance();
+		$this->assertIsInt( has_action( 'admin_init', array( $init, 'add_missing_capabilities' ) ) );
+
+		// simulate an update: the new platform has no capability, the existing platforms have their own settings.
+		delete_option( 'efmlawss3_platforms_with_capabilities' );
+		delete_option( 'eml_service_s3-compatible_allowed_roles' );
+		foreach ( array( 'administrator', 'editor' ) as $role ) {
+			get_role( $role )->remove_cap( 'efml_cap_s3-compatible' );
+		}
+
+		// an existing platform, whose permissions have been removed by the user (no role has the capability).
+		update_option( 'eml_service_backblaze-s3_allowed_roles', array() );
+		foreach ( array( 'administrator', 'editor' ) as $role ) {
+			get_role( $role )->remove_cap( 'efml_cap_backblaze-s3' );
+		}
+
+		// an existing platform, which is only allowed for administrators (without saved settings).
+		delete_option( 'eml_service_cloudflare-r2_allowed_roles' );
+		get_role( 'editor' )->remove_cap( 'efml_cap_cloudflare-r2' );
+		get_role( 'administrator' )->add_cap( 'efml_cap_cloudflare-r2' );
+
+		// run the check.
+		$init->add_missing_capabilities();
+
+		// test 1: the new platform has the capabilities for the default roles.
+		$this->assertTrue( get_role( 'administrator' )->has_cap( 'efml_cap_s3-compatible' ) );
+		$this->assertTrue( get_role( 'editor' )->has_cap( 'efml_cap_s3-compatible' ) );
+
+		// test 2: the saved permissions of the existing platforms are not changed.
+		$this->assertFalse( get_role( 'administrator' )->has_cap( 'efml_cap_backblaze-s3' ) );
+		$this->assertTrue( get_role( 'administrator' )->has_cap( 'efml_cap_cloudflare-r2' ) );
+		$this->assertFalse( get_role( 'editor' )->has_cap( 'efml_cap_cloudflare-r2' ) );
+
+		// test 3: each platform is checked only once.
+		$this->assertContains( 's3-compatible', get_option( 'efmlawss3_platforms_with_capabilities' ) );
+		get_role( 'editor' )->remove_cap( 'efml_cap_s3-compatible' );
+		get_role( 'administrator' )->remove_cap( 'efml_cap_s3-compatible' );
+		$init->add_missing_capabilities();
+		$this->assertFalse( get_role( 'administrator' )->has_cap( 'efml_cap_s3-compatible' ) );
+
+		// cleanup.
+		delete_option( 'eml_service_backblaze-s3_allowed_roles' );
+		\ExternalFilesFromAwsS3\Plugin\Init::get_instance()->activation();
 	}
 
 	/**

@@ -1,0 +1,97 @@
+name: Integration tests
+
+# Runs the tests for the S3-compatible storage against a real S3 server (Moto), without any external account.
+on:
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: Integration tests with S3 server (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.5']
+    services:
+      database:
+        # a fixed LTS version, so a new major release does not break the tests unnoticed.
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: wordpress_tests
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      EFMLAWSS3_INTEGRATION_ENDPOINT: http://127.0.0.1:9000
+      EFMLAWSS3_INTEGRATION_ACCESS_KEY: testing
+      EFMLAWSS3_INTEGRATION_SECRET: testing
+      # Moto does not use the bucket policy for anonymous requests, so the tests upload with a public ACL.
+      EFMLAWSS3_INTEGRATION_PUBLIC_ACL: 1
+    steps:
+      # this plugin and the main plugin are checked out side by side, like in wp-content/plugins/.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: external-files-from-aws-s3
+          persist-credentials: false
+
+      - name: Checkout main plugin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: threadi/external-files-in-media-library
+          path: external-files-in-media-library
+          persist-credentials: false
+
+      # Moto is an S3-compatible server, which runs locally without any account.
+      - name: Start S3 server
+        run: |
+          python3 -m pip install --user "moto[server]==5.2.5"
+          nohup python3 -m moto.server -H 127.0.0.1 -p 9000 > moto.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:9000/; then exit 0; fi
+            sleep 1
+          done
+          cat moto.log
+          exit 1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: phpunit-polyfills:1.1
+          extensions: mbstring, xml, zip, intl, pdo, mysql
+          coverage: none
+
+      - name: Install dependencies of the main plugin
+        working-directory: external-files-in-media-library
+        run: composer install --no-interaction --no-progress
+
+      - name: Install dependencies
+        working-directory: external-files-from-aws-s3
+        run: composer install --no-interaction --no-progress
+
+      - name: Install SVN
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
+      - name: Setup tests
+        working-directory: external-files-from-aws-s3
+        run: bash bin/install-wp-tests.sh wordpress_tests root root 127.0.0.1 latest true
+
+      - name: Run integration tests
+        working-directory: external-files-from-aws-s3
+        run: composer test-integration
+
+      - name: Show log of the S3 server
+        if: failure()
+        run: cat moto.log

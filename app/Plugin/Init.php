@@ -60,6 +60,9 @@ class Init {
 		// init update handling.
 		Updates::get_instance()->init();
 
+		// init the connection test for S3-compatible storages.
+		Connection_Test::get_instance()->init();
+
 		// plugin-action.
 		register_activation_hook( EFMLAWSS3_PLUGIN, array( $this, 'activation' ) );
 
@@ -67,6 +70,7 @@ class Init {
 		add_filter( 'efml_services_support', array( $this, 'add_service' ) );
 		add_filter( 'efml_service_plugins', array( $this, 'remove_service_plugin' ) );
 		add_filter( 'efml_configurations', array( $this, 'add_configurations' ) );
+		add_action( 'admin_init', array( $this, 'add_missing_capabilities' ) );
 
 		// misc.
 		add_action( 'init', array( $this, 'init_languages' ) );
@@ -95,6 +99,12 @@ class Init {
 			'ExternalFilesFromAwsS3\Platforms\BackblazeS3',
 			'ExternalFilesFromAwsS3\Platforms\CloudflareR2',
 			'ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces',
+			'ExternalFilesFromAwsS3\Platforms\S3Compatible',
+			'ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage',
+			'ExternalFilesFromAwsS3\Platforms\IonosObjectStorage',
+			'ExternalFilesFromAwsS3\Platforms\OvhcloudObjectStorage',
+			'ExternalFilesFromAwsS3\Platforms\ScalewayObjectStorage',
+			'ExternalFilesFromAwsS3\Platforms\Wasabi',
 		);
 	}
 
@@ -162,6 +172,73 @@ class Init {
 		foreach ( $this->get_platforms_as_object() as $obj ) {
 			$roles_obj->set( $obj->get_default_roles(), 'efml_cap_' . $obj->get_name() );
 		}
+	}
+
+	/**
+	 * Add the capabilities for platforms, which have been added with an update of this plugin.
+	 *
+	 * The capabilities are set during the activation of this plugin, but not during an update.
+	 * They are only set for platforms, whose capability is not used by any role and whose permissions
+	 * have never been saved, so changes of the permissions are never overwritten. Each platform is checked only once.
+	 *
+	 * @return void
+	 */
+	public function add_missing_capabilities(): void {
+		// get the list of already checked platforms.
+		$checked = get_option( 'efmlawss3_platforms_with_capabilities', array() );
+		if ( ! is_array( $checked ) ) {
+			$checked = array();
+		}
+
+		// check each platform.
+		$changed = false;
+		foreach ( $this->get_platforms_as_object() as $obj ) {
+			// bail if this platform has already been checked.
+			if ( in_array( $obj->get_name(), $checked, true ) ) {
+				continue;
+			}
+
+			// mark the platform as checked.
+			$checked[] = $obj->get_name();
+			$changed   = true;
+
+			// bail if the permissions of this platform has been saved.
+			if ( false !== get_option( 'eml_service_' . $obj->get_name() . '_allowed_roles' ) ) {
+				continue;
+			}
+
+			// bail if any role has the capability.
+			if ( $this->is_capability_used( 'efml_cap_' . $obj->get_name() ) ) {
+				continue;
+			}
+
+			// set the capability for the default roles.
+			Roles::get_instance()->set( $obj->get_default_roles(), 'efml_cap_' . $obj->get_name() );
+		}
+
+		// bail if nothing has been changed.
+		if ( ! $changed ) {
+			return;
+		}
+
+		// save the list of checked platforms.
+		update_option( 'efmlawss3_platforms_with_capabilities', $checked );
+	}
+
+	/**
+	 * Return whether any role has the given capability.
+	 *
+	 * @param string $capability The capability.
+	 *
+	 * @return bool
+	 */
+	private function is_capability_used( string $capability ): bool {
+		foreach ( wp_roles()->role_objects as $role_obj ) {
+			if ( $role_obj->has_cap( $capability ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

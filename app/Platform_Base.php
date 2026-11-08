@@ -10,6 +10,7 @@ namespace ExternalFilesFromAwsS3;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
+use Aws\Exception\AwsException;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easySettingsForWordPress\Section;
@@ -17,6 +18,7 @@ use ExternalFilesInMediaLibrary\ExternalFiles\File;
 use ExternalFilesInMediaLibrary\ExternalFiles\ImportDialog;
 use ExternalFilesInMediaLibrary\Plugin\Admin\Directory_Listing;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
+use ExternalFilesInMediaLibrary\Plugin\Log;
 use ExternalFilesInMediaLibrary\Services\Service_Base;
 use WP_Error;
 use WP_User;
@@ -314,7 +316,7 @@ class Platform_Base extends Service_Base {
 			return;
 		}
 
-		?><h3 id="efml-<?php echo esc_attr( $this->get_name() ); ?>"><?php echo esc_html__( 'AWS S3', 'external-files-from-aws-s3' ); ?></h3>
+		?><h3 id="efml-<?php echo esc_attr( $this->get_name() ); ?>"><?php echo esc_html( $this->get_label() ); ?></h3>
 		<div class="efml-user-settings">
 			<?php
 
@@ -435,14 +437,8 @@ class Platform_Base extends Service_Base {
 				'Bucket' => $this->get_bucket_name(),
 			);
 
-			/**
-			 * Filter the query for files in AWS S3.
-			 *
-			 * @since 1.0.0 Available since 1.0.0.
-			 * @param array $query The query.
-			 * @param string $directory The URL.
-			 */
-			$query = apply_filters( 'efmlawss3_aws_s3_query_params', $query, $directory );
+			// filter the query.
+			$query = $this->filter_query_params( $query, $directory );
 
 			// try to load the requested bucket.
 			$result = $s3->listObjectsV2( $query );
@@ -479,19 +475,8 @@ class Platform_Base extends Service_Base {
 
 			// add each file to the list.
 			foreach ( $files as $file ) {
-				$false = false;
-				/**
-				 * Filter whether given AWS S3 file should be hidden.
-				 *
-				 * @since 1.0.0 Available since 1.0.0.
-				 *
-				 * @param bool $false True if it should be hidden.
-				 * @param array<string,mixed> $file The array with the file data.
-				 * @param string $directory The requested directory.
-				 *
-				 * @noinspection PhpConditionAlreadyCheckedInspection
-				 */
-				if ( apply_filters( 'efmlawss3_service_aws_s3_hide_file', $false, $file, $directory ) ) {
+				// bail if this file should be hidden.
+				if ( $this->is_file_hidden( $file, $directory ) ) {
 					continue;
 				}
 
@@ -595,6 +580,136 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return the filtered query for the list of files in the bucket.
+	 *
+	 * Platforms could override this to use their own hook.
+	 *
+	 * @param array<string,mixed> $query The query.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function filter_query_params( array $query, string $directory ): array {
+		/**
+		 * Filter the query for files in AWS S3.
+		 *
+		 * @since 1.0.0 Available since 1.0.0.
+		 * @param array $query The query.
+		 * @param string $directory The URL.
+		 */
+		return apply_filters( 'efmlawss3_aws_s3_query_params', $query, $directory );
+	}
+
+	/**
+	 * Return whether the given file from the bucket should be hidden in the directory listing.
+	 *
+	 * Platforms could override this to use their own hook.
+	 *
+	 * @param array<string,mixed> $file The array with the file data.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return bool
+	 */
+	protected function is_file_hidden( array $file, string $directory ): bool {
+		$false = false;
+		/**
+		 * Filter whether given AWS S3 file should be hidden.
+		 *
+		 * @since 1.0.0 Available since 1.0.0.
+		 *
+		 * @param bool $false True if it should be hidden.
+		 * @param array<string,mixed> $file The array with the file data.
+		 * @param string $directory The requested directory.
+		 *
+		 * @noinspection PhpConditionAlreadyCheckedInspection
+		 */
+		return (bool) apply_filters( 'efmlawss3_service_aws_s3_hide_file', $false, $file, $directory );
+	}
+
+	/**
+	 * Return the details of the connection, which are added to log entries for failed requests.
+	 *
+	 * The list must never contain credentials. Platforms could override this to add their own details.
+	 *
+	 * @return array<string,string>
+	 */
+	public function get_log_context(): array {
+		return array(
+			__( 'Platform', 'external-files-from-aws-s3' ) => $this->get_label(),
+			__( 'Bucket', 'external-files-from-aws-s3' )   => $this->get_bucket_name(),
+		);
+	}
+
+	/**
+	 * Add a detailed log entry for a failed request to the S3 API.
+	 *
+	 * The entry contains all details, which are necessary to analyze the error together with the
+	 * provider of the storage: the HTTP status, the S3 error code and message, the request IDs
+	 * of the provider and the connection details from @get_log_context(). Credentials are never logged.
+	 *
+	 * @param AwsException $e         The exception.
+	 * @param string       $operation The name of the operation (e.g. "PutObject").
+	 * @param string       $url       The URL the entry is assigned to (optional).
+	 *
+	 * @return void
+	 */
+	public function log_aws_exception( AwsException $e, string $operation, string $url = '' ): void {
+		// collect the details of the error.
+		$details = array(
+			__( 'HTTP status', 'external-files-from-aws-s3' )         => (string) $e->getStatusCode(),
+			__( 'Error code', 'external-files-from-aws-s3' )          => (string) $e->getAwsErrorCode(),
+			__( 'Error message', 'external-files-from-aws-s3' )       => (string) $e->getAwsErrorMessage(),
+			__( 'Request ID', 'external-files-from-aws-s3' )          => (string) $e->getAwsRequestId(),
+			__( 'Extended request ID', 'external-files-from-aws-s3' ) => $this->get_extended_request_id( $e ),
+		);
+
+		// add the message of the exception, if no S3 error message has been returned (e.g. if the connection failed).
+		if ( '' === $details[ __( 'Error message', 'external-files-from-aws-s3' ) ] ) {
+			$previous = $e->getPrevious();
+			$details[ __( 'Error message', 'external-files-from-aws-s3' ) ] = $previous instanceof \Throwable ? $previous->getMessage() : $e->getMessage();
+		}
+
+		// add the details of the connection.
+		$details = array_merge( $details, $this->get_log_context() );
+
+		// create the output.
+		/* translators: %1$s will be replaced by the name of the operation (e.g. "PutObject"). */
+		$message = sprintf( __( 'The request %1$s to the storage failed.', 'external-files-from-aws-s3' ), '<code>' . esc_html( $operation ) . '</code>' );
+		foreach ( $details as $label => $value ) {
+			// bail if no value is given.
+			if ( '' === $value ) {
+				continue;
+			}
+
+			// add the detail.
+			$message .= '<br>' . esc_html( $label ) . ': <code>' . esc_html( $value ) . '</code>';
+		}
+
+		// add the log entry.
+		Log::get_instance()->create( $message, $url, 'error' );
+	}
+
+	/**
+	 * Return the extended request ID of the provider from the response of the given exception.
+	 *
+	 * @param AwsException $e The exception.
+	 *
+	 * @return string
+	 */
+	private function get_extended_request_id( AwsException $e ): string {
+		// get the response.
+		$response = $e->getResponse();
+
+		// bail if no response is given (e.g. if the connection failed).
+		if ( is_null( $response ) ) {
+			return '';
+		}
+
+		// return the header with the extended request ID.
+		return $response->getHeaderLine( 'x-amz-id-2' );
+	}
+
+	/**
 	 * Remove the authorization header for requests on public S3 files as their usage
 	 * would result in HTTP status 400 from S3.
 	 *
@@ -665,6 +780,17 @@ class Platform_Base extends Service_Base {
 	 */
 	public function get_fields(): array {
 		return parent::get_fields();
+	}
+
+	/**
+	 * Return the public label.
+	 *
+	 * Hint: helper to PHPStan to not warn about not existing functions as they are in the main plugin.
+	 *
+	 * @return string
+	 */
+	public function get_label(): string {
+		return parent::get_label();
 	}
 
 	/**
