@@ -66,7 +66,7 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		}
 
 		// get the key for this file.
-		$key = $this->get_key_for_filename( basename( $file_path ), $credentials, $s3_obj );
+		$key = $this->get_key_for_filename( $this->get_folder_from_target( $target, $credentials ) . basename( $file_path ), $credentials, $s3_obj );
 
 		// get the S3Client.
 		$s3_client = $s3_obj->get_s3_client();
@@ -244,11 +244,59 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		}
 
 		// get the key for this file.
-		$key = $this->get_key_for_filename( basename( $target ), $credentials, $s3_obj );
+		$key = $this->get_key_for_filename( $this->get_folder_from_target( $target, $credentials ) . basename( $target ), $credentials, $s3_obj );
 
 		// return whether the object exists in the bucket.
 		// (errors other than "not found" result in an exception, which is handled by the caller).
 		return $s3_obj->get_s3_client()->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
+	}
+
+	/**
+	 * Return whether this service supports folders for exported files.
+	 *
+	 * S3 uses the folders as part of the key of the file, so no folders must be created.
+	 *
+	 * @return bool
+	 */
+	public function supports_folders(): bool {
+		return true;
+	}
+
+	/**
+	 * Return the folder of the given target below the directory of the external source, with trailing slash.
+	 *
+	 * Returns an empty string if the target is located directly in the directory of the external source
+	 * or not located in it at all.
+	 *
+	 * @param string              $target The target path of the file.
+	 * @param array<string,mixed> $credentials The credentials of the external source.
+	 *
+	 * @return string
+	 */
+	protected function get_folder_from_target( string $target, array $credentials ): string {
+		// get the directory from the credentials.
+		$directory = isset( $credentials['directory'] ) && is_string( $credentials['directory'] ) ? trailingslashit( $credentials['directory'] ) : '';
+
+		// bail if no directory is set or the target is not located in it.
+		if ( in_array( $directory, array( '', '/' ), true ) || ! str_starts_with( $target, $directory ) ) {
+			return '';
+		}
+
+		// get the folder of the target below the directory.
+		$folder = dirname( substr( $target, strlen( $directory ) ) );
+
+		// bail if the target is located directly in the directory.
+		if ( '.' === $folder || '' === $folder ) {
+			return '';
+		}
+
+		// bail on relative folders.
+		if ( in_array( '..', explode( '/', $folder ), true ) ) {
+			return '';
+		}
+
+		// return the folder.
+		return trailingslashit( $folder );
 	}
 
 	/**

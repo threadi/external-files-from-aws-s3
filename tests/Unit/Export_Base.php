@@ -230,6 +230,77 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Test the export of a file into a folder below the directory of the external source.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_file_into_folder( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+		$key           = 'uploads/2026/11/' . $file_name;
+
+		$responses               = $this->set_availability( $platform_class_name, $public_base_url . $key, true );
+		$responses['PutObject']  = array( 'ObjectURL' => $public_base_url . $key );
+		$responses['HeadObject'] = array();
+		$s3                      = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                  = $this->set_platform_fields( $s3, $values );
+		$credentials             = $this->get_credentials( $fields, $directory . 'uploads/' );
+
+		// the platform supports folders.
+		$this->assertTrue( $export_class_name::get_instance()->supports_folders() );
+
+		// export the file like the main plugin does it with a folder in the target.
+		$url = $export_class_name::get_instance()->export_file( $attachment_id, $directory . 'uploads/2026/11/' . $file_name, $credentials );
+		$this->assertEquals( $public_base_url . $key, $url );
+		$this->assertEquals( $key, get_post_meta( $attachment_id, 'efml_s3_key', true ) );
+		$uploads = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'PutObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertCount( 1, $uploads );
+		$this->assertEquals( $key, $uploads[0]['Key'] );
+
+		// the check for existing files uses the folder too.
+		$this->assertTrue( $export_class_name::get_instance()->file_exists_on_target( $directory . 'uploads/2026/11/' . $file_name, $credentials ) );
+		$checks = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'HeadObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertEquals( $key, end( $checks )['Key'] );
+	}
+
+	/**
+	 * Test if relative folders in the target are never used for the key.
+	 *
+	 * @return void
+	 */
+	public function test_get_folder_from_target(): void {
+		$export      = \ExternalFilesFromAwsS3\Platforms\AwsS3\Export::get_instance();
+		$credentials = array( 'directory' => 'https://my-bucket.s3.amazonaws.com/uploads/' );
+		$this->assertEquals( '2026/11/', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/2026/11/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/other/2026/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/../2026/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/2026/file.jpg', array() ) ) );
+	}
+
+	/**
 	 * Test the export of a file, which would not be public available after the export.
 	 *
 	 * @dataProvider platforms_provider

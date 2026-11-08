@@ -268,6 +268,35 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Test the export into a folder and the deletion there.
+	 *
+	 * @return void
+	 */
+	public function test_export_into_folder(): void {
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+		$export        = Export::get_instance();
+		$target        = $directory . '2026/11/' . $file_name;
+
+		// export the file into the folder.
+		$url = $export->export_file( $attachment_id, $target, $credentials );
+		$this->assertEquals( $target, $url );
+		$this->assertTrue( $export->file_exists_on_target( $target, $credentials ) );
+		$this->assertFalse( $export->file_exists_on_target( $directory . $file_name, $credentials ) );
+		$this->assertEquals( 200, wp_remote_retrieve_response_code( wp_remote_head( (string) $url ) ) );
+
+		// delete the file.
+		$this->assertTrue( $export->delete_exported_file( (string) $url, $credentials, $attachment_id ) );
+		$this->assertFalse( $export->file_exists_on_target( $target, $credentials ) );
+	}
+
+	/**
 	 * Test the errors with a not existing bucket: the login fails and the error is logged.
 	 *
 	 * @return void

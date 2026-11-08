@@ -21,6 +21,7 @@
 - Added detailed log entries for failed requests to S3-compatible storages incl. HTTP status, error code, request IDs and connection details (without credentials)
 - Added capabilities for new platforms after an update of this plugin
 - Added integration tests against a real S3 server and a GitHub workflow for them
+- Added support for the folder structure of exported files for all platforms (requires External Files in Media Library 5.7.0)
 
 ### Changed
 
