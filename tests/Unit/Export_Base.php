@@ -183,7 +183,7 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$this->assertCount( 1, $uploads );
 		$this->assertEquals( 'my-bucket', $uploads[0]['Bucket'] );
 		$this->assertEquals( $key, $uploads[0]['Key'] );
-		$this->assertEquals( file_get_contents( $file_path ), (string) $uploads[0]['Body'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$this->assertEquals( file_get_contents( $file_path ), $this->get_s3_command_body( $uploads[0] ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 	}
 
 	/**

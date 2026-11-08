@@ -8,7 +8,6 @@
 namespace ExternalFilesFromAwsS3\Tests\Unit\Plugin;
 
 use ExternalFilesFromAwsS3\Tests\externalFilesFromAwsS3Tests;
-use stdClass;
 
 /**
  * Object to test functions in class ExternalFilesFromAwsS3\Plugin\Updates.
@@ -19,13 +18,23 @@ class Updates extends externalFilesFromAwsS3Tests {
 	 *
 	 * @var string
 	 */
-	private string $api_url = 'https://api.github.com/repos/threadi/external-files-from-aws-s3/releases/latest';
+	private string $github_api_url = 'https://api.github.com/repos/threadi/external-files-from-aws-s3/releases/latest';
+
+	/**
+	 * Prepare each test.
+	 *
+	 * @return void
+	 */
+	public function set_up(): void {
+		parent::set_up();
+		\ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->delete_cache();
+	}
 
 	/**
 	 * Return the release data like the GitHub API returns them.
 	 *
-	 * @param string                         $tag_name The tag name.
-	 * @param array<int,array<string,string>> $assets  The assets of the release.
+	 * @param string                          $tag_name The tag name.
+	 * @param array<int,array<string,string>> $assets   The assets of the release.
 	 *
 	 * @return string
 	 */
@@ -53,6 +62,15 @@ class Updates extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Return the result of the update check for this plugin.
+	 *
+	 * @return array<string,mixed>|false
+	 */
+	private function check(): array|false {
+		return \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( false, array(), plugin_basename( EFMLAWSS3_PLUGIN ) );
+	}
+
+	/**
 	 * Test if the returned object is always the same.
 	 *
 	 * @return void
@@ -64,95 +82,132 @@ class Updates extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
-	 * Test if a new release on GitHub is added as update.
+	 * Test if the plugin header "Update URI" matches the used hook, so WordPress asks this plugin for updates.
 	 *
 	 * @return void
 	 */
-	public function test_check_with_new_release(): void {
-		$this->add_http_response( $this->api_url, 200, array( 'Content-Type' => 'application/json' ), $this->get_release_json( 'v99.0.0', array( array( 'content_type' => 'text/plain', 'browser_download_url' => 'https://example.com/readme.txt' ), $this->get_zip_asset( '99.0.0' ) ) ) );
-
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( new stdClass() );
-		$slug = plugin_basename( EFMLAWSS3_PLUGIN );
-
-		$this->assertIsObject( $data );
-		$this->assertArrayHasKey( $slug, $data->response );
-		$this->assertEquals( '99.0.0', $data->response[ $slug ]->new_version );
-		$this->assertEquals( 'external-files-from-aws-s3', $data->response[ $slug ]->slug );
-		$this->assertEquals( $slug, $data->response[ $slug ]->plugin );
-		$this->assertStringEndsWith( 'external-files-from-aws-s3_99.0.0.zip', $data->response[ $slug ]->package );
-		$this->assertCount( 1, $this->get_http_requests() );
+	public function test_update_uri(): void {
+		$plugin_data = get_plugin_data( EFMLAWSS3_PLUGIN, false, false );
+		$this->assertEquals( 'https://github.com/threadi/external-files-from-aws-s3', $plugin_data['UpdateURI'] );
+		$this->assertEquals( 'github.com', wp_parse_url( $plugin_data['UpdateURI'], PHP_URL_HOST ) );
+		$this->assertIsInt( has_filter( 'update_plugins_github.com', array( \ExternalFilesFromAwsS3\Plugin\Updates::get_instance(), 'check' ) ) );
 	}
 
 	/**
-	 * Test if an existing update information is not changed and GitHub is not requested.
+	 * Test the update data for a release on GitHub.
 	 *
 	 * @return void
 	 */
-	public function test_check_with_existing_data(): void {
-		$slug                   = plugin_basename( EFMLAWSS3_PLUGIN );
-		$existing               = new stdClass();
-		$existing->new_version  = '1.0.0';
-		$input                  = new stdClass();
-		$input->response        = array( $slug => $existing );
+	public function test_check(): void {
+		$this->add_http_response(
+			$this->github_api_url,
+			200,
+			array( 'Content-Type' => 'application/json' ),
+			$this->get_release_json(
+				'v99.0.0',
+				array(
+					array(
+						'content_type'         => 'text/plain',
+						'browser_download_url' => 'https://example.com/readme.txt',
+					),
+					$this->get_zip_asset( '99.0.0' ),
+				)
+			)
+		);
 
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( $input );
+		$update = $this->check();
 
-		$this->assertSame( $existing, $data->response[ $slug ] );
+		$this->assertIsArray( $update );
+		$this->assertEquals( '99.0.0', $update['version'] );
+		$this->assertEquals( 'external-files-from-aws-s3', $update['slug'] );
+		$this->assertStringEndsWith( 'external-files-from-aws-s3_99.0.0.zip', $update['package'] );
+		$this->assertEquals( '8.2', $update['requires_php'] );
+		$this->assertStringEndsWith( '/gfx/logo.png', $update['icons']['default'] );
+		$this->assertStringNotContainsString( '//gfx', $update['icons']['default'] );
+
+		// the GitHub API is only requested once, as the result is cached.
+		$this->assertEquals( $update, $this->check() );
+		$this->assertCount( 1, $this->get_http_requests() );
+		$this->assertEquals( 'application/vnd.github+json', $this->get_http_requests()[0]['args']['headers']['Accept'] );
+	}
+
+	/**
+	 * Test if the data of other plugins are not changed.
+	 *
+	 * @return void
+	 */
+	public function test_check_for_other_plugin(): void {
+		$other = array( 'version' => '1.0.0' );
+		$this->assertSame( $other, \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( $other, array(), 'other-plugin/other-plugin.php' ) );
+		$this->assertFalse( \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( false, array(), 'other-plugin/other-plugin.php' ) );
 		$this->assertEmpty( $this->get_http_requests() );
 	}
 
 	/**
-	 * Test if nothing is changed if GitHub does not answer with HTTP status 200.
+	 * Test if nothing is returned if GitHub does not answer with HTTP status 200, and if this is cached.
 	 *
 	 * @return void
 	 */
 	public function test_check_with_error_from_github(): void {
-		$this->add_http_response( $this->api_url, 500 );
+		$this->add_http_response( $this->github_api_url, 403 );
 
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( new stdClass() );
-
-		$this->assertObjectNotHasProperty( 'response', $data );
-		$this->assertObjectNotHasProperty( 'no_update', $data );
+		$this->assertFalse( $this->check() );
+		$this->assertFalse( $this->check() );
+		$this->assertCount( 1, $this->get_http_requests() );
 	}
 
 	/**
-	 * Test if nothing is changed if the release does not have any assets.
-	 *
-	 * @return void
-	 */
-	public function test_check_without_assets(): void {
-		$this->add_http_response( $this->api_url, 200, array( 'Content-Type' => 'application/json' ), $this->get_release_json( 'v99.0.0', array() ) );
-
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( new stdClass() );
-
-		$this->assertObjectNotHasProperty( 'response', $data );
-		$this->assertObjectNotHasProperty( 'no_update', $data );
-	}
-
-	/**
-	 * Test if no update is set if the release does not contain a ZIP file.
+	 * Test if nothing is returned if the release does not contain a ZIP file.
 	 *
 	 * @return void
 	 */
 	public function test_check_without_zip_asset(): void {
-		$this->add_http_response( $this->api_url, 200, array( 'Content-Type' => 'application/json' ), $this->get_release_json( 'v99.0.0', array( array( 'content_type' => 'text/plain', 'browser_download_url' => 'https://example.com/readme.txt' ) ) ) );
+		// test 1: without assets.
+		$this->add_http_response( $this->github_api_url, 200, array(), $this->get_release_json( 'v99.0.0', array() ) );
+		$this->assertFalse( $this->check() );
 
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( new stdClass() );
-
-		$this->assertObjectNotHasProperty( 'response', $data );
+		// test 2: without ZIP asset.
+		\ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->delete_cache();
+		$this->add_http_response(
+			$this->github_api_url,
+			200,
+			array(),
+			$this->get_release_json(
+				'v99.0.0',
+				array(
+					array(
+						'content_type'         => 'text/plain',
+						'browser_download_url' => 'https://example.com/readme.txt',
+					),
+				)
+			)
+		);
+		$this->assertFalse( $this->check() );
 	}
 
 	/**
-	 * Test if nothing is changed if GitHub answers with invalid JSON.
+	 * Test if nothing is returned if GitHub answers with invalid JSON.
 	 *
 	 * @return void
 	 */
 	public function test_check_with_invalid_json(): void {
-		$this->add_http_response( $this->api_url, 200, array(), 'no json' );
+		$this->add_http_response( $this->github_api_url, 200, array(), 'no json' );
+		$this->assertFalse( $this->check() );
+	}
 
-		$data = \ExternalFilesFromAwsS3\Plugin\Updates::get_instance()->check( new stdClass() );
+	/**
+	 * Test if WordPress uses the update data for this plugin.
+	 *
+	 * @return void
+	 */
+	public function test_update_in_wordpress(): void {
+		$this->add_http_response( $this->github_api_url, 200, array(), $this->get_release_json( '2.0.0', array( $this->get_zip_asset( '2.0.0' ) ) ) );
 
-		$this->assertObjectNotHasProperty( 'response', $data );
-		$this->assertObjectNotHasProperty( 'no_update', $data );
+		// run the hook like wp_update_plugins() does it.
+		$plugin_file = plugin_basename( EFMLAWSS3_PLUGIN );
+		$update      = apply_filters( 'update_plugins_github.com', false, get_plugin_data( EFMLAWSS3_PLUGIN, false, false ), $plugin_file, array() );
+
+		$this->assertIsArray( $update );
+		$this->assertEquals( '2.0.0', $update['version'] );
 	}
 }

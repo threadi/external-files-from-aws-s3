@@ -64,6 +64,15 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	private static array $s3_commands = array();
 
 	/**
+	 * List of the bodies of the S3 commands, read when the command has been sent.
+	 *
+	 * The export closes the file handle of the body after the upload, so the body could not be read afterward.
+	 *
+	 * @var array<int,string>
+	 */
+	private static array $s3_command_bodies = array();
+
+	/**
 	 * List of configurations, which has been used for S3 clients during the actual test.
 	 *
 	 * @var array<int,array<string,mixed>>
@@ -142,6 +151,7 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		self::$http_responses    = array();
 		self::$http_requests     = array();
 		self::$s3_commands       = array();
+		self::$s3_command_bodies = array();
 		self::$s3_configurations   = array();
 		self::$cloudfront_commands = array();
 	}
@@ -185,6 +195,7 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		self::$http_requests[] = array(
 			'url'    => $url,
 			'method' => isset( $parsed_args['method'] ) ? (string) $parsed_args['method'] : 'GET',
+			'args'   => $parsed_args,
 		);
 
 		// show error if no response is configured for this URL, as we do not want any external URL connection during PHP Unit Tests.
@@ -337,6 +348,11 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 					// save the command for checks in the tests.
 					self::$s3_commands[] = $command;
 
+					// save the body now, as the export closes its file handle after the upload.
+					if ( $command->hasParam( 'Body' ) ) {
+						self::$s3_command_bodies[ count( self::$s3_commands ) - 1 ] = (string) $command['Body'];
+					}
+
 					// fail if no response is configured for this command.
 					if ( ! array_key_exists( $command->getName(), $responses ) ) {
 						$test->fail( 'Unexpected S3 command during PHP Unit Tests: ' . $command->getName() );
@@ -410,6 +426,18 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	 */
 	protected function get_s3_commands(): array {
 		return self::$s3_commands;
+	}
+
+	/**
+	 * Return the body of the given S3 command as it has been sent.
+	 *
+	 * @param CommandInterface $command The command.
+	 *
+	 * @return string
+	 */
+	protected function get_s3_command_body( CommandInterface $command ): string {
+		$index = array_search( $command, self::$s3_commands, true );
+		return false !== $index && isset( self::$s3_command_bodies[ $index ] ) ? self::$s3_command_bodies[ $index ] : '';
 	}
 
 	/**

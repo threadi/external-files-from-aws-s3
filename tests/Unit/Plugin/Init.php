@@ -40,7 +40,7 @@ class Init extends externalFilesFromAwsS3Tests {
 		$this->assertIsInt( has_filter( 'efml_configurations', array( $init, 'add_configurations' ) ) );
 		$this->assertIsInt( has_action( 'init', array( $init, 'init_languages' ) ) );
 		$this->assertIsInt( has_action( 'admin_enqueue_scripts', array( $init, 'add_styles_in_admin' ) ) );
-		$this->assertIsInt( has_filter( 'pre_set_site_transient_update_plugins', array( \ExternalFilesFromAwsS3\Plugin\Updates::get_instance(), 'check' ) ) );
+		$this->assertIsInt( has_filter( 'update_plugins_github.com', array( \ExternalFilesFromAwsS3\Plugin\Updates::get_instance(), 'check' ) ) );
 	}
 
 	/**
