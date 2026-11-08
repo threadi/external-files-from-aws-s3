@@ -382,65 +382,80 @@ class AwsS3 extends Platform_Base implements Service {
 
 		// add settings.
 		if ( defined( 'EFML_ACTIVATION_RUNNING' ) || 'global' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_s3_access_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
-			/* translators: %1$s will be replaced by a URL. */
-			$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
-			$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'access_key', __( 'Access key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_s3_access_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
+				/* translators: %1$s will be replaced by a URL. */
+				$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
+				$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_s3_secret_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Password( $settings_obj );
-			$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'secret', __( 'Secret key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_s3_secret_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Password( $settings_obj );
+				$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_s3_bucket' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'bucket', __( 'Bucket', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_s3_bucket' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_s3_cloudfront_domain' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Amazon CloudFront domain (optional)', 'external-files-from-aws-s3' ) );
-			$field->set_description( $this->get_cloudfront_domain_description() );
-			$field->set_placeholder( __( 'd111111abcdef8.cloudfront.net', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'cloudfront_domain', __( 'Amazon CloudFront domain (optional)', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_s3_cloudfront_domain' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Amazon CloudFront domain (optional)', 'external-files-from-aws-s3' ) );
+				$field->set_description( $this->get_cloudfront_domain_description() );
+				$field->set_placeholder( __( 'd111111abcdef8.cloudfront.net', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_s3_cloudfront_distribution_id' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Amazon CloudFront distribution ID (optional)', 'external-files-from-aws-s3' ) );
-			$field->set_description( $this->get_cloudfront_distribution_id_description() );
-			$field->set_placeholder( __( 'E2QWRUHAPOMQZL', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'cloudfront_distribution_id', __( 'Amazon CloudFront distribution ID (optional)', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_s3_cloudfront_distribution_id' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Amazon CloudFront distribution ID (optional)', 'external-files-from-aws-s3' ) );
+				$field->set_description( $this->get_cloudfront_distribution_id_description() );
+				$field->set_placeholder( __( 'E2QWRUHAPOMQZL', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 		}
 
 		// show hint for user settings.
@@ -456,15 +471,18 @@ class AwsS3 extends Platform_Base implements Service {
 			$setting->set_field( $field );
 		}
 
-		// add setting.
-		$setting = $settings_obj->add_setting( 'eml_s3_region' );
-		$setting->set_section( $section );
-		$setting->set_type( 'string' );
-		$setting->set_default( $this->get_mapping_region() );
-		$field = new Select( $settings_obj );
-		$field->set_title( __( 'Choose the region', 'external-files-from-aws-s3' ) );
-		$field->set_options( $this->get_regions() );
-		$setting->set_field( $field );
+		// show hint if the value is defined via constant, otherwise the setting.
+		if ( ! $this->show_constant_hint( $section, 'region', __( 'Choose the region', 'external-files-from-aws-s3' ) ) ) {
+			// add setting.
+			$setting = $settings_obj->add_setting( 'eml_s3_region' );
+			$setting->set_section( $section );
+			$setting->set_type( 'string' );
+			$setting->set_default( $this->get_mapping_region() );
+			$field = new Select( $settings_obj );
+			$field->set_title( __( 'Choose the region', 'external-files-from-aws-s3' ) );
+			$field->set_options( $this->get_regions() );
+			$setting->set_field( $field );
+		}
 
 		// add setting to show also trashed files.
 		$setting = $settings_obj->add_setting( 'eml_s3_import_limit' );

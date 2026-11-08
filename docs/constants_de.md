@@ -2,12 +2,15 @@
 
 Die Zugangsdaten und Einstellungen jeder Plattform lassen sich als Konstanten festlegen, z. B. in der `wp-config.php`. So landen sie nicht in der Datenbank und nicht in Datenbank-Backups, und jede Umgebung kann eigene Werte haben.
 
-Erfordert _External Files in Media Library_ 5.7.0 oder neuer.
+Erfordert _External Files in Media Library_ 5.7.0 oder neuer. Siehe auch die [Dokumentation des Hauptplugins](https://github.com/threadi/external-files-in-media-library/blob/master/docs/constants_de.md).
 
 ## So funktioniert es
 
-* Eine Konstante ersetzt den Wert aus den Plugin-Einstellungen, dem Benutzerprofil oder einer gespeicherten externen Quelle - in jedem Modus für die Zugangsdaten.
+* **Alle Pflichtfelder:** Die Konstanten einer Plattform werden nur genutzt, wenn für alle Pflichtfelder eine Konstante gesetzt ist (unten ohne „optional“). Fehlt eine, wird keine Konstante dieser Plattform genutzt und die Einstellungsseite zeigt, welche fehlen.
+* Eine Konstante ersetzt den Wert aus den Plugin-Einstellungen, dem Benutzerprofil oder einer gespeicherten externen Quelle.
+* Der Speicherort der Zugangsdaten steht dann fest auf „Eines für die Website“. In den Einstellungen erscheinen Hinweise statt der Eingabefelder.
 * Per Konstante festgelegte Felder lassen sich im Backend nicht bearbeiten.
+* **Nur für den festgelegten Bucket:** Gespeicherte externe Quellen für einen anderen Bucket (bei Cloudflare R2 auch ein anderes Konto, bei DigitalOcean Spaces und Backblaze auch eine andere Region) sind nicht nutzbar, solange die Konstanten gesetzt sind. Öffnen, Import, Synchronisierung und Export sind dann gesperrt, bereits importierte Dateien werden weiter ausgeliefert. Manuelle Importe aus anderen Buckets sind ebenfalls nicht möglich.
 * Werte von Zugangsdaten-Feldern (Access Key, Secret Key) werden nie an den Browser übertragen.
 * Per Konstante festgelegte Werte werden in neuen externen Quellen nicht gespeichert.
 

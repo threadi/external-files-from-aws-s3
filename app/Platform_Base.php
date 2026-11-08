@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use easySettingsForWordPress\Section;
 use ExternalFilesInMediaLibrary\ExternalFiles\File;
 use ExternalFilesInMediaLibrary\ExternalFiles\ImportDialog;
 use ExternalFilesInMediaLibrary\Plugin\Admin\Directory_Listing;
@@ -46,6 +47,18 @@ class Platform_Base extends Service_Base {
 	 * @var bool
 	 */
 	protected bool $fields_via_constants = true;
+
+	/**
+	 * List of fields, which identify the bucket of this platform.
+	 *
+	 * If the credentials are defined via constants, saved external sources for other buckets could not be used,
+	 * and the constants are never used for them.
+	 *
+	 * Requires "External Files in Media Library" 5.7.0 or newer.
+	 *
+	 * @var array<int,string>
+	 */
+	protected array $constants_target_fields = array( 'bucket' );
 
 	/**
 	 * Initialize this object.
@@ -311,6 +324,25 @@ class Platform_Base extends Service_Base {
 			?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Show a non-editable hint instead of a setting, if the value of the given field is defined via constant.
+	 *
+	 * @param Section $section    The section for the setting.
+	 * @param string  $field_name The name of the field.
+	 * @param string  $title      The title of the setting.
+	 *
+	 * @return bool True if the hint has been added, false if the setting should be added.
+	 */
+	protected function show_constant_hint( Section $section, string $field_name, string $title ): bool {
+		// bail if the main plugin does not support this (requires "External Files in Media Library" 5.7.0 or newer).
+		if ( ! method_exists( $this, 'add_constant_hint_setting' ) ) { // @phpstan-ignore function.alreadyNarrowedType
+			return false;
+		}
+
+		// add the hint, if the value is defined via constant.
+		return $this->add_constant_hint_setting( $section, $field_name, $title );
 	}
 
 	/**

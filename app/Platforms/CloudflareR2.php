@@ -43,6 +43,13 @@ class CloudflareR2 extends Platform_Base implements Service {
 	protected string $name = 'cloudflare-r2';
 
 	/**
+	 * List of fields, which identify the bucket of this platform (account and bucket).
+	 *
+	 * @var array<int,string>
+	 */
+	protected array $constants_target_fields = array( 'account_id', 'bucket' );
+
+	/**
 	 * The public label.
 	 *
 	 * @var string
@@ -299,83 +306,101 @@ class CloudflareR2 extends Platform_Base implements Service {
 
 		// add settings.
 		if ( defined( 'EFML_ACTIVATION_RUNNING' ) || 'global' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_account_id' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Account ID', 'external-files-from-aws-s3' ) );
-			/* translators: %1$s will be replaced by a URL. */
-			$field->set_description( sprintf( __( 'Get your account ID as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
-			$field->set_placeholder( __( 'The account ID', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'account_id', __( 'Account ID', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_account_id' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Account ID', 'external-files-from-aws-s3' ) );
+				/* translators: %1$s will be replaced by a URL. */
+				$field->set_description( sprintf( __( 'Get your account ID as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
+				$field->set_placeholder( __( 'The account ID', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_eu' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'integer' );
-			$setting->set_default( 0 );
-			$field = new Checkbox( $settings_obj );
-			$field->set_title( __( 'EU-storage', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'eu', __( 'EU-storage', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_eu' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'integer' );
+				$setting->set_default( 0 );
+				$field = new Checkbox( $settings_obj );
+				$field->set_title( __( 'EU-storage', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_access_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
-			/* translators: %1$s will be replaced by a URL. */
-			$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
-			$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'access_key', __( 'Access key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_access_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
+				/* translators: %1$s will be replaced by a URL. */
+				$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
+				$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_secret_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Password( $settings_obj );
-			$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'secret', __( 'Secret key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_secret_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Password( $settings_obj );
+				$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_bucket' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'bucket', __( 'Bucket', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_bucket' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
+				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_public_domain' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
-			$field->set_description( __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'public_domain', __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_public_domain' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
+				$field->set_description( __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 		}
 
 		// show hint for user settings.

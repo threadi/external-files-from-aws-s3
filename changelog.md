@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.3.0] - 07.11.2026
+## [Unreleased]
 
 ### Added
 
@@ -8,6 +8,9 @@
 - Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
 - Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront
 - Added possibility to define credentials and settings of each platform via constants, e.g. in wp-config.php (requires External Files in Media Library 5.7.0)
+- Constants of a platform are only used if the constants for all its required fields are defined
+- Settings show hints instead of input fields for values defined via constants
+- Saved external sources for other buckets than the one defined via constants are not usable as long as the constants are defined, files imported before are still delivered
 - Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 5.7.0)
 - Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
 
