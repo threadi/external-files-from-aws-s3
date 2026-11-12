@@ -809,8 +809,9 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 
 		$global_actions = $this->call_method( $this->get_platform(), 'get_global_actions' );
 		$this->assertIsArray( $global_actions );
-		$this->assertStringContainsString( 'https://s3.example.com/my-bucket/', $global_actions[ count( $global_actions ) - 3 ]['action'] );
-		$this->assertStringContainsString( 'efmlawss3_connection_test( "s3-compatible"', end( $global_actions )['action'] );
+		$labels = array_column( $global_actions, 'label' );
+		$this->assertStringContainsString( 'https://s3.example.com/my-bucket/', $global_actions[ array_search( 'Import active directory', $labels, true ) ]['action'] );
+		$this->assertStringContainsString( 'efmlawss3_connection_test( "s3-compatible"', $global_actions[ array_search( 'Run complete connection test', $labels, true ) ]['action'] );
 	}
 
 	/**

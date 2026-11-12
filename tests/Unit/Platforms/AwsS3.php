@@ -1054,4 +1054,91 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 		$this->assertCount( 1, $commands );
 		$this->assertEquals( array( '/' . $key ), $commands[0]['InvalidationBatch']['Paths']['Items'] );
 	}
+
+	/**
+	 * Test the complete connection test for AWS S3 (before only available for S3-compatible storages).
+	 *
+	 * @return void
+	 */
+	public function test_run_connection_test(): void {
+		$s3 = $this->use_s3_mock(
+			\ExternalFilesFromAwsS3\Platforms\AwsS3::class,
+			array(
+				'ListObjectsV2' => array( 'Contents' => array() ),
+				'PutObject'     => array( 'ObjectURL' => 'https://my-bucket.s3.eu-central-1.amazonaws.com/test.txt' ),
+				'GetObjectAcl'  => array(
+					'Grants' => array(
+						array(
+							'Grantee'    => array( 'URI' => 'http://acs.amazonaws.com/groups/global/AllUsers' ),
+							'Permission' => 'READ',
+						),
+					),
+				),
+				'DeleteObject'  => array(),
+			)
+		);
+		$this->set_platform_fields( $s3, $this->field_values );
+
+		$steps = $s3->run_connection_test();
+
+		$this->assertCount( 4, $steps );
+		foreach ( $steps as $step ) {
+			$this->assertTrue( $step['success'], $step['title'] . ': ' . $step['message'] );
+		}
+		$this->assertEquals( array( 'ListObjectsV2', 'PutObject', 'GetObjectAcl', 'DeleteObject' ), $this->get_s3_command_names() );
+
+		// the directory listing offers the connection test.
+		$labels = array_column( $this->call_method( $s3, 'get_global_actions' ), 'label' );
+		$this->assertContains( 'Run complete connection test', $labels );
+	}
+
+	/**
+	 * Test the connection test and the error log for AWS S3 with wrong credentials.
+	 *
+	 * @return void
+	 */
+	public function test_run_connection_test_with_failure(): void {
+		$s3 = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array( 'ListObjectsV2' => $this->get_s3_exception( 'ListObjectsV2', 403, 'InvalidAccessKeyId' ) ) );
+		$this->set_platform_fields( $s3, $this->field_values );
+
+		$steps = $s3->run_connection_test();
+
+		$this->assertFalse( $steps[0]['success'] );
+		$this->assertStringContainsString( 'Check the access key.', $steps[0]['message'] );
+		$this->assertTrue( $steps[1]['skipped'] );
+
+		// the failed request is logged with its details, but without the credentials.
+		$logs = (string) wp_json_encode( $this->get_log_entries( $s3->get_directory() ) );
+		$this->assertStringContainsString( 'ListObjectsV2', $logs );
+		$this->assertStringContainsString( 'InvalidAccessKeyId', $logs );
+		$this->assertStringNotContainsString( 'secret-example', $logs );
+	}
+
+	/**
+	 * Test the connection test without a bucket.
+	 *
+	 * @return void
+	 */
+	public function test_run_connection_test_without_bucket(): void {
+		$s3 = $this->use_s3_mock( \ExternalFilesFromAwsS3\Platforms\AwsS3::class, array() );
+		$this->set_platform_fields( $s3, array_merge( $this->field_values, array( 'bucket' => '' ) ) );
+
+		$steps = $s3->run_connection_test();
+
+		$this->assertFalse( $steps[0]['success'] );
+		$this->assertEmpty( $this->get_s3_commands() );
+	}
+
+	/**
+	 * Test the hints for errors, which do not mention settings of S3-compatible storages.
+	 *
+	 * @return void
+	 */
+	public function test_get_hint_for_error(): void {
+		$s3 = $this->get_platform();
+		$this->assertEquals( 'Check the name and the region of the bucket.', $s3->get_hint_for_error( 404, 'NoSuchBucket' ) );
+		$this->assertEquals( 'Check the region of the bucket.', $s3->get_hint_for_error( 301, '' ) );
+		$this->assertStringNotContainsString( 'path-style', $s3->get_hint_for_error( 400, 'InvalidArgument' ) );
+		$this->assertStringContainsString( 'path-style', \ExternalFilesFromAwsS3\Platforms\S3Compatible::get_instance()->get_hint_for_error( 404, 'NoSuchBucket' ) );
+	}
 }

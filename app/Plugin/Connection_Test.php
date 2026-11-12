@@ -10,7 +10,7 @@ namespace ExternalFilesFromAwsS3\Plugin;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use ExternalFilesFromAwsS3\Platforms\S3Compatible;
+use ExternalFilesFromAwsS3\Platform_Base;
 use ExternalFilesInMediaLibrary\ExternalFiles\Taxonomy;
 use ExternalFilesInMediaLibrary\Plugin\Admin\Directory_Listing;
 use ExternalFilesInMediaLibrary\Plugin\Settings;
@@ -105,17 +105,17 @@ class Connection_Test {
 	}
 
 	/**
-	 * Return the S3-compatible platform with the given name.
+	 * Return the platform of this plugin with the given name.
 	 *
 	 * @param string $name The name of the platform.
 	 *
-	 * @return S3Compatible|false
+	 * @return Platform_Base|false
 	 */
-	public function get_platform_by_name( string $name ): S3Compatible|false {
+	public function get_platform_by_name( string $name ): Platform_Base|false {
 		// check each service.
 		foreach ( Services::get_instance()->get_services_as_objects() as $service_obj ) {
-			// bail if this is not an S3-compatible platform.
-			if ( ! $service_obj instanceof S3Compatible ) {
+			// bail if this is not a platform of this plugin.
+			if ( ! $service_obj instanceof Platform_Base ) {
 				continue;
 			}
 
@@ -162,7 +162,7 @@ class Connection_Test {
 		$platform = $this->get_platform_by_name( $type );
 
 		// bail if platform is unknown or the user is not allowed to use it.
-		if ( ! $platform instanceof S3Compatible || ! current_user_can( 'efml_cap_' . $platform->get_name() ) ) {
+		if ( ! $platform instanceof Platform_Base || ! current_user_can( 'efml_cap_' . $platform->get_name() ) ) {
 			$dialog['detail']['texts'][] = '<p>' . __( 'The connection test could not be run.', 'external-files-from-aws-s3' ) . '</p>';
 			wp_send_json( $dialog );
 		}

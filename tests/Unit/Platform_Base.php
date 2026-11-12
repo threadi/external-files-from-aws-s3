@@ -486,4 +486,79 @@ class Platform_Base extends externalFilesFromAwsS3Tests {
 			$this->assertStringContainsString( '<h3 id="efml-' . $platform->get_name() . '">' . esc_html( $platform->get_label() ) . '</h3>', $output );
 		}
 	}
+
+	/**
+	 * Test that the directory listing contains all files, also if S3 returns them in multiple parts (more than 1000 files).
+	 *
+	 * @dataProvider listing_hooks_provider
+	 *
+	 * @param class-string<\ExternalFilesFromAwsS3\Platform_Base> $platform_class_name The class name of the platform.
+	 * @param array<string,mixed>                                   $values              The values for the fields.
+	 *
+	 * @return void
+	 */
+	public function test_directory_listing_with_multiple_parts( string $platform_class_name, array $values ): void {
+		$date  = new DateTimeResult( '2024-01-02T03:04:05Z' );
+		$parts = array(
+			''   => array( 'from' => 0, 'count' => 1000, 'next' => 'token-2' ),
+			'token-2' => array( 'from' => 1000, 'count' => 1000, 'next' => 'token-3' ),
+			'token-3' => array( 'from' => 2000, 'count' => 500, 'next' => '' ),
+		);
+
+		$s3 = $this->use_s3_mock(
+			$platform_class_name,
+			array(
+				'ListObjectsV2' => static function ( \Aws\CommandInterface $command ) use ( $parts, $date ): array {
+					$part     = $parts[ (string) ( $command['ContinuationToken'] ?? '' ) ];
+					$contents = array();
+					for ( $i = $part['from']; $i < $part['from'] + $part['count']; $i++ ) {
+						$contents[] = array( 'Key' => 'folder/file-' . $i . '.jpg', 'Size' => 1, 'LastModified' => $date );
+					}
+					return array(
+						'Contents'              => $contents,
+						'IsTruncated'           => '' !== $part['next'],
+						'NextContinuationToken' => $part['next'],
+					);
+				},
+			)
+		);
+		$this->set_platform_fields( $s3, $values );
+
+		$listing = $s3->get_directory_listing( '/' );
+
+		// all parts have been loaded with the token of the previous part.
+		$commands = $this->get_s3_commands();
+		$this->assertCount( 3, $commands );
+		$this->assertArrayNotHasKey( 'ContinuationToken', $commands[0]->toArray() );
+		$this->assertEquals( 'token-2', $commands[1]['ContinuationToken'] );
+		$this->assertEquals( 'token-3', $commands[2]['ContinuationToken'] );
+
+		// all files are in the listing.
+		$this->assertCount( 2500, $listing[ $s3->get_directory() . 'folder/' ]['files'] );
+	}
+
+	/**
+	 * Test that the directory listing stops, if S3 returns the same continuation token again.
+	 *
+	 * @return void
+	 */
+	public function test_directory_listing_with_repeated_token(): void {
+		$date = new DateTimeResult( '2024-01-02T03:04:05Z' );
+		$s3   = $this->use_s3_mock(
+			\ExternalFilesFromAwsS3\Platforms\AwsS3::class,
+			array(
+				'ListObjectsV2' => array(
+					'Contents'              => array( array( 'Key' => 'example.jpg', 'Size' => 1, 'LastModified' => $date ) ),
+					'IsTruncated'           => true,
+					'NextContinuationToken' => 'same-token',
+				),
+			)
+		);
+		$this->set_platform_fields( $s3, $this->listing_hooks_provider()['AWS S3'][1] );
+
+		$listing = $s3->get_directory_listing( '/' );
+
+		$this->assertCount( 2, $this->get_s3_commands() );
+		$this->assertCount( 2, $listing[ $s3->get_directory() ]['files'] );
+	}
 }

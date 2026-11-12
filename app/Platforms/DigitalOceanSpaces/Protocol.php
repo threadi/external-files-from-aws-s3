@@ -41,7 +41,12 @@ class Protocol extends Protocol_Base {
 	 */
 	public function is_url_compatible(): bool {
 		// bail if this is not a DigitalOcean Space URL.
-		return str_contains( $this->get_url(), 'digitaloceanspaces.com' );
+		if ( str_contains( $this->get_url(), 'digitaloceanspaces.com' ) ) {
+			return true;
+		}
+
+		// return whether the URL is on the custom domain.
+		return '' !== DigitalOceanSpaces::get_instance()->get_key_from_custom_domain_url( $this->get_url(), $this->get_fields() );
 	}
 
 	/**
@@ -63,6 +68,12 @@ class Protocol extends Protocol_Base {
 	protected function get_key_of_file( string $url ): string {
 		// get the fields.
 		$fields = $this->get_fields();
+
+		// return the key, if the URL is on the custom domain.
+		$key = DigitalOceanSpaces::get_instance()->get_key_from_custom_domain_url( $url, $fields );
+		if ( '' !== $key ) {
+			return $key;
+		}
 
 		// return the key.
 		return str_replace( 'https://' . $fields['bucket']['value'] . '.' . $fields['region']['value'] . '.digitaloceanspaces.com/', '', $url );

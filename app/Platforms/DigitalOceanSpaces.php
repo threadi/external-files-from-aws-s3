@@ -365,6 +365,21 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 				$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
 				$setting->set_field( $field );
 			}
+
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'public_domain', __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_digital_ocean_spaces_public_domain' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
+				$field->set_description( __( 'Set your own domain or the CDN endpoint of your Space (e.g. my-space.fra1.cdn.digitaloceanspaces.com). Files are then embedded with this domain.', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 		}
 
 		// show hint for user settings.
@@ -413,26 +428,31 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 */
 	public function get_user_settings(): array {
 		$list = array(
-			'digital_ocean_spaces_access_key' => array(
+			'digital_ocean_spaces_access_key'    => array(
 				'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The access key', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_secret_key' => array(
+			'digital_ocean_spaces_secret_key'    => array(
 				'label'       => __( 'Secret key', 'external-files-from-aws-s3' ),
 				'field'       => 'password',
 				'placeholder' => __( 'The secret key', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_bucket'     => array(
+			'digital_ocean_spaces_bucket'        => array(
 				'label'       => __( 'Bucket', 'external-files-from-aws-s3' ),
 				'field'       => 'text',
 				'placeholder' => __( 'The bucket you want to use', 'external-files-from-aws-s3' ),
 			),
-			'digital_ocean_spaces_region'     => array(
+			'digital_ocean_spaces_region'        => array(
 				'label'   => __( 'Choose your region', 'external-files-from-aws-s3' ),
 				'field'   => 'select',
 				'options' => $this->get_regions(),
 				'default' => $this->get_mapping_region(),
+			),
+			'digital_ocean_spaces_public_domain' => array(
+				'label'       => __( 'Custom domain (optional)', 'external-files-from-aws-s3' ),
+				'field'       => 'text',
+				'placeholder' => __( 'example.com', 'external-files-from-aws-s3' ),
 			),
 		);
 
@@ -471,7 +491,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 
 			// set the fields.
 			$this->fields = array( // @phpstan-ignore property.notFound
-				'access_key' => array(
+				'access_key'    => array(
 					'name'        => 'access_key',
 					'type'        => 'text',
 					'label'       => __( 'Access key', 'external-files-from-aws-s3' ),
@@ -480,7 +500,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 					'value'       => $values['access_key'],
 					'readonly'    => ! empty( $values['access_key'] ),
 				),
-				'secret'     => array(
+				'secret'        => array(
 					'name'        => 'secret',
 					'type'        => 'password',
 					'label'       => __( 'Secret key', 'external-files-from-aws-s3' ),
@@ -489,7 +509,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 					'value'       => $values['secret_key'],
 					'readonly'    => ! empty( $values['secret_key'] ),
 				),
-				'bucket'     => array(
+				'bucket'        => array(
 					'name'        => 'bucket',
 					'type'        => 'text',
 					'label'       => __( 'Bucket', 'external-files-from-aws-s3' ),
@@ -497,7 +517,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 					'value'       => $values['bucket'],
 					'readonly'    => ! empty( $values['bucket'] ),
 				),
-				'region'     => array(
+				'region'        => array(
 					'name'        => 'region',
 					'type'        => 'select',
 					'label'       => __( 'Region', 'external-files-from-aws-s3' ),
@@ -505,6 +525,15 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 					'options'     => $this->get_regions_for_react(),
 					'value'       => $values['region'],
 					'readonly'    => 'manually' === $this->get_mode() && ! empty( $values['region'] ),
+				),
+				'public_domain' => array(
+					'name'         => 'public_domain',
+					'type'         => 'text',
+					'label'        => __( 'Custom domain (optional)', 'external-files-from-aws-s3' ),
+					'placeholder'  => __( 'example.com', 'external-files-from-aws-s3' ),
+					'description'  => __( 'Set your own domain or the CDN endpoint of your Space (e.g. my-space.fra1.cdn.digitaloceanspaces.com). Files are then embedded with this domain.', 'external-files-from-aws-s3' ),
+					'value'        => $values['public_domain'],
+					'not_required' => true,
 				),
 			);
 		}
@@ -579,18 +608,20 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	private function get_field_values(): array {
 		// prepare the return array.
 		$values = array(
-			'access_key' => '',
-			'secret_key' => '',
-			'bucket'     => '',
-			'region'     => get_option( 'eml_digital_ocean_spaces_region', '' ),
+			'access_key'    => '',
+			'secret_key'    => '',
+			'bucket'        => '',
+			'region'        => get_option( 'eml_digital_ocean_spaces_region', '' ),
+			'public_domain' => '',
 		);
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_access_key', '' ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_secret_key', '' ) );
-			$values['bucket']     = get_option( 'eml_digital_ocean_spaces_bucket', '' );
-			$values['region']     = get_option( 'eml_digital_ocean_spaces_region', '' );
+			$values['access_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_access_key', '' ) );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_secret_key', '' ) );
+			$values['bucket']        = get_option( 'eml_digital_ocean_spaces_bucket', '' );
+			$values['region']        = get_option( 'eml_digital_ocean_spaces_region', '' );
+			$values['public_domain'] = get_option( 'eml_digital_ocean_spaces_public_domain', '' );
 		}
 
 		// save it user-specific, if this is enabled.
@@ -604,10 +635,11 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_access_key', true ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_secret_key', true ) );
-			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_bucket', true ) );
-			$values['region']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_region', true ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_access_key', true ) );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_secret_key', true ) );
+			$values['bucket']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_bucket', true ) );
+			$values['region']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_region', true ) );
+			$values['public_domain'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_public_domain', true ) );
 		}
 
 		// return the resulting list of values.
@@ -631,7 +663,13 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 * @return bool
 	 */
 	public function is_platform_url( string $url ): bool {
-		return str_contains( $url, '.digitaloceanspaces.com' );
+		// check the URL of the storage.
+		if ( str_contains( $url, '.digitaloceanspaces.com' ) ) {
+			return true;
+		}
+
+		// return whether the URL is on the custom domain.
+		return '' !== $this->get_key_from_custom_domain_url( $url, $this->get_fields() );
 	}
 
 	/**
@@ -683,6 +721,13 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	 * @return string
 	 */
 	public function get_public_url_of_file( string $key, array $fields ): string {
+		// use the custom domain, if set.
+		$domain = $this->get_custom_domain( $fields );
+		if ( '' !== $domain ) {
+			return $this->get_custom_domain_url( $domain, $key );
+		}
+
+		// return the URL of the bucket.
 		return sprintf(
 			'https://%s.%s.digitaloceanspaces.com/%s',
 			$fields['bucket']['value'],
@@ -713,7 +758,7 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 				'secret' => $fields['secret']['value'],
 			),
 		);
-		return $this->get_the_client( $configuration );
+		return $this->add_error_log( $this->get_the_client( $configuration ) );
 	}
 
 	/**
@@ -739,6 +784,12 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	public function is_file_public_available( string $file_key, S3Client $s3 ): bool {
 		// get the fields.
 		$fields = $this->get_fields();
+
+		// check the file on the custom domain, if set.
+		$domain = $this->get_custom_domain( $fields );
+		if ( '' !== $domain ) {
+			return 200 === wp_remote_retrieve_response_code( wp_remote_head( $this->get_custom_domain_url( $domain, $file_key ) ) );
+		}
 
 		// create the URL we want to check.
 		$url = 'https://' . $fields['bucket']['value'] . '.' . $fields['region']['value'] . '.digitaloceanspaces.com/' . $file_key;

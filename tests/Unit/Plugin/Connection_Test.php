@@ -104,8 +104,12 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 		$this->assertSame( S3Compatible::get_instance(), $instance->get_platform_by_name( 's3-compatible' ) );
 		$this->assertSame( HetznerObjectStorage::get_instance(), $instance->get_platform_by_name( 'hetzner-object-storage' ) );
 
-		// other platforms are not supported.
-		$this->assertFalse( $instance->get_platform_by_name( AwsS3::get_instance()->get_name() ) );
+		// all platforms of this plugin are supported.
+		$this->assertSame( AwsS3::get_instance(), $instance->get_platform_by_name( AwsS3::get_instance()->get_name() ) );
+		$this->assertSame( \ExternalFilesFromAwsS3\Platforms\CloudflareR2::get_instance(), $instance->get_platform_by_name( \ExternalFilesFromAwsS3\Platforms\CloudflareR2::get_instance()->get_name() ) );
+
+		// other services are not supported.
+		$this->assertFalse( $instance->get_platform_by_name( 'dropbox' ) );
 		$this->assertFalse( $instance->get_platform_by_name( 'unknown' ) );
 	}
 
@@ -211,7 +215,7 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 		$dialog = $this->run_ajax(
 			array(
 				'nonce' => wp_create_nonce( 'efmlawss3_connection_test' ),
-				'type'  => 'aws-s3',
+				'type'  => 'unknown-platform',
 			)
 		);
 		$this->assertStringContainsString( 'could not be run', $dialog['detail']['texts'][0] );

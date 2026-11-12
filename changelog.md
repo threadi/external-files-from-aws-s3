@@ -17,8 +17,8 @@
 - Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
 - Added optional public URL (own domain or CDN) for the S3-compatible storage and its presets
 - Added optional setting to send checksums only if required for S3-compatible providers, which do not support the checksums of the AWS SDK
-- Added complete connection test for the S3-compatible storage and its presets: list, upload, public availability and deletion of a test file
-- Added detailed log entries for failed requests to S3-compatible storages incl. HTTP status, error code, request IDs and connection details (without credentials)
+- Added complete connection test for all platforms: list, upload, public availability and deletion of a test file
+- Added detailed log entries for failed requests to all platforms incl. HTTP status, error code, request IDs and connection details (without credentials)
 - Added capabilities for new platforms after an update of this plugin
 - Added integration tests against a real S3 server and a GitHub workflow for them
 - Added support for the folder structure of exported files for all platforms (requires External Files in Media Library 6.0.0)
@@ -26,6 +26,7 @@
 - Added hook "efmlawss3_signed_url" to change the pre-signed URLs
 - Added link to the platform of each file in its info box, e.g. to the AWS console, the Cloudflare dashboard or the consoles of Backblaze, DigitalOcean and the presets (requires External Files in Media Library 6.0.0)
 - The directory listing of each platform with a known web interface now links to it ("Go to …"), before only AWS S3
+- Added optional custom domain (e.g. of a CDN) for Backblaze B2 and DigitalOcean Spaces, also via constants
 
 ### Changed
 
@@ -42,6 +43,7 @@
 - Fixed missing error handling if the upload of a file fails
 - Fixed the directory listing of Backblaze S3, Cloudflare R2 and DigitalOcean Spaces, which used the hooks of AWS S3: not supported file types were not hidden and subdirectories were not loaded separately
 - Fixed the heading of the settings in the user profile, which showed "AWS S3" for each platform
+- Fixed directory listing, import and synchronization of buckets with more than 1000 files, only the first 1000 files have been used
 
 ## [1.2.1] - 24.10.2026
 

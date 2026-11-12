@@ -103,7 +103,7 @@ class DigitalOceanSpaces extends externalFilesFromAwsS3Tests {
 	 */
 	public function test_get_fields(): void {
 		$fields = $this->get_platform()->get_fields();
-		$this->assertEquals( array( 'access_key', 'secret', 'bucket', 'region' ), array_keys( $fields ) );
+		$this->assertEquals( array( 'access_key', 'secret', 'bucket', 'region', 'public_domain' ), array_keys( $fields ) );
 		$this->assertTrue( $fields['access_key']['credential'] );
 		$this->assertTrue( $fields['secret']['credential'] );
 
@@ -191,7 +191,7 @@ class DigitalOceanSpaces extends externalFilesFromAwsS3Tests {
 	 */
 	public function test_get_user_settings(): void {
 		$settings = $this->get_platform()->get_user_settings();
-		$this->assertEquals( array( 'digital_ocean_spaces_access_key', 'digital_ocean_spaces_secret_key', 'digital_ocean_spaces_bucket', 'digital_ocean_spaces_region' ), array_keys( $settings ) );
+		$this->assertEquals( array( 'digital_ocean_spaces_access_key', 'digital_ocean_spaces_secret_key', 'digital_ocean_spaces_bucket', 'digital_ocean_spaces_region', 'digital_ocean_spaces_public_domain' ), array_keys( $settings ) );
 
 		// the list of settings is filterable.
 		$callback = static function ( array $list ): array {
@@ -415,5 +415,51 @@ class DigitalOceanSpaces extends externalFilesFromAwsS3Tests {
 		foreach ( $this->get_platform()->get_fields()['region']['options'] as $option ) {
 			$this->assertStringStartsWith( strtoupper( $option['value'] ) . ' ', $option['label'] );
 		}
+	}
+
+	/**
+	 * Test the custom domain: files get URLs on this domain and are checked there, URLs on it are recognized.
+	 *
+	 * @return void
+	 */
+	public function test_custom_domain(): void {
+		$platform = $this->get_platform();
+		$fields   = $this->set_platform_fields( $platform, array_merge( $this->field_values, array( 'public_domain' => 'https://my-space.fra1.cdn.digitaloceanspaces.com/' ) ) );
+
+		// the public URL uses the custom domain.
+		$url = $platform->get_public_url_of_file( 'folder/my file.jpg', $fields );
+		$this->assertEquals( 'https://my-space.fra1.cdn.digitaloceanspaces.com/folder/my%20file.jpg', $url );
+
+		// the availability is checked on the custom domain.
+		$this->add_http_response( $url, 200 );
+		$this->assertTrue( $platform->is_file_public_available( 'folder/my file.jpg', $platform->get_s3_client() ) );
+		$this->add_http_response( 'https://my-space.fra1.cdn.digitaloceanspaces.com/missing.jpg', 404 );
+		$this->assertFalse( $platform->is_file_public_available( 'missing.jpg', $platform->get_s3_client() ) );
+
+		// URLs on the custom domain belong to this platform and their key is found.
+		$this->assertTrue( $platform->is_platform_url( $url ) );
+		$this->assertFalse( $platform->is_platform_url( 'https://other.example.com/folder/my%20file.jpg' ) );
+		$this->assertEquals( 'folder/my file.jpg', $platform->get_key_from_custom_domain_url( $url, $fields ) );
+		$protocol = new \ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces\Protocol( $url );
+		$protocol->set_fields( $fields );
+		$this->assertTrue( $protocol->is_url_compatible() );
+		$this->assertEquals( 'folder/my file.jpg', $this->call_method( $protocol, 'get_key_of_file', array( $url ) ) );
+
+		// the field is optional and could be set via constant.
+		$this->assertTrue( $fields['public_domain']['not_required'] );
+	}
+
+	/**
+	 * Test that the URL of the bucket is used without custom domain.
+	 *
+	 * @return void
+	 */
+	public function test_without_custom_domain(): void {
+		$platform = $this->get_platform();
+		$fields   = $this->set_platform_fields( $platform, $this->field_values );
+
+		$this->assertStringNotContainsString( 'example.com', $platform->get_public_url_of_file( 'example.jpg', $fields ) );
+		$this->assertEquals( '', $platform->get_custom_domain( $fields ) );
+		$this->assertEquals( '', $platform->get_key_from_custom_domain_url( 'https://cdn.example.com/example.jpg', $fields ) );
 	}
 }

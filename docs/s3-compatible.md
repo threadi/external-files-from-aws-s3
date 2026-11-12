@@ -52,13 +52,15 @@ In the directory listing of the storage you will find the action "Run complete c
 
 Each step is shown with its result and written to the log. The test writes into your bucket, so it only runs if you start it.
 
+The connection test and the log below are available for all platforms of this plugin, also for AWS S3, Cloudflare R2, Backblaze B2 and DigitalOcean Spaces. If the test file is not public available, files could still be exported with the option "Save files privately" of the external source.
+
 ## Log
 
 Each failed request to the storage is logged with:
 
 * the request (e.g. `PutObject`), the HTTP status, the S3 error code and the error message,
 * the request ID and the extended request ID of the provider (`x-amz-id-2`), with them your provider could find the request in its logs,
-* platform, endpoint, bucket, region, the settings for path-style URLs and checksums and the public URL.
+* platform, endpoint, bucket, region, the settings for path-style URLs and checksums and the public URL (for AWS S3, Cloudflare R2, Backblaze B2 and DigitalOcean Spaces: platform and bucket).
 
 Credentials are never logged. If a check of the public availability fails during an export or the connection test, the checked URL and the HTTP status are logged, too.
 

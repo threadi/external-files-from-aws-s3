@@ -52,13 +52,15 @@ In der Verzeichnisansicht des Speichers gibt es die Aktion „Vollständigen Ver
 
 Jeder Schritt wird mit seinem Ergebnis angezeigt und ins Log geschrieben. Der Test schreibt in den Bucket und läuft deshalb nur, wenn man ihn startet.
 
+Verbindungstest und Log gibt es für alle Plattformen dieses Plugins, also auch für AWS S3, Cloudflare R2, Backblaze B2 und DigitalOcean Spaces. Ist die Testdatei nicht öffentlich erreichbar, lassen sich Dateien trotzdem mit der Option „Dateien privat speichern“ der externen Quelle exportieren.
+
 ## Log
 
 Jede fehlgeschlagene Anfrage an den Speicher wird protokolliert mit:
 
 * der Anfrage (z. B. `PutObject`), dem HTTP-Status, dem S3-Fehlercode und der Fehlermeldung,
 * der Request-ID und der erweiterten Request-ID des Anbieters (`x-amz-id-2`), mit denen der Anbieter die Anfrage in seinen Logs findet,
-* Plattform, Endpunkt, Bucket, Region, den Einstellungen für Path-Style-URLs und Prüfsummen sowie der öffentlichen URL.
+* Plattform, Endpunkt, Bucket, Region, den Einstellungen für Path-Style-URLs und Prüfsummen sowie der öffentlichen URL (bei AWS S3, Cloudflare R2, Backblaze B2 und DigitalOcean Spaces: Plattform und Bucket).
 
 Zugangsdaten werden nie protokolliert. Scheitert die Prüfung der öffentlichen Erreichbarkeit bei einem Export oder beim Verbindungstest, werden auch die geprüfte URL und der HTTP-Status protokolliert.
 

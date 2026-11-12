@@ -45,6 +45,7 @@ define( 'EFML_DIGITAL_OCEAN_SPACES_ACCESS_KEY', 'dein-access-key' );
 define( 'EFML_DIGITAL_OCEAN_SPACES_SECRET', 'dein-secret-key' );
 define( 'EFML_DIGITAL_OCEAN_SPACES_BUCKET', 'dein-bucket' );
 define( 'EFML_DIGITAL_OCEAN_SPACES_REGION', 'fra1' );
+define( 'EFML_DIGITAL_OCEAN_SPACES_PUBLIC_DOMAIN', 'files.example.com' ); // optional
 ```
 
 ## Backblaze S3
@@ -54,6 +55,7 @@ define( 'EFML_BACKBLAZE_S3_ACCESS_KEY', 'deine-key-id' );
 define( 'EFML_BACKBLAZE_S3_SECRET', 'dein-application-key' );
 define( 'EFML_BACKBLAZE_S3_BUCKET', 'dein-bucket' );
 define( 'EFML_BACKBLAZE_S3_REGION', 'eu-central-003' );
+define( 'EFML_BACKBLAZE_S3_PUBLIC_DOMAIN', 'files.example.com' ); // optional
 ```
 
 ## S3-kompatibler Speicher (eigener Endpunkt)

@@ -1037,7 +1037,7 @@ class AwsS3 extends Platform_Base implements Service {
 				'secret' => $fields['secret']['value'],
 			),
 		);
-		return $this->get_the_client( $configuration );
+		return $this->add_error_log( $this->get_the_client( $configuration ) );
 	}
 
 	/**

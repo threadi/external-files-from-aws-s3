@@ -10,7 +10,6 @@ namespace ExternalFilesFromAwsS3\Platforms;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
-use Aws\CommandInterface;
 use Aws\Exception\AwsException;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
@@ -29,9 +28,6 @@ use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Log;
 use ExternalFilesInMediaLibrary\Plugin\Settings;
 use ExternalFilesInMediaLibrary\Services\Service;
-use GuzzleHttp\Promise\Create;
-use GuzzleHttp\Promise\PromiseInterface;
-use Psr\Http\Message\RequestInterface;
 use WP_Error;
 use WP_User;
 
@@ -90,15 +86,6 @@ class S3Compatible extends Platform_Base implements Service {
 	 * @var string
 	 */
 	protected string $settings_sub_tab = 'eml_s3_compatible';
-
-	/**
-	 * Whether failed checks of the public availability should be logged with all details.
-	 *
-	 * Enabled during the export and the connection test, as these checks are expected to be successful.
-	 *
-	 * @var bool
-	 */
-	private bool $log_public_check_failures = false;
 
 	/**
 	 * Instance of actual object.
@@ -301,10 +288,6 @@ class S3Compatible extends Platform_Base implements Service {
 					'action' => 'efml_save_as_directory( "' . $this->get_name() . '", actualDirectoryPath, config.fields, config.term );',
 					'label'  => __( 'Save active directory as your external source', 'external-files-from-aws-s3' ),
 				),
-				array(
-					'action' => 'efmlawss3_connection_test( "' . $this->get_name() . '", config.fields, config.term );',
-					'label'  => __( 'Run complete connection test', 'external-files-from-aws-s3' ),
-				),
 			)
 		);
 	}
@@ -355,30 +338,6 @@ class S3Compatible extends Platform_Base implements Service {
 			// return false to prevent any further actions.
 			return false;
 		}
-	}
-
-	/**
-	 * Return a text for the given exception, which explains the error and a possible solution.
-	 *
-	 * @param AwsException $e The exception.
-	 *
-	 * @return string
-	 */
-	public function get_error_text_for_exception( AwsException $e ): string {
-		// get the status and the error code.
-		$status     = absint( $e->getStatusCode() );
-		$error_code = (string) $e->getAwsErrorCode();
-
-		// get the text with the error.
-		if ( 0 === $status ) {
-			$text = __( 'The storage could not be reached.', 'external-files-from-aws-s3' );
-		} else {
-			/* translators: %1$d will be replaced by an HTTP status like 403, %2$s by an error code like "AccessDenied". */
-			$text = sprintf( __( 'The storage returns with HTTP status %1$d and the error code %2$s.', 'external-files-from-aws-s3' ), $status, '' !== $error_code ? $error_code : '-' );
-		}
-
-		// return the text with the hint.
-		return $text . ' ' . $this->get_hint_for_error( $status, $error_code ) . ' ' . __( 'Check the log for details.', 'external-files-from-aws-s3' );
 	}
 
 	/**
@@ -1368,34 +1327,17 @@ class S3Compatible extends Platform_Base implements Service {
 		// get the client.
 		$client = $this->get_the_client( $this->get_client_configuration( $this->get_fields() ) );
 
-		// log each failed request.
-		$client->getHandlerList()->appendInit( array( $this, 'get_error_log_middleware' ), 'efmlawss3_error_log' );
-
-		// return the client.
-		return $client;
+		// log each failed request and return the client.
+		return $this->add_error_log( $client );
 	}
 
 	/**
-	 * Return the middleware for the S3 client, which logs failed requests.
+	 * Return whether the connection is configured enough to test it.
 	 *
-	 * @param callable $handler The next handler.
-	 *
-	 * @return callable
+	 * @return bool
 	 */
-	public function get_error_log_middleware( callable $handler ): callable {
-		return function ( CommandInterface $command, ?RequestInterface $request = null ) use ( $handler ): PromiseInterface {
-			return $handler( $command, $request )->otherwise(
-				function ( $reason ) use ( $command ) {
-					// log the error, except a not existing file during a check for its existence.
-					if ( $reason instanceof AwsException && ! ( 'HeadObject' === $command->getName() && 404 === $reason->getStatusCode() ) ) {
-						$this->log_aws_exception( $reason, $command->getName(), $this->get_directory() );
-					}
-
-					// return the rejection, so it is handled by the caller.
-					return Create::rejectionFor( $reason );
-				}
-			);
-		};
+	protected function is_connection_configured(): bool {
+		return '' !== $this->get_bucket_url( $this->get_fields() );
 	}
 
 	/**
@@ -1442,17 +1384,6 @@ class S3Compatible extends Platform_Base implements Service {
 	}
 
 	/**
-	 * Enable or disable the detailed log for failed checks of the public availability.
-	 *
-	 * @param bool $enabled True to enable it.
-	 *
-	 * @return void
-	 */
-	public function set_public_check_logging( bool $enabled ): void {
-		$this->log_public_check_failures = $enabled;
-	}
-
-	/**
 	 * Return whether given file in the bucket is public available.
 	 *
 	 * The check is done via HEAD request on the public URL of the file.
@@ -1492,162 +1423,6 @@ class S3Compatible extends Platform_Base implements Service {
 
 		// return false as the file is not public available.
 		return false;
-	}
-
-	/**
-	 * Run a complete test of the connection with the actual fields.
-	 *
-	 * The test lists the bucket, uploads a small test file the same way an export does it,
-	 * checks if it is public available and deletes it. Each step is logged.
-	 *
-	 * @return array<int,array<string,mixed>> List of steps with "title", "success", "skipped" and "message".
-	 */
-	public function run_connection_test(): array {
-		// get the fields.
-		$fields = $this->get_fields();
-
-		// get the URL for the log entries.
-		$log_url = $this->get_directory();
-
-		// log the start.
-		/* translators: %1$s will be replaced by the name of the platform. */
-		Log::get_instance()->create( sprintf( __( 'Starting the connection test for %1$s.', 'external-files-from-aws-s3' ), '<em>' . esc_html( $this->get_label() ) . '</em>' ), $log_url, 'info' );
-
-		// prepare the steps.
-		$steps = array(
-			'list'   => array(
-				'title'   => __( 'Connect and list the bucket', 'external-files-from-aws-s3' ),
-				'success' => false,
-				'skipped' => true,
-				'message' => '',
-			),
-			'upload' => array(
-				'title'   => __( 'Upload a test file', 'external-files-from-aws-s3' ),
-				'success' => false,
-				'skipped' => true,
-				'message' => '',
-			),
-			'public' => array(
-				'title'   => __( 'Check the public availability of the test file', 'external-files-from-aws-s3' ),
-				'success' => false,
-				'skipped' => true,
-				'message' => '',
-			),
-			'delete' => array(
-				'title'   => __( 'Delete the test file', 'external-files-from-aws-s3' ),
-				'success' => false,
-				'skipped' => true,
-				'message' => '',
-			),
-		);
-
-		// bail if endpoint or bucket are missing.
-		if ( '' === $this->get_bucket_url( $fields ) ) {
-			$steps['list']['skipped'] = false;
-			$steps['list']['message'] = __( 'The endpoint or the bucket is missing.', 'external-files-from-aws-s3' );
-			return $this->log_connection_test( $steps, $log_url );
-		}
-
-		// get the client.
-		$s3_client = $this->get_s3_client();
-
-		// step 1: list the bucket.
-		$steps['list']['skipped'] = false;
-		try {
-			$s3_client->listObjectsV2(
-				array(
-					'Bucket'  => $this->get_bucket_name(),
-					'MaxKeys' => 1,
-				)
-			);
-			$steps['list']['success'] = true;
-			$steps['list']['message'] = __( 'The bucket could be listed.', 'external-files-from-aws-s3' );
-		} catch ( AwsException $e ) {
-			$steps['list']['message'] = $this->get_error_text_for_exception( $e );
-			return $this->log_connection_test( $steps, $log_url );
-		}
-
-		// step 2: upload a test file the same way as an export.
-		$key                        = 'efml-connection-test-' . wp_generate_password( 12, false ) . '.txt';
-		$steps['upload']['skipped'] = false;
-		try {
-			$s3_client->upload(
-				$this->get_bucket_name(),
-				$key,
-				__( 'This is a test file of the plugin "External files from AWS S3". It could be deleted.', 'external-files-from-aws-s3' ),
-				'private',
-				array(
-					'params' => array(
-						'ContentType' => 'text/plain',
-					),
-				)
-			);
-			$steps['upload']['success'] = true;
-			/* translators: %1$s will be replaced by a file name. */
-			$steps['upload']['message'] = sprintf( __( 'The test file %1$s has been uploaded.', 'external-files-from-aws-s3' ), $key );
-		} catch ( AwsException $e ) {
-			$steps['upload']['message'] = $this->get_error_text_for_exception( $e );
-			return $this->log_connection_test( $steps, $log_url );
-		} catch ( Exception $e ) {
-			$steps['upload']['message'] = $e->getMessage();
-			return $this->log_connection_test( $steps, $log_url );
-		}
-
-		// step 3: check the public availability.
-		$steps['public']['skipped'] = false;
-		$public_url                 = $this->get_public_url_of_file( $key, $fields );
-		$this->set_public_check_logging( true );
-		$steps['public']['success'] = $this->is_file_public_available( $key, $s3_client );
-		$this->set_public_check_logging( false );
-		if ( $steps['public']['success'] ) {
-			/* translators: %1$s will be replaced by a URL. */
-			$steps['public']['message'] = sprintf( __( 'The test file is public available under %1$s.', 'external-files-from-aws-s3' ), $public_url );
-		} else {
-			/* translators: %1$s will be replaced by a URL. */
-			$steps['public']['message'] = sprintf( __( 'The test file is not public available under %1$s. Files could be imported, but not exported to this bucket. Check the permissions of the bucket or the public URL.', 'external-files-from-aws-s3' ), $public_url );
-		}
-
-		// step 4: delete the test file.
-		$steps['delete']['skipped'] = false;
-		try {
-			$s3_client->deleteObject(
-				array(
-					'Bucket' => $this->get_bucket_name(),
-					'Key'    => $key,
-				)
-			);
-			$steps['delete']['success'] = true;
-			$steps['delete']['message'] = __( 'The test file has been deleted.', 'external-files-from-aws-s3' );
-		} catch ( AwsException $e ) {
-			/* translators: %1$s will be replaced by a file name. */
-			$steps['delete']['message'] = $this->get_error_text_for_exception( $e ) . ' ' . sprintf( __( 'Please delete the test file %1$s manually.', 'external-files-from-aws-s3' ), $key );
-		}
-
-		// return the result.
-		return $this->log_connection_test( $steps, $log_url );
-	}
-
-	/**
-	 * Log the results of the connection test and return the steps as list.
-	 *
-	 * @param array<string,array<string,mixed>> $steps   The steps.
-	 * @param string                            $log_url The URL for the log entries.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
-	private function log_connection_test( array $steps, string $log_url ): array {
-		foreach ( $steps as $step ) {
-			// bail if step has been skipped.
-			if ( $step['skipped'] ) {
-				continue;
-			}
-
-			// log the result.
-			Log::get_instance()->create( esc_html( $step['title'] ) . ': ' . esc_html( $step['message'] ), $log_url, $step['success'] ? 'success' : 'error' );
-		}
-
-		// return the steps as list.
-		return array_values( $steps );
 	}
 
 	/**
