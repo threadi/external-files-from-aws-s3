@@ -390,7 +390,7 @@ class DigitalOceanSpaces extends externalFilesFromAwsS3Tests {
 		update_option( 'eml_digital-ocean-spaces_credentials_vault', 'global' );
 		$this->do_login();
 		$this->get_platform()->init_digital_ocean_spaces();
-		foreach ( array( 'eml_digital_ocean_spaces_access_key', 'eml_digital_ocean_spaces_secret_key', 'eml_digital_ocean_spaces_bucket', 'eml_digital_ocean_spaces_region', 'eml_digital_ocean_spaces_import_limit' ) as $setting_name ) {
+		foreach ( array( 'eml_digital_ocean_spaces_access_key', 'eml_digital_ocean_spaces_secret_key', 'eml_digital_ocean_spaces_bucket', 'eml_digital_ocean_spaces_region' ) as $setting_name ) {
 			$this->assertInstanceOf( \easySettingsForWordPress\Setting::class, $settings_obj->get_setting( $setting_name ), 'Setting ' . $setting_name . ' is missing.' );
 		}
 	}

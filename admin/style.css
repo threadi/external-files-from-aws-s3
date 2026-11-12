@@ -27,12 +27,57 @@
 	width: 32px;
 }
 
-.efml-s3-compatible:before,
-.efml-hetzner-object-storage:before,
-.efml-ionos-object-storage:before,
-.efml-ovhcloud-object-storage:before,
-.efml-scaleway-object-storage:before,
+.efml-hetzner-object-storage:before {
+	background-image: url(../gfx/hetzner.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 32px;
+	width: 32px;
+}
+
+.efml-ionos-object-storage:before {
+	background-image: url(../gfx/ionos.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 28px;
+	width: 96px;
+}
+
+.efml-ovhcloud-object-storage:before {
+	background-image: url(../gfx/ovhcloud.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 32px;
+	width: 32px;
+}
+
+.efml-scaleway-object-storage:before {
+	background-image: url(../gfx/scaleway.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 32px;
+	width: 32px;
+}
+
 .efml-wasabi:before {
+	background-image: url(../gfx/wasabi.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	content: '';
+	height: 32px;
+	width: 32px;
+}
+
+.efml-s3-compatible:before {
 	content: "\f176";
 	font-family: dashicons;
 	font-size: 32px;

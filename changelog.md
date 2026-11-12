@@ -15,6 +15,7 @@
 - Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
 - Added S3-compatible storage with own endpoint for any provider or self-hosted storage with S3 API (e.g. MinIO, Garage or Ceph)
 - Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
+- Added logos for the presets Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
 - Added optional public URL (own domain or CDN) for the S3-compatible storage and its presets
 - Added optional setting to send checksums only if required for S3-compatible providers, which do not support the checksums of the AWS SDK
 - Added connection test for all platforms: list, upload, public availability and deletion of a test file
@@ -27,6 +28,8 @@
 - Added link to the platform of each file in its info box, e.g. to the AWS console, the Cloudflare dashboard or the consoles of Backblaze, DigitalOcean and the presets (requires External Files in Media Library 6.0.0)
 - The directory listing of each platform with a known web interface now links to it ("Go to …"), before only AWS S3
 - Added optional custom domain (e.g. of a CDN) for Backblaze B2 and DigitalOcean Spaces, also via constants
+- Folders are imported file by file via the import of External Files in Media Library 6.0.0: also folders with tens of thousands of files, in the background if necessary
+- Added integration tests for the file list of a folder with 10,000 files and the import of a folder with 1,100 files
 
 ### Changed
 
@@ -35,6 +38,8 @@
 - The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
 - Now requires External Files in Media Library 6.0.0 or newer, with an older version this plugin loads none of its functions and shows a hint
 - The connection test now uses the connection test of External Files in Media Library
+- Removed the setting "Max. files to load during import per iteration" of all platforms, it is replaced by the import in the background
+- The import of a folder imports the files of this folder and its subfolders
 
 ### Fixed
 

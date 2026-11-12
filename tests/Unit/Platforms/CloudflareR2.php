@@ -382,7 +382,7 @@ class CloudflareR2 extends externalFilesFromAwsS3Tests {
 		update_option( 'eml_cloudflare-r2_credentials_vault', 'global' );
 		$this->do_login();
 		$this->get_platform()->init_cloudflare_r2();
-		foreach ( array( 'eml_cloudflare_r2_account_id', 'eml_cloudflare_r2_eu', 'eml_cloudflare_r2_access_key', 'eml_cloudflare_r2_secret_key', 'eml_cloudflare_r2_bucket', 'eml_cloudflare_r2_public_domain', 'eml_cloudflare_r2_import_limit' ) as $setting_name ) {
+		foreach ( array( 'eml_cloudflare_r2_account_id', 'eml_cloudflare_r2_eu', 'eml_cloudflare_r2_access_key', 'eml_cloudflare_r2_secret_key', 'eml_cloudflare_r2_bucket', 'eml_cloudflare_r2_public_domain' ) as $setting_name ) {
 			$this->assertInstanceOf( \easySettingsForWordPress\Setting::class, $settings_obj->get_setting( $setting_name ), 'Setting ' . $setting_name . ' is missing.' );
 		}
 	}

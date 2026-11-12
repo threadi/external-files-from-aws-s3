@@ -592,6 +592,89 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return one page of the files in the bucket for the import of a directory, without loading the files.
+	 *
+	 * Contains the same files as the directory listing: also the files in subdirectories, without hidden files
+	 * and files with not allowed file types.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $prefix    The prefix of the keys (e.g. the requested directory), empty for the complete bucket.
+	 * @param string $cursor    The continuation token of the page, empty for the first page.
+	 * @param int    $page_size The maximum count of objects on this page.
+	 *
+	 * @return array{files: array<int,array{url: string, media-url?: string, filesize?: int, last-modified?: int}>, cursor: string}|false
+	 */
+	public function get_file_list_page( string $prefix, string $cursor, int $page_size ): array|false {
+		// get the S3Client.
+		$s3 = $this->get_s3_client();
+
+		// create the query.
+		$query = $this->filter_query_params( array( 'Bucket' => $this->get_bucket_name() ), '/' );
+
+		// use the prefix, if the query does not have one and it is a path in the bucket (not a URL).
+		if ( empty( $query['Prefix'] ) && '' !== $prefix && '/' !== $prefix && ! str_contains( $prefix, '://' ) ) {
+			$query['Prefix'] = ltrim( $prefix, '/' );
+		}
+
+		// set the size of the page.
+		$query['MaxKeys'] = $page_size;
+
+		// set the token for the requested page.
+		if ( '' !== $cursor ) {
+			$query['ContinuationToken'] = $cursor;
+		}
+
+		// load the page.
+		try {
+			$result = $s3->listObjectsV2( $query );
+		} catch ( S3Exception $e ) {
+			/* translators: %1$d will be replaced by an HTTP-status code like 403. */
+			Log::get_instance()->create( sprintf( __( 'Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d!', 'external-files-from-aws-s3' ), $e->getStatusCode() ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $this->get_directory(), 'error' );
+			return false;
+		}
+
+		// collect the files.
+		$files = array();
+		foreach ( is_array( $result['Contents'] ) ? $result['Contents'] : array() as $object ) {
+			// bail if this is a directory.
+			if ( str_ends_with( (string) $object['Key'], '/' ) ) {
+				continue;
+			}
+
+			// bail if this file should be hidden.
+			if ( $this->is_file_hidden( $object, '/' ) ) {
+				continue;
+			}
+
+			// bail if file type is not allowed.
+			$mime_type = wp_check_filetype( basename( (string) $object['Key'] ) );
+			if ( empty( $mime_type['type'] ) ) {
+				continue;
+			}
+
+			// add the file.
+			$files[] = array(
+				'url'           => $this->get_public_url_of_file( (string) $object['Key'], $this->get_fields() ),
+				'filesize'      => absint( $object['Size'] ),
+				'last-modified' => absint( $object['LastModified']->format( 'U' ) ),
+			);
+		}
+
+		// get the token for the next page, if the list is not complete (and the server returns a new one).
+		$token = ! empty( $result['IsTruncated'] ) && ! empty( $result['NextContinuationToken'] ) ? (string) $result['NextContinuationToken'] : '';
+		if ( $token === $cursor ) {
+			$token = '';
+		}
+
+		// return the page.
+		return array(
+			'files'  => $files,
+			'cursor' => $token,
+		);
+	}
+
+	/**
 	 * Return all objects for the given query, also if S3 returns them in multiple parts.
 	 *
 	 * S3 returns at most 1000 objects per request (or the value of "MaxKeys"). The following parts are loaded

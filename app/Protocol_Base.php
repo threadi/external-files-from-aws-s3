@@ -288,6 +288,76 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	}
 
 	/**
+	 * Return whether this protocol could list the files of a directory page by page.
+	 *
+	 * @return bool
+	 */
+	public function supports_file_list(): bool {
+		return true;
+	}
+
+	/**
+	 * Return the requested path in the bucket of the URL of this object (e.g. a directory or a file).
+	 *
+	 * @return string
+	 */
+	private function get_requested_path(): string {
+		// get our own service object.
+		$s3 = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3 instanceof Platform_Base ) {
+			return '';
+		}
+
+		// return the requested path.
+		return $s3->get_requested_url( $this->get_url(), $this->get_fields() );
+	}
+
+	/**
+	 * Return whether the URL of this object is a directory in the bucket.
+	 *
+	 * Like for the import, a URL without a file extension is a directory.
+	 *
+	 * @return bool
+	 */
+	public function is_directory(): bool {
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $this->get_directory_listing_object() instanceof Platform_Base ) {
+			return false;
+		}
+
+		// get the mime type of the requested path.
+		$mime_type = wp_check_filetype( basename( $this->get_requested_path() ) );
+
+		// return whether it has no file extension.
+		return false === $mime_type['ext'];
+	}
+
+	/**
+	 * Return one page of the files in the requested directory of the bucket, also from its subdirectories.
+	 *
+	 * @param string $cursor The cursor for the requested page.
+	 *
+	 * @return array{files: array<int,array{url: string, media-url?: string, filesize?: int, last-modified?: int}>, cursor: string}|false
+	 */
+	public function get_file_list( string $cursor ): array|false {
+		// get our own service object.
+		$s3 = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3 instanceof Platform_Base ) {
+			return false;
+		}
+
+		// set the fields.
+		$s3->set_fields( $this->get_fields() );
+
+		// return the page.
+		return $s3->get_file_list_page( $this->get_requested_path(), $cursor, $this->get_file_list_page_size() );
+	}
+
+	/**
 	 * Return infos to each given URL.
 	 *
 	 * @return array<int|string,array<string,mixed>|bool> List of files with its infos.
@@ -356,20 +426,10 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 						continue;
 					}
 
-					// set counter for files, which has been loaded from S3.
-					$loaded_files = 0;
-
 					// add each file to the list.
 					foreach ( $dir_data['files'] as $file ) {
 						// bail if this an AJAX-request, and the file already exist in media library.
 						if ( wp_doing_ajax() && Files::get_instance()->get_file_by_title( $file['title'] ) ) {
-							continue;
-						}
-
-						// bail if limit for loaded files has been reached and this is an AJAX-request.
-						if ( wp_doing_ajax() && $loaded_files > absint( get_option( 'eml_s3_import_limit', 10 ) ) ) {
-							// set marker to load more.
-							$results['load_more'] = true;
 							continue;
 						}
 
@@ -421,9 +481,6 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 
 						// add tmp file to the list.
 						$entry['tmp-file'] = $tmp_file;
-
-						// update the counter.
-						++$loaded_files;
 
 						// add entry to the list of files.
 						$results[] = $entry;

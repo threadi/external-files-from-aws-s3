@@ -297,6 +297,122 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Return the count of attachments in the media library.
+	 *
+	 * @return int
+	 */
+	private function count_attachments(): int {
+		global $wpdb;
+		return absint( $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE `post_type` = %s', array( $wpdb->posts, 'attachment' ) ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+
+	/**
+	 * Upload the given count of small files into the given folder of the bucket, many at the same time.
+	 *
+	 * @param string $folder The folder.
+	 * @param int    $count  The count of files.
+	 *
+	 * @return void
+	 */
+	private function upload_many_files( string $folder, int $count ): void {
+		$client = $this->get_platform()->get_s3_client();
+		$body   = (string) file_get_contents( UNIT_TESTS_DATA_PLUGIN_DIR . 'example.jpg' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$bucket    = $this->bucket;
+		$generator = static function () use ( $client, $folder, $count, $body, $bucket ) {
+			for ( $i = 1; $i <= $count; $i++ ) {
+				yield $client->getCommand(
+					'PutObject',
+					array(
+						'Bucket'      => $bucket,
+						'Key'         => $folder . 'file-' . $i . '.jpg',
+						'Body'        => $body,
+						'ContentType' => 'image/jpeg',
+					)
+				);
+			}
+		};
+		( new \Aws\CommandPool( $client, $generator(), array( 'concurrency' => 25 ) ) )->promise()->wait();
+	}
+
+	/**
+	 * Test the file list of a folder with many files: all files are listed page by page, files of other folders
+	 * are not listed.
+	 *
+	 * The count of files could be changed with the environment variable EFMLAWSS3_INTEGRATION_LIST_COUNT.
+	 *
+	 * @return void
+	 */
+	public function test_file_list_with_many_files(): void {
+		$count  = getenv( 'EFMLAWSS3_INTEGRATION_LIST_COUNT' ) ? absint( getenv( 'EFMLAWSS3_INTEGRATION_LIST_COUNT' ) ) : 10000;
+		$fields = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->upload_many_files( 'many/', $count );
+		$this->upload_many_files( 'other/', 3 );
+
+		// get the protocol for the folder.
+		$protocol = new Protocol( $this->get_platform()->get_directory() . 'many/' );
+		$protocol->set_fields( $fields );
+		$this->assertTrue( $protocol->is_directory() );
+
+		// load all pages.
+		$urls   = array();
+		$pages  = 0;
+		$cursor = '';
+		do {
+			$page = $protocol->get_file_list( $cursor );
+			$this->assertIsArray( $page );
+			foreach ( $page['files'] as $file ) {
+				$urls[ $file['url'] ] = true;
+				$this->assertEquals( filesize( UNIT_TESTS_DATA_PLUGIN_DIR . 'example.jpg' ), $file['filesize'] );
+			}
+			$cursor = $page['cursor'];
+			++$pages;
+		} while ( '' !== $cursor );
+
+		$this->assertCount( $count, $urls );
+		$this->assertEquals( (int) ceil( $count / 500 ), $pages );
+		$this->assertArrayHasKey( $this->get_platform()->get_directory() . 'many/file-1.jpg', $urls );
+	}
+
+	/**
+	 * Test the import of a folder with more files than one page of the list: the import run imports all of them,
+	 * also in the background, and a second import skips them.
+	 *
+	 * The count of files could be changed with the environment variable EFMLAWSS3_INTEGRATION_IMPORT_COUNT.
+	 *
+	 * @return void
+	 */
+	public function test_import_of_folder_with_many_files(): void {
+		global $wpdb;
+
+		// use the protocol of the platform, like for users with its capability.
+		add_filter( 'efml_protocols', array( $this->get_platform(), 'add_protocol' ) );
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'efml_import_runs' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'eml_queue' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$count = getenv( 'EFMLAWSS3_INTEGRATION_IMPORT_COUNT' ) ? absint( getenv( 'EFMLAWSS3_INTEGRATION_IMPORT_COUNT' ) ) : 1100;
+		$fields = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->upload_many_files( 'import/', $count );
+		$before = $this->count_attachments();
+
+		// import the folder and process the run in the background until it is finished.
+		$import = \ExternalFilesInMediaLibrary\ExternalFiles\Import::get_instance();
+		$import->set_fields( $fields );
+		$this->assertTrue( $import->add_url( $this->get_platform()->get_directory() . 'import/' ) );
+		$runs = \ExternalFilesInMediaLibrary\ExternalFiles\Import_Runs::get_instance();
+		for ( $i = 0; $i < 100 && $runs->get_progress()['runs'] > 0; $i++ ) {
+			$runs->process();
+		}
+		$this->assertEquals( 0, $runs->get_progress()['runs'] );
+		$this->assertEquals( $before + $count, $this->count_attachments() );
+		$this->assertInstanceOf( \ExternalFilesInMediaLibrary\ExternalFiles\File::class, \ExternalFilesInMediaLibrary\ExternalFiles\Files::get_instance()->get_file_by_url( $this->get_platform()->get_directory() . 'import/file-' . $count . '.jpg' ) );
+
+		// a second import does not import them again.
+		$this->assertFalse( $import->add_url( $this->get_platform()->get_directory() . 'import/' ) );
+		$this->assertEquals( $before + $count, $this->count_attachments() );
+		$import->set_fields( array() );
+		remove_filter( 'efml_protocols', array( $this->get_platform(), 'add_protocol' ) );
+	}
+
+	/**
 	 * Test the errors with a not existing bucket: the login fails and the error is logged.
 	 *
 	 * @return void

@@ -744,10 +744,10 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 		// test 2: with the capability.
 		$this->do_login();
 		$this->get_platform()->init_aws_s3();
-		foreach ( array( 'eml_s3_access_key', 'eml_s3_secret_key', 'eml_s3_bucket', 'eml_s3_cloudfront_domain', 'eml_s3_cloudfront_distribution_id', 'eml_s3_region', 'eml_s3_import_limit' ) as $setting_name ) {
+		foreach ( array( 'eml_s3_access_key', 'eml_s3_secret_key', 'eml_s3_bucket', 'eml_s3_cloudfront_domain', 'eml_s3_cloudfront_distribution_id', 'eml_s3_region' ) as $setting_name ) {
 			$this->assertInstanceOf( \easySettingsForWordPress\Setting::class, $settings_obj->get_setting( $setting_name ), 'Setting ' . $setting_name . ' is missing.' );
 		}
-		$this->assertEquals( 10, $settings_obj->get_setting( 'eml_s3_import_limit' )->get_default() );
+		$this->assertFalse( $settings_obj->get_setting( 'eml_s3_import_limit' ) );
 	}
 
 	/**

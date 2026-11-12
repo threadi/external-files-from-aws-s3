@@ -13,7 +13,6 @@ defined( 'ABSPATH' ) || exit;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
-use easySettingsForWordPress\Fields\Number;
 use easySettingsForWordPress\Fields\Password;
 use easySettingsForWordPress\Fields\Select;
 use easySettingsForWordPress\Fields\Text;
@@ -407,18 +406,6 @@ class BackblazeS3 extends Platform_Base implements Service {
 			$field->set_options( $this->get_regions() );
 			$setting->set_field( $field );
 		}
-
-		// add setting to show also trashed files.
-		$setting = $settings_obj->add_setting( 'eml_backblaze_s3_import_limit' );
-		$setting->set_section( $section );
-		$setting->set_type( 'integer' );
-		$setting->set_default( 10 );
-		$field = new Number( $settings_obj );
-		$field->set_title( __( 'Max. files to load during import per iteration', 'external-files-from-aws-s3' ) );
-		$field->set_description( __( 'This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import.', 'external-files-from-aws-s3' ) );
-		$field->set_setting( $setting );
-		$field->set_readonly( $this->is_disabled() ); // @phpstan-ignore method.notFound
-		$setting->set_field( $field );
 	}
 
 	/**

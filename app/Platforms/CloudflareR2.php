@@ -14,7 +14,6 @@ use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
 use easySettingsForWordPress\Fields\Checkbox;
-use easySettingsForWordPress\Fields\Number;
 use easySettingsForWordPress\Fields\Password;
 use easySettingsForWordPress\Fields\Text;
 use easySettingsForWordPress\Fields\TextInfo;
@@ -426,18 +425,6 @@ class CloudflareR2 extends Platform_Base implements Service {
 			$field->set_description( sprintf( __( 'Each user will find its settings in his own <a href="%1$s">user profile</a>.', 'external-files-from-aws-s3' ), $this->get_config_url() ) );
 			$setting->set_field( $field );
 		}
-
-		// add setting to show also trashed files.
-		$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_import_limit' );
-		$setting->set_section( $section );
-		$setting->set_type( 'integer' );
-		$setting->set_default( 10 );
-		$field = new Number( $settings_obj );
-		$field->set_title( __( 'Max. files to load during import per iteration', 'external-files-from-aws-s3' ) );
-		$field->set_description( __( 'This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import.', 'external-files-from-aws-s3' ) );
-		$field->set_setting( $setting );
-		$field->set_readonly( $this->is_disabled() ); // @phpstan-ignore method.notFound
-		$setting->set_field( $field );
 	}
 
 	/**

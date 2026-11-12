@@ -378,7 +378,7 @@ class BackblazeS3 extends externalFilesFromAwsS3Tests {
 		update_option( 'eml_backblaze-s3_credentials_vault', 'global' );
 		$this->do_login();
 		$this->get_platform()->init_backblaze_s3();
-		foreach ( array( 'eml_backblaze_s3_access_key', 'eml_backblaze_s3_secret_key', 'eml_backblaze_s3_bucket', 'eml_backblaze_s3_region', 'eml_backblaze_s3_import_limit' ) as $setting_name ) {
+		foreach ( array( 'eml_backblaze_s3_access_key', 'eml_backblaze_s3_secret_key', 'eml_backblaze_s3_bucket', 'eml_backblaze_s3_region' ) as $setting_name ) {
 			$this->assertInstanceOf( \easySettingsForWordPress\Setting::class, $settings_obj->get_setting( $setting_name ), 'Setting ' . $setting_name . ' is missing.' );
 		}
 	}
