@@ -70,156 +70,152 @@ msgstr ""
 msgid "Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d!"
 msgstr ""
 
-#: app/Platform_Base.php:782
+#: app/Platform_Base.php:793
 msgid "Check whether your hosting is allowed to connect to the storage."
 msgstr ""
 
-#: app/Platform_Base.php:788 app/Platforms/S3Compatible.php:360
+#: app/Platform_Base.php:799 app/Platforms/S3Compatible.php:360
 msgid "Check the access key."
 msgstr ""
 
-#: app/Platform_Base.php:790 app/Platforms/S3Compatible.php:362
+#: app/Platform_Base.php:801 app/Platforms/S3Compatible.php:362
 msgid "Check the secret key and the region."
 msgstr ""
 
-#: app/Platform_Base.php:794 app/Platform_Base.php:803 app/Platforms/S3Compatible.php:366
+#: app/Platform_Base.php:805 app/Platform_Base.php:814 app/Platforms/S3Compatible.php:366
 msgid "Check the region of the bucket."
 msgstr ""
 
-#: app/Platform_Base.php:796 app/Platform_Base.php:809
+#: app/Platform_Base.php:807 app/Platform_Base.php:820
 msgid "Check the name and the region of the bucket."
 msgstr ""
 
-#: app/Platform_Base.php:798 app/Platforms/S3Compatible.php:370
+#: app/Platform_Base.php:809 app/Platforms/S3Compatible.php:370
 msgid "The access key is not allowed to do this. Check its permissions for the bucket."
 msgstr ""
 
-#: app/Platform_Base.php:806 app/Platforms/S3Compatible.php:383
+#: app/Platform_Base.php:817 app/Platforms/S3Compatible.php:383
 msgid "Check the credentials and the permissions of the access key."
 msgstr ""
 
-#: app/Platform_Base.php:813 app/Platforms/S3Compatible.php:390
+#: app/Platform_Base.php:824 app/Platforms/S3Compatible.php:390
 msgid "Please contact the provider of your storage with the details from the log."
 msgstr ""
 
-#: app/Platform_Base.php:850
+#: app/Platform_Base.php:861
 msgid "The storage could not be reached."
 msgstr ""
 
 #. translators: %1$d will be replaced by an HTTP status like 403, %2$s by an error code like "AccessDenied".
-#: app/Platform_Base.php:853
+#: app/Platform_Base.php:864
 #, php-format
 msgid "The storage returns with HTTP status %1$d and the error code %2$s."
 msgstr ""
 
-#: app/Platform_Base.php:857
+#: app/Platform_Base.php:868
 msgid "Check the log for details."
 msgstr ""
 
 #. translators: %1$s will be replaced by the name of the platform.
-#: app/Platform_Base.php:913
+#: app/Platform_Base.php:924
 #, php-format
 msgid "Starting the connection test for %1$s."
 msgstr ""
 
-#: app/Platform_Base.php:918
+#: app/Platform_Base.php:929
 msgid "Connect and list the bucket"
 msgstr ""
 
-#: app/Platform_Base.php:924
+#: app/Platform_Base.php:935
 msgid "Upload a test file"
 msgstr ""
 
-#: app/Platform_Base.php:930
+#: app/Platform_Base.php:941
 msgid "Check the public availability of the test file"
 msgstr ""
 
-#: app/Platform_Base.php:936
+#: app/Platform_Base.php:947
 msgid "Delete the test file"
 msgstr ""
 
-#: app/Platform_Base.php:946
+#: app/Platform_Base.php:957
 msgid "The endpoint or the bucket is missing."
 msgstr ""
 
-#: app/Platform_Base.php:963
+#: app/Platform_Base.php:974
 msgid "The bucket could be listed."
 msgstr ""
 
-#: app/Platform_Base.php:976
+#: app/Platform_Base.php:987
 msgid "This is a test file of the plugin \"External files from AWS S3\". It could be deleted."
 msgstr ""
 
 #. translators: %1$s will be replaced by a file name.
-#: app/Platform_Base.php:986
+#: app/Platform_Base.php:997
 #, php-format
 msgid "The test file %1$s has been uploaded."
 msgstr ""
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platform_Base.php:1003
+#: app/Platform_Base.php:1014
 #, php-format
 msgid "The test file is public available under %1$s."
 msgstr ""
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platform_Base.php:1006
+#: app/Platform_Base.php:1017
 #, php-format
 msgid "The test file is not public available under %1$s. Files could be imported and exported with the option \"Save files privately\", but not exported as public files. Check the permissions of the bucket or the public URL."
 msgstr ""
 
-#: app/Platform_Base.php:1019
+#: app/Platform_Base.php:1030
 msgid "The test file has been deleted."
 msgstr ""
 
 #. translators: %1$s will be replaced by a file name.
-#: app/Platform_Base.php:1022
+#: app/Platform_Base.php:1033
 #, php-format
 msgid "Please delete the test file %1$s manually."
 msgstr ""
 
-#: app/Platform_Base.php:1061
+#: app/Platform_Base.php:1072
 msgid "Platform"
 msgstr ""
 
-#: app/Platform_Base.php:1062 app/Platforms/AwsS3.php:425 app/Platforms/AwsS3.php:432 app/Platforms/AwsS3.php:612 app/Platforms/AwsS3.php:776 app/Platforms/BackblazeS3.php:356 app/Platforms/BackblazeS3.php:364 app/Platforms/BackblazeS3.php:442 app/Platforms/BackblazeS3.php:515 app/Platforms/CloudflareR2.php:386 app/Platforms/CloudflareR2.php:396 app/Platforms/CloudflareR2.php:470 app/Platforms/CloudflareR2.php:550 app/Platforms/DigitalOceanSpaces.php:356 app/Platforms/DigitalOceanSpaces.php:364 app/Platforms/DigitalOceanSpaces.php:442 app/Platforms/DigitalOceanSpaces.php:515 app/Platforms/S3Compatible.php:593
+#: app/Platform_Base.php:1073 app/Platforms/AwsS3.php:425 app/Platforms/AwsS3.php:432 app/Platforms/AwsS3.php:612 app/Platforms/AwsS3.php:776 app/Platforms/BackblazeS3.php:356 app/Platforms/BackblazeS3.php:364 app/Platforms/BackblazeS3.php:442 app/Platforms/BackblazeS3.php:515 app/Platforms/CloudflareR2.php:386 app/Platforms/CloudflareR2.php:396 app/Platforms/CloudflareR2.php:470 app/Platforms/CloudflareR2.php:550 app/Platforms/DigitalOceanSpaces.php:356 app/Platforms/DigitalOceanSpaces.php:364 app/Platforms/DigitalOceanSpaces.php:442 app/Platforms/DigitalOceanSpaces.php:515 app/Platforms/S3Compatible.php:593
 msgid "Bucket"
 msgstr ""
 
-#: app/Platform_Base.php:1082 app/Platforms/S3Compatible.php:1418
+#: app/Platform_Base.php:1093 app/Platforms/S3Compatible.php:1418
 msgid "HTTP status"
 msgstr ""
 
-#: app/Platform_Base.php:1083
+#: app/Platform_Base.php:1094
 msgid "Error code"
 msgstr ""
 
-#: app/Platform_Base.php:1084 app/Platform_Base.php:1090 app/Platform_Base.php:1092 app/Platforms/S3Compatible.php:1416
+#: app/Platform_Base.php:1095 app/Platform_Base.php:1101 app/Platform_Base.php:1103 app/Platforms/S3Compatible.php:1416
 msgid "Error message"
 msgstr ""
 
-#: app/Platform_Base.php:1085
+#: app/Platform_Base.php:1096
 msgid "Request ID"
 msgstr ""
 
-#: app/Platform_Base.php:1086
+#: app/Platform_Base.php:1097
 msgid "Extended request ID"
 msgstr ""
 
 #. translators: %1$s will be replaced by the name of the operation (e.g. "PutObject").
-#: app/Platform_Base.php:1100
+#: app/Platform_Base.php:1111
 #, php-format
 msgid "The request %1$s to the storage failed."
 msgstr ""
 
 #. translators: %1$s will be replaced by the name of the platform (e.g. Wasabi).
-#: app/Platform_Base.php:1252
+#: app/Platform_Base.php:1263
 #, php-format
 msgid "Go to %1$s"
-msgstr ""
-
-#: app/Platform_Base.php:1259
-msgid "Run complete connection test"
 msgstr ""
 
 #: app/Platforms/AwsS3.php:142
@@ -320,7 +316,7 @@ msgstr ""
 msgid "The bucket you want to use"
 msgstr ""
 
-#: app/Platforms/AwsS3.php:617 app/Platforms/BackblazeS3.php:452 app/Platforms/DigitalOceanSpaces.php:452
+#: app/Platforms/AwsS3.php:617 app/Platforms/BackblazeS3.php:447 app/Platforms/DigitalOceanSpaces.php:447
 msgid "Choose your region"
 msgstr ""
 
@@ -448,7 +444,7 @@ msgstr ""
 msgid "Credentials and/or bucket are not valid. Backblaze S3 returns with HTTP-Status %1$d! Error:"
 msgstr ""
 
-#: app/Platforms/BackblazeS3.php:370 app/Platforms/BackblazeS3.php:378 app/Platforms/BackblazeS3.php:447 app/Platforms/BackblazeS3.php:532 app/Platforms/CloudflareR2.php:402 app/Platforms/CloudflareR2.php:410 app/Platforms/CloudflareR2.php:475 app/Platforms/CloudflareR2.php:558 app/Platforms/DigitalOceanSpaces.php:370 app/Platforms/DigitalOceanSpaces.php:378 app/Platforms/DigitalOceanSpaces.php:447 app/Platforms/DigitalOceanSpaces.php:532
+#: app/Platforms/BackblazeS3.php:370 app/Platforms/BackblazeS3.php:378 app/Platforms/BackblazeS3.php:453 app/Platforms/BackblazeS3.php:532 app/Platforms/CloudflareR2.php:402 app/Platforms/CloudflareR2.php:410 app/Platforms/CloudflareR2.php:475 app/Platforms/CloudflareR2.php:558 app/Platforms/DigitalOceanSpaces.php:370 app/Platforms/DigitalOceanSpaces.php:378 app/Platforms/DigitalOceanSpaces.php:453 app/Platforms/DigitalOceanSpaces.php:532
 msgid "Custom domain (optional)"
 msgstr ""
 
@@ -456,7 +452,7 @@ msgstr ""
 msgid "Set your own domain or the domain of your CDN for this bucket (e.g. files.example.com). Files are then embedded with this domain."
 msgstr ""
 
-#: app/Platforms/BackblazeS3.php:380 app/Platforms/BackblazeS3.php:449 app/Platforms/BackblazeS3.php:533 app/Platforms/CloudflareR2.php:412 app/Platforms/CloudflareR2.php:477 app/Platforms/CloudflareR2.php:559 app/Platforms/DigitalOceanSpaces.php:380 app/Platforms/DigitalOceanSpaces.php:449 app/Platforms/DigitalOceanSpaces.php:533
+#: app/Platforms/BackblazeS3.php:380 app/Platforms/BackblazeS3.php:455 app/Platforms/BackblazeS3.php:533 app/Platforms/CloudflareR2.php:412 app/Platforms/CloudflareR2.php:477 app/Platforms/CloudflareR2.php:559 app/Platforms/DigitalOceanSpaces.php:380 app/Platforms/DigitalOceanSpaces.php:455 app/Platforms/DigitalOceanSpaces.php:533
 msgid "example.com"
 msgstr ""
 
@@ -765,54 +761,14 @@ msgstr ""
 msgid "This will disable all other services except %1$s."
 msgstr ""
 
-#: app/Plugin/Connection_Test.php:101
-msgid "Connection test is running"
+#. translators: %1$s will be replaced by a version number.
+#: app/Plugin/Init.php:325
+msgid "External files from AWS S3-compatible platforms in Media Library is not active!"
 msgstr ""
 
-#: app/Plugin/Connection_Test.php:102
-msgid "Please wait a moment."
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:148
-msgid "Connection test"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:154
-msgid "OK"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:166
-msgid "The connection test could not be run."
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:178
-msgid "Access not allowed!"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:201
-msgid "Skipped"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:203
-msgid "Successful"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:205
-msgid "Failed"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:214
-msgid "Connection test failed"
-msgstr ""
-
-#: app/Plugin/Connection_Test.php:214
-msgid "Connection test successful"
-msgstr ""
-
-#. translators: %1$s will be replaced by a URL.
-#: app/Plugin/Connection_Test.php:217
+#: app/Plugin/Init.php:325
 #, php-format
-msgid "All steps are logged with their details in the <a href=\"%1$s\">log</a>. Use them if you contact the support or the provider of your storage."
+msgid "It requires <em>External Files in Media Library</em> %1$s or newer. Please update this plugin."
 msgstr ""
 
 #: app/Protocol_Base.php:165

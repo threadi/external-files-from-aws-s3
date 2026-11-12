@@ -13,7 +13,7 @@ Add the possibility to import, export and synchronise files from and to AWS S3. 
 
 == Description ==
 
-Add the possibility to import, export and synchronise files from and to AWS S3. Your need the plugin "Externale Files in Media Library" to use it.
+Add the possibility to import, export and synchronise files from and to AWS S3. You need the plugin "External Files in Media Library" 6.0.0 or newer to use it.
 
 == Repository, documentation and reliability ==
 

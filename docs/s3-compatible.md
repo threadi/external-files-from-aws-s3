@@ -43,7 +43,7 @@ Example of a bucket policy for public read access:
 
 ## Connection test
 
-In the directory listing of the storage you will find the action "Run complete connection test". It runs these steps with the actual settings:
+In the directory listing of the storage you will find the action "Run connection test". It runs these steps with the actual settings:
 
 1. connect and list the bucket,
 2. upload a small test file `efml-connection-test-….txt` the same way the export does it,

@@ -43,7 +43,7 @@ Beispiel einer Bucket-Richtlinie für öffentlichen Lesezugriff:
 
 ## Verbindungstest
 
-In der Verzeichnisansicht des Speichers gibt es die Aktion „Vollständigen Verbindungstest ausführen“. Er durchläuft mit den aktuellen Einstellungen diese Schritte:
+In der Verzeichnisansicht des Speichers gibt es die Aktion „Verbindungstest ausführen“. Er durchläuft mit den aktuellen Einstellungen diese Schritte:
 
 1. verbinden und den Bucket auflisten,
 2. eine kleine Testdatei `efml-connection-test-….txt` so hochladen, wie es der Export tut,

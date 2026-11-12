@@ -6,7 +6,7 @@ This repository provides the features of the WordPress plugin _External files fr
 
 ## Hints
 
-* You will need the plugin _External Files in Media Library_ to run this plugin.
+* You will need the plugin _External Files in Media Library_ 6.0.0 or newer to run this plugin. With an older version this plugin loads none of its functions.
 * This plugin adds the official library "aws-sdk-php", that is using the Apache License. This is not kompatible with the GPL License the WordPress Repository requires.
 
 ## Usage

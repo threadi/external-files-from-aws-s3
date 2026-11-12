@@ -252,4 +252,43 @@ class Init extends externalFilesFromAwsS3Tests {
 		wp_dequeue_style( 'efmlawss3-admin' );
 		wp_deregister_style( 'efmlawss3-admin' );
 	}
+
+	/**
+	 * Test the check for the required version of the main plugin.
+	 *
+	 * @return void
+	 */
+	public function test_is_parent_plugin_compatible(): void {
+		$init = \ExternalFilesFromAwsS3\Plugin\Init::get_instance();
+
+		$this->assertEquals( '6.0.0', $init->get_required_parent_plugin_version() );
+		$this->assertTrue( $init->is_parent_plugin_compatible( '6.0.0' ) );
+		$this->assertTrue( $init->is_parent_plugin_compatible( '6.1.2' ) );
+		$this->assertFalse( $init->is_parent_plugin_compatible( '5.6.2' ) );
+		$this->assertFalse( $init->is_parent_plugin_compatible( '6.0.0-beta1' ) );
+
+		// development versions without version number are compatible.
+		$this->assertTrue( $init->is_parent_plugin_compatible( '@@VersionNumber@@' ) );
+	}
+
+	/**
+	 * Test the hint for an incompatible main plugin: it is shown and removed again.
+	 *
+	 * @return void
+	 */
+	public function test_incompatible_parent_plugin_hint(): void {
+		$init       = \ExternalFilesFromAwsS3\Plugin\Init::get_instance();
+		$transients = \ExternalFilesInMediaLibrary\Dependencies\easyTransientsForWordPress\Transients::get_instance();
+
+		$init->show_incompatible_parent_plugin_hint();
+		$transient = $transients->get_transient_by_name( 'efmlawss3_incompatible_parent_plugin' );
+		$this->assertTrue( $transient->is_set() );
+		$this->assertStringContainsString( '6.0.0', $transient->get_message() );
+
+		$init->remove_incompatible_parent_plugin_hint();
+		$this->assertFalse( $transients->get_transient_by_name( 'efmlawss3_incompatible_parent_plugin' )->is_set() );
+
+		// the hint is removed on each request with a compatible main plugin.
+		$this->assertIsInt( has_action( 'admin_init', array( $init, 'remove_incompatible_parent_plugin_hint' ) ) );
+	}
 }

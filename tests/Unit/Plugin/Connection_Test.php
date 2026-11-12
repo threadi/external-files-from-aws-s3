@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for class ExternalFilesFromAwsS3\Plugin\Connection_Test.
+ * Tests for the connection test of the platforms via the connection test of External Files in Media Library.
  *
  * @package external-files-from-aws-s3
  */
@@ -14,7 +14,7 @@ use ExternalFilesFromAwsS3\Tests\externalFilesFromAwsS3Tests;
 use WPAjaxDieContinueException;
 
 /**
- * Object to test functions in class ExternalFilesFromAwsS3\Plugin\Connection_Test.
+ * Object to test the connection test of the platforms via AJAX.
  */
 class Connection_Test extends externalFilesFromAwsS3Tests {
 	/**
@@ -53,6 +53,7 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 	 */
 	private function run_ajax( array $request ): array {
 		// prepare the request.
+		$request  = array_merge( array( 'nonce' => wp_create_nonce( 'efml_connection_test' ) ), $request );
 		$_POST    = $request;
 		$_REQUEST = $request;
 
@@ -70,7 +71,7 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 		// run the request.
 		ob_start();
 		try {
-			\ExternalFilesFromAwsS3\Plugin\Connection_Test::get_instance()->run_via_ajax();
+			\ExternalFilesInMediaLibrary\Plugin\Connection_Test::get_instance()->run_via_ajax();
 		} catch ( WPAjaxDieContinueException $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
 			// the request has been finished.
 		}
@@ -83,56 +84,25 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
-	 * Test if the returned object is always the same and its hooks are registered.
+	 * Test that all platforms are found by the connection test of the main plugin.
 	 *
 	 * @return void
 	 */
-	public function test_get_instance_and_init(): void {
-		$instance = \ExternalFilesFromAwsS3\Plugin\Connection_Test::get_instance();
-		$this->assertSame( $instance, \ExternalFilesFromAwsS3\Plugin\Connection_Test::get_instance() );
-		$this->assertIsInt( has_action( 'wp_ajax_efmlawss3_connection_test', array( $instance, 'run_via_ajax' ) ) );
-		$this->assertIsInt( has_action( 'admin_enqueue_scripts', array( $instance, 'add_script' ) ) );
+	public function test_get_service_by_name(): void {
+		$instance = \ExternalFilesInMediaLibrary\Plugin\Connection_Test::get_instance();
+		$this->assertSame( S3Compatible::get_instance(), $instance->get_service_by_name( 's3-compatible' ) );
+		$this->assertSame( HetznerObjectStorage::get_instance(), $instance->get_service_by_name( 'hetzner-object-storage' ) );
+		$this->assertSame( AwsS3::get_instance(), $instance->get_service_by_name( AwsS3::get_instance()->get_name() ) );
 	}
 
 	/**
-	 * Test the search for the S3-compatible platforms.
+	 * Test that the platform has no own connection test anymore, but uses the one of the main plugin.
 	 *
 	 * @return void
 	 */
-	public function test_get_platform_by_name(): void {
-		$instance = \ExternalFilesFromAwsS3\Plugin\Connection_Test::get_instance();
-		$this->assertSame( S3Compatible::get_instance(), $instance->get_platform_by_name( 's3-compatible' ) );
-		$this->assertSame( HetznerObjectStorage::get_instance(), $instance->get_platform_by_name( 'hetzner-object-storage' ) );
-
-		// all platforms of this plugin are supported.
-		$this->assertSame( AwsS3::get_instance(), $instance->get_platform_by_name( AwsS3::get_instance()->get_name() ) );
-		$this->assertSame( \ExternalFilesFromAwsS3\Platforms\CloudflareR2::get_instance(), $instance->get_platform_by_name( \ExternalFilesFromAwsS3\Platforms\CloudflareR2::get_instance()->get_name() ) );
-
-		// other services are not supported.
-		$this->assertFalse( $instance->get_platform_by_name( 'dropbox' ) );
-		$this->assertFalse( $instance->get_platform_by_name( 'unknown' ) );
-	}
-
-	/**
-	 * Test if the script is only loaded on the supported pages.
-	 *
-	 * @return void
-	 */
-	public function test_add_script(): void {
-		$instance = \ExternalFilesFromAwsS3\Plugin\Connection_Test::get_instance();
-
-		// test 1: not on a supported page.
-		$instance->add_script( 'index.php' );
-		$this->assertFalse( wp_script_is( 'efmlawss3-connection-test' ) );
-
-		// test 2: on the page of the directory listing.
-		$instance->add_script( 'media_page_efml_local_directories' );
-		$this->assertTrue( wp_script_is( 'efmlawss3-connection-test' ) );
-		$this->assertStringEndsWith( 'admin/connection-test.js', wp_scripts()->registered['efmlawss3-connection-test']->src );
-		$this->assertStringContainsString( 'efmlawss3ConnectionTestVars', (string) wp_scripts()->get_data( 'efmlawss3-connection-test', 'data' ) );
-
-		// cleanup.
-		wp_dequeue_script( 'efmlawss3-connection-test' );
+	public function test_no_own_connection_test(): void {
+		$this->assertFalse( has_action( 'wp_ajax_efmlawss3_connection_test' ) );
+		$this->assertFalse( class_exists( '\ExternalFilesFromAwsS3\Plugin\Connection_Test' ) );
 	}
 
 	/**
@@ -155,7 +125,6 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 
 		$dialog = $this->run_ajax(
 			array(
-				'nonce'  => wp_create_nonce( 'efmlawss3_connection_test' ),
 				'type'   => 's3-compatible',
 				'fields' => $fields,
 			)
@@ -180,7 +149,6 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 
 		$dialog = $this->run_ajax(
 			array(
-				'nonce'  => wp_create_nonce( 'efmlawss3_connection_test' ),
 				'type'   => 's3-compatible',
 				'fields' => $fields,
 			)
@@ -188,36 +156,17 @@ class Connection_Test extends externalFilesFromAwsS3Tests {
 
 		$this->assertEquals( 'Connection test failed', $dialog['detail']['title'] );
 		$this->assertStringContainsString( 'Check the access key.', $dialog['detail']['texts'][0] );
-		$this->assertStringContainsString( 'Skipped', $dialog['detail']['texts'][0] );
 	}
 
 	/**
-	 * Test the connection test via AJAX without the capability for the platform or for an unknown platform.
+	 * Test the connection test via AJAX without the capability for the platform.
 	 *
 	 * @return void
 	 */
 	public function test_run_via_ajax_not_allowed(): void {
-		// test 1: a user without capability.
-		$user_id = self::factory()->user->create( array( 'role' => 'subscriber' ) );
-		wp_set_current_user( $user_id );
-		$dialog = $this->run_ajax(
-			array(
-				'nonce' => wp_create_nonce( 'efmlawss3_connection_test' ),
-				'type'  => 's3-compatible',
-			)
-		);
-		$this->assertEquals( 'Connection test', $dialog['detail']['title'] );
+		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
+		$dialog = $this->run_ajax( array( 'type' => 's3-compatible' ) );
 		$this->assertStringContainsString( 'could not be run', $dialog['detail']['texts'][0] );
 		$this->assertEmpty( $this->get_s3_commands() );
-
-		// test 2: an unknown platform.
-		$this->do_login();
-		$dialog = $this->run_ajax(
-			array(
-				'nonce' => wp_create_nonce( 'efmlawss3_connection_test' ),
-				'type'  => 'unknown-platform',
-			)
-		);
-		$this->assertStringContainsString( 'could not be run', $dialog['detail']['texts'][0] );
 	}
 }

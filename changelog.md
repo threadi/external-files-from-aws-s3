@@ -17,7 +17,7 @@
 - Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
 - Added optional public URL (own domain or CDN) for the S3-compatible storage and its presets
 - Added optional setting to send checksums only if required for S3-compatible providers, which do not support the checksums of the AWS SDK
-- Added complete connection test for all platforms: list, upload, public availability and deletion of a test file
+- Added connection test for all platforms: list, upload, public availability and deletion of a test file
 - Added detailed log entries for failed requests to all platforms incl. HTTP status, error code, request IDs and connection details (without credentials)
 - Added capabilities for new platforms after an update of this plugin
 - Added integration tests against a real S3 server and a GitHub workflow for them
@@ -33,6 +33,8 @@
 - Updated German translations
 - Optimized the option for use auto-updates for this plugin
 - The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
+- Now requires External Files in Media Library 6.0.0 or newer, with an older version this plugin loads none of its functions and shows a hint
+- The connection test now uses the connection test of External Files in Media Library
 
 ### Fixed
 

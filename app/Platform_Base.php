@@ -756,6 +756,17 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return whether this platform supports the complete connection test of External Files in Media Library.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return bool
+	 */
+	public function supports_connection_test(): bool {
+		return true;
+	}
+
+	/**
 	 * Return whether the connection is configured enough to test it.
 	 *
 	 * Platforms could override this, e.g. to check their endpoint, too.
@@ -967,7 +978,7 @@ class Platform_Base extends Service_Base {
 		}
 
 		// step 2: upload a test file the same way as an export.
-		$key                        = 'efml-connection-test-' . wp_generate_password( 12, false ) . '.txt';
+		$key                        = $this->get_connection_test_file_name();
 		$steps['upload']['skipped'] = false;
 		try {
 			$s3_client->upload(
@@ -1252,12 +1263,6 @@ class Platform_Base extends Service_Base {
 				'label'  => sprintf( __( 'Go to %1$s', 'external-files-from-aws-s3' ), $this->get_label() ),
 			);
 		}
-
-		// add the complete connection test.
-		$actions[] = array(
-			'action' => 'efmlawss3_connection_test( "' . $this->get_name() . '", config.fields, config.term );',
-			'label'  => __( 'Run complete connection test', 'external-files-from-aws-s3' ),
-		);
 
 		// return the resulting list.
 		return $actions;

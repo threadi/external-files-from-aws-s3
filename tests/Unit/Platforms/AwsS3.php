@@ -1089,7 +1089,7 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 
 		// the directory listing offers the connection test.
 		$labels = array_column( $this->call_method( $s3, 'get_global_actions' ), 'label' );
-		$this->assertContains( 'Run complete connection test', $labels );
+		$this->assertContains( 'Run connection test', $labels );
 	}
 
 	/**

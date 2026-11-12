@@ -60,9 +60,6 @@ class Init {
 		// init update handling.
 		Updates::get_instance()->init();
 
-		// init the connection test for S3-compatible storages.
-		Connection_Test::get_instance()->init();
-
 		// plugin-action.
 		register_activation_hook( EFMLAWSS3_PLUGIN, array( $this, 'activation' ) );
 
@@ -71,6 +68,7 @@ class Init {
 		add_filter( 'efml_service_plugins', array( $this, 'remove_service_plugin' ) );
 		add_filter( 'efml_configurations', array( $this, 'add_configurations' ) );
 		add_action( 'admin_init', array( $this, 'add_missing_capabilities' ) );
+		add_action( 'admin_init', array( $this, 'remove_incompatible_parent_plugin_hint' ) );
 
 		// misc.
 		add_action( 'init', array( $this, 'init_languages' ) );
@@ -239,6 +237,110 @@ class Init {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Return the minimum version of "External Files in Media Library", which is required by this plugin.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_required_parent_plugin_version(): string {
+		return '6.0.0';
+	}
+
+	/**
+	 * Return the version of the installed plugin "External Files in Media Library" from its plugin header.
+	 *
+	 * The header is used, as the parent plugin is loaded after this plugin.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string Empty string, if the plugin could not be found.
+	 */
+	public function get_parent_plugin_version(): string {
+		// get the plugin file.
+		$file = trailingslashit( WP_PLUGIN_DIR ) . 'external-files-in-media-library/external-files-in-media-library.php';
+
+		// bail if the file does not exist.
+		if ( ! file_exists( $file ) ) {
+			return '';
+		}
+
+		// return the version from the plugin header.
+		$data = get_file_data( $file, array( 'version' => 'Version' ) );
+		return (string) $data['version'];
+	}
+
+	/**
+	 * Return whether the installed version of "External Files in Media Library" is compatible with this plugin.
+	 *
+	 * Development versions without a version number (e.g. from the repository) are seen as compatible.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $version The version to check (the installed version, if empty).
+	 *
+	 * @return bool
+	 */
+	public function is_parent_plugin_compatible( string $version = '' ): bool {
+		// get the installed version.
+		if ( '' === $version ) {
+			$version = $this->get_parent_plugin_version();
+		}
+
+		// bail if the version is not a version number (e.g. "@@VersionNumber@@" in development versions).
+		if ( 1 !== preg_match( '/^\d+(\.\d+)*/', $version ) ) {
+			return true;
+		}
+
+		// return whether the version is new enough.
+		return version_compare( $version, $this->get_required_parent_plugin_version(), '>=' );
+	}
+
+	/**
+	 * Show a hint, that this plugin requires a newer version of "External Files in Media Library".
+	 *
+	 * Used instead of all other functions of this plugin, if the parent plugin is too old.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return void
+	 */
+	public function show_incompatible_parent_plugin_hint(): void {
+		// bail if the transients of the parent plugin are not available.
+		if ( ! class_exists( '\ExternalFilesInMediaLibrary\Dependencies\easyTransientsForWordPress\Transients' ) ) {
+			return;
+		}
+
+		// load the translations of this plugin.
+		$this->init_languages();
+
+		// show the hint.
+		$transient_obj = \ExternalFilesInMediaLibrary\Dependencies\easyTransientsForWordPress\Transients::get_instance()->add();
+		$transient_obj->set_type( 'error' );
+		$transient_obj->set_name( 'efmlawss3_incompatible_parent_plugin' );
+		/* translators: %1$s will be replaced by a version number. */
+		$transient_obj->set_message( '<strong>' . __( 'External files from AWS S3-compatible platforms in Media Library is not active!', 'external-files-from-aws-s3' ) . '</strong> ' . sprintf( __( 'It requires <em>External Files in Media Library</em> %1$s or newer. Please update this plugin.', 'external-files-from-aws-s3' ), esc_html( $this->get_required_parent_plugin_version() ) ) );
+		$transient_obj->save();
+	}
+
+	/**
+	 * Remove the hint about an incompatible version of "External Files in Media Library".
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return void
+	 */
+	public function remove_incompatible_parent_plugin_hint(): void {
+		// bail if the transients of the parent plugin are not available.
+		if ( ! class_exists( '\ExternalFilesInMediaLibrary\Dependencies\easyTransientsForWordPress\Transients' ) ) {
+			return;
+		}
+
+		// delete the hint.
+		\ExternalFilesInMediaLibrary\Dependencies\easyTransientsForWordPress\Transients::get_instance()->get_transient_by_name( 'efmlawss3_incompatible_parent_plugin' )->delete();
 	}
 
 	/**
