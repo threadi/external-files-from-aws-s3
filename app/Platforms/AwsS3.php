@@ -169,6 +169,17 @@ class AwsS3 extends Platform_Base implements Service {
 	}
 
 	/**
+	 * Return the URL of the web interface of AWS S3.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://console.aws.amazon.com/s3/buckets/';
+	}
+
+	/**
 	 * Return global actions.
 	 *
 	 * @return array<int,array<string,string>>
@@ -177,10 +188,6 @@ class AwsS3 extends Platform_Base implements Service {
 		return array_merge(
 			parent::get_global_actions(),
 			array(
-				array(
-					'action' => 'location.href="https://console.aws.amazon.com/s3/buckets/";',
-					'label'  => __( 'Go to S3 Bucket', 'external-files-from-aws-s3' ),
-				),
 				array(
 					'action' => 'efml_get_import_dialog( { "service": "' . $this->get_name() . '", "urls": "' . $this->get_url_mark( $this->get_bucket_name() ) . '" + actualDirectoryPath, "fields": config.fields, "term": config.term } );',
 					'label'  => __( 'Import active directory', 'external-files-from-aws-s3' ),

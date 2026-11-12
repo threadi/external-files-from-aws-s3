@@ -5,7 +5,7 @@ Besides AWS S3, Backblaze B2, Cloudflare R2 and DigitalOcean Spaces this plugin 
 * **S3-compatible storage (own endpoint):** for any provider or self-hosted storage, e.g. MinIO, Garage, Ceph, SeaweedFS, Synology or TrueNAS.
 * **Presets** for providers with fixed endpoints: Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi. A preset is the S3-compatible storage with a list of the regions of the provider, so you do not have to enter the endpoint.
 
-Requires _External Files in Media Library_ 5.7.0 or newer.
+Requires _External Files in Media Library_ 6.0.0 or newer.
 
 ## Settings
 

@@ -808,7 +808,7 @@ class S3Compatible extends Platform_Base implements Service {
 	 *
 	 * The endpoint is compared in its normalized form, so e.g. a trailing slash does not matter.
 	 *
-	 * Requires "External Files in Media Library" 5.7.0 or newer.
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
 	 *
 	 * @param array<string,mixed> $fields List of fields.
 	 *

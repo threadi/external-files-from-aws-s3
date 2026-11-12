@@ -5,7 +5,7 @@ Neben AWS S3, Backblaze B2, Cloudflare R2 und DigitalOcean Spaces unterstützt d
 * **S3-kompatibler Speicher (eigener Endpunkt):** für jeden Anbieter oder selbst betriebenen Speicher, z. B. MinIO, Garage, Ceph, SeaweedFS, Synology oder TrueNAS.
 * **Voreinstellungen** für Anbieter mit festen Endpunkten: Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage und Wasabi. Eine Voreinstellung ist der S3-kompatible Speicher mit einer Liste der Regionen des Anbieters, sodass der Endpunkt nicht eingegeben werden muss.
 
-Erfordert _External Files in Media Library_ 5.7.0 oder neuer.
+Erfordert _External Files in Media Library_ 6.0.0 oder neuer.
 
 ## Einstellungen
 

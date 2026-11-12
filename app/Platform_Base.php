@@ -44,7 +44,7 @@ class Platform_Base extends Service_Base {
 	/**
 	 * Allow to define the values of the fields via constants, e.g. "EFML_AWS_S3_ACCESS_KEY".
 	 *
-	 * Requires "External Files in Media Library" 5.7.0 or newer.
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
 	 *
 	 * @var bool
 	 */
@@ -56,7 +56,7 @@ class Platform_Base extends Service_Base {
 	 * If the credentials are defined via constants, saved external sources for other buckets could not be used,
 	 * and the constants are never used for them.
 	 *
-	 * Requires "External Files in Media Library" 5.7.0 or newer.
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
 	 *
 	 * @var array<int,string>
 	 */
@@ -338,7 +338,7 @@ class Platform_Base extends Service_Base {
 	 * @return bool True if the hint has been added, false if the setting should be added.
 	 */
 	protected function show_constant_hint( Section $section, string $field_name, string $title ): bool {
-		// bail if the main plugin does not support this (requires "External Files in Media Library" 5.7.0 or newer).
+		// bail if the main plugin does not support this (requires "External Files in Media Library" 6.0.0 or newer).
 		if ( ! method_exists( $this, 'add_constant_hint_setting' ) ) { // @phpstan-ignore function.alreadyNarrowedType
 			return false;
 		}
@@ -794,14 +794,47 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return the URL of the web interface of this platform.
+	 *
+	 * Empty, if the platform has no such interface (e.g. S3-compatible storage with own endpoint).
+	 * Also defined here to be usable with older versions of the main plugin.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return '';
+	}
+
+	/**
 	 * Return global actions.
 	 *
-	 * Hint: helper to PHPStan to not warn about not existing functions as they are in the main plugin.
+	 * Adds the link to the web interface of the platform, if it is known.
 	 *
 	 * @return array<int,array<string,string>>
 	 */
 	protected function get_global_actions(): array {
-		return parent::get_global_actions();
+		// get the actions of the main plugin.
+		$actions = parent::get_global_actions();
+
+		// get the URL of the platform.
+		$platform_url = $this->get_platform_url();
+
+		// bail if no URL is known.
+		if ( '' === $platform_url ) {
+			return $actions;
+		}
+
+		// add the link to the platform.
+		$actions[] = array(
+			'action' => 'location.href="' . esc_url( $platform_url ) . '";',
+			/* translators: %1$s will be replaced by the name of the platform (e.g. Wasabi). */
+			'label'  => sprintf( __( 'Go to %1$s', 'external-files-from-aws-s3' ), $this->get_label() ),
+		);
+
+		// return the resulting list.
+		return $actions;
 	}
 
 	/**

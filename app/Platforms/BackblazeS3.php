@@ -165,6 +165,17 @@ class BackblazeS3 extends Platform_Base implements Service {
 	}
 
 	/**
+	 * Return the URL of the web interface of Backblaze (the list of buckets).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://secure.backblaze.com/b2_buckets.htm';
+	}
+
+	/**
 	 * Return global actions.
 	 *
 	 * @return array<int,array<string,string>>

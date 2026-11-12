@@ -164,6 +164,17 @@ class CloudflareR2 extends Platform_Base implements Service {
 	}
 
 	/**
+	 * Return the URL of the web interface of Cloudflare R2 (the Cloudflare dashboard).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://dash.cloudflare.com/?to=/:account/r2/overview';
+	}
+
+	/**
 	 * Return global actions.
 	 *
 	 * @return array<int,array<string,string>>

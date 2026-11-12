@@ -165,6 +165,17 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 	}
 
 	/**
+	 * Return the URL of the web interface of DigitalOcean Spaces.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://cloud.digitalocean.com/spaces';
+	}
+
+	/**
 	 * Return global actions.
 	 *
 	 * @return array<int,array<string,string>>

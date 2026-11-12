@@ -46,7 +46,7 @@ class Constants extends externalFilesFromAwsS3Tests {
 
 		// bail if the main plugin does not support the checks of the target.
 		if ( ! method_exists( AwsS3::get_instance(), 'is_target_blocked_by_constants' ) ) {
-			$this->markTestSkipped( 'Requires "External Files in Media Library" 5.7.0 or newer.' );
+			$this->markTestSkipped( 'Requires "External Files in Media Library" 6.0.0 or newer.' );
 		}
 
 		// use a unique prefix for the constants of this test.

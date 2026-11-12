@@ -371,7 +371,7 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 		$this->assertIsArray( $actions );
 
 		$labels = array_column( $actions, 'label' );
-		$this->assertContains( 'Go to S3 Bucket', $labels );
+		$this->assertContains( 'Go to AWS S3', $labels );
 		$this->assertContains( 'Import active directory', $labels );
 		$this->assertContains( 'Save active directory as your external source', $labels );
 

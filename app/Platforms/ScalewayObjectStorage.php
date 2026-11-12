@@ -114,4 +114,15 @@ class ScalewayObjectStorage extends S3Compatible_Preset {
 	public function get_documentation_url(): string {
 		return 'https://www.scaleway.com/en/docs/object-storage/';
 	}
+
+	/**
+	 * Return the URL of the web interface of Scaleway (the buckets in the Scaleway console).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://console.scaleway.com/object-storage/buckets';
+	}
 }

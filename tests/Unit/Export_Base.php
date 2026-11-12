@@ -477,4 +477,63 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$this->assertFalse( $export->export_file( 1, 'https://example.com/', array() ) );
 		$this->assertFalse( $export->delete_exported_file( 'https://example.com/', array(), 1 ) );
 	}
+
+	/**
+	 * Test that all platforms support private files.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 *
+	 * @return void
+	 */
+	public function test_supports_private_files( string $platform_class_name, string $export_class_name ): void {
+		$this->assertTrue( $export_class_name::get_instance()->supports_private_files() );
+	}
+
+	/**
+	 * Test the export of a private file into a bucket, which is not public.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_private_file( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$file_path     = (string) get_attached_file( $attachment_id, true );
+		$key           = 'uploads/' . basename( $file_path );
+
+		// the file is not public available.
+		$responses              = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject'] = array( 'ObjectURL' => $public_base_url . $key );
+		$s3                     = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                 = $this->set_platform_fields( $s3, $values );
+		$credentials            = $this->get_credentials( $fields, $directory . 'uploads/' );
+
+		// without the private option the export fails.
+		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+
+		// with the private option the export is successful.
+		$credentials['private'] = true;
+		$url                    = $export_class_name::get_instance()->export_file( $attachment_id, $directory, $credentials );
+		$this->assertIsString( $url );
+		$this->assertNotEmpty( $url );
+		$this->assertEquals( $key, get_post_meta( $attachment_id, 'efml_s3_key', true ) );
+
+		// the file is not checked for public access during the private export.
+		$acl_checks = array_filter(
+			$this->get_s3_commands(),
+			static function ( CommandInterface $command ): bool {
+				return 'GetObjectAcl' === $command->getName();
+			}
+		);
+		$this->assertLessThanOrEqual( 1, count( $acl_checks ) );
+	}
 }

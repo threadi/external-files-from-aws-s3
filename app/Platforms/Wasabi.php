@@ -162,4 +162,15 @@ class Wasabi extends S3Compatible_Preset {
 	public function get_documentation_url(): string {
 		return 'https://docs.wasabi.com/docs/service-urls-for-wasabis-storage-regions';
 	}
+
+	/**
+	 * Return the URL of the web interface of Wasabi (the Wasabi console).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://console.wasabisys.com/';
+	}
 }

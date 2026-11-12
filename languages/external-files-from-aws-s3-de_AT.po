@@ -2,20 +2,18 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: External files from AWS S3 in Media Library "
-"@@VersionNumber@@\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/external-files-"
-"from-aws-s3\n"
-"POT-Creation-Date: 2026-10-24T10:57:03+00:00\n"
-"PO-Revision-Date: 2026-10-24 12:58+0200\n"
+"Project-Id-Version: External files from AWS S3 in Media Library @@VersionNumber@@\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/external-files-from-aws-s3\n"
+"POT-Creation-Date: 2026-11-12T15:00:00+00:00\n"
+"PO-Revision-Date: 2026-11-12 16:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.8\n"
 "X-Domain: external-files-from-aws-s3\n"
+"X-Generator: Poedit 3.8\n"
 
 #. Plugin Name of the plugin
 #: external-files-from-aws-s3.php
@@ -24,12 +22,8 @@ msgstr "Externe Dateien aus AWS S3-kompatiblen Plattformen in der Mediathek"
 
 #. Description of the plugin
 #: external-files-from-aws-s3.php
-msgid ""
-"Extends External files in the Media Library for use with AWS S3-compatible "
-"platforms."
-msgstr ""
-"Erweitert Externe Dateien in der Mediathek für die Verwendung von AWS S3-"
-"kompatiblen Plattformen."
+msgid "Extends External files in the Media Library for use with AWS S3-compatible platforms."
+msgstr "Erweitert Externe Dateien in der Mediathek für die Verwendung von AWS S3-kompatiblen Plattformen."
 
 #. Author of the plugin
 #: external-files-from-aws-s3.php
@@ -41,607 +35,793 @@ msgstr "Thomas Zwirner"
 msgid "https://www.thomaszwirner.de"
 msgstr "https://www.thomaszwirner.de"
 
-#: app/Export_Base.php:46 app/Export_Base.php:129
+#: app/Export_Base.php:46 app/Export_Base.php:176
 msgid "Given path is not a S3-URL."
 msgstr "Angegebener Pfad ist keine gültige S3-URL."
 
 #. translators: %1$s will be replaced by the attachment ID, %2$s by the bucket name.
-#: app/Export_Base.php:79
+#: app/Export_Base.php:76
 #, php-format
 msgid "Exporting attachment ID %1$s to S3 bucket %2$s."
 msgstr "Exportiere Anhand ID %1$s zum S3 Bucket %2$s."
 
-#: app/Export_Base.php:92
-msgid ""
-"File would not be public available on your S3 bucket. Check the settings in "
-"the bucket to use the export of files."
-msgstr ""
-"Die Datei wäre nicht öffentlich in deinem S3 Bucket erreichbar. Prüfe die "
-"Einstellungen im Bucket, um den Export von Dateien dorthin zu ermöglichen."
+#: app/Export_Base.php:96
+msgid "File could not be opened for the export."
+msgstr "Die Datei konnte für den Export nicht geöffnet werden."
 
-#: app/Export_Base.php:156
+#: app/Export_Base.php:115
+msgid "File could not be uploaded to the S3 bucket. Error:"
+msgstr "Die Datei konnte nicht in den S3-Bucket hochgeladen werden. Fehler:"
+
+#: app/Export_Base.php:134
+msgid "File would not be public available on your S3 bucket. Check the settings in the bucket to use the export of files."
+msgstr "Die Datei wäre nicht öffentlich in deinem S3 Bucket erreichbar. Prüfe die Einstellungen im Bucket, um den Export von Dateien dorthin zu ermöglichen."
+
+#: app/Export_Base.php:203
 msgid "File could not be deleted! Error:"
 msgstr "Datei konnte nicht gelöscht werden! Fehler:"
 
-#: app/Platforms/AwsS3.php:137
+#: app/Platform_Base.php:457
+msgid "No files returned from AWS S3."
+msgstr "Keine Dateien von AWS S3 erhalten."
+
+#. translators: %1$d will be replaced by an HTTP-status code like 403.
+#: app/Platform_Base.php:573 app/Platforms/AwsS3.php:236
+#, php-format
+msgid "Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d!"
+msgstr "Anmeldedaten und/oder Bucket sind ungültig. Der S3 gibt den HTTP-Status %1$d zurück!"
+
+#: app/Platform_Base.php:638
+msgid "Platform"
+msgstr "Plattform"
+
+#: app/Platform_Base.php:639 app/Platforms/AwsS3.php:425 app/Platforms/AwsS3.php:432 app/Platforms/AwsS3.php:612 app/Platforms/AwsS3.php:776 app/Platforms/BackblazeS3.php:356 app/Platforms/BackblazeS3.php:364 app/Platforms/BackblazeS3.php:427 app/Platforms/BackblazeS3.php:495 app/Platforms/CloudflareR2.php:386 app/Platforms/CloudflareR2.php:396 app/Platforms/CloudflareR2.php:470 app/Platforms/CloudflareR2.php:550 app/Platforms/DigitalOceanSpaces.php:356 app/Platforms/DigitalOceanSpaces.php:364 app/Platforms/DigitalOceanSpaces.php:427 app/Platforms/DigitalOceanSpaces.php:495 app/Platforms/S3Compatible.php:634
+msgid "Bucket"
+msgstr "Bucket"
+
+#: app/Platform_Base.php:659 app/Platforms/S3Compatible.php:1487
+msgid "HTTP status"
+msgstr "HTTP-Status"
+
+#: app/Platform_Base.php:660
+msgid "Error code"
+msgstr "Fehlercode"
+
+#: app/Platform_Base.php:661 app/Platform_Base.php:667 app/Platform_Base.php:669 app/Platforms/S3Compatible.php:1485
+msgid "Error message"
+msgstr "Fehlermeldung"
+
+#: app/Platform_Base.php:662
+msgid "Request ID"
+msgstr "Anfrage-ID"
+
+#: app/Platform_Base.php:663
+msgid "Extended request ID"
+msgstr "Erweiterte Anfrage-ID"
+
+#. translators: %1$s will be replaced by the name of the operation (e.g. "PutObject").
+#: app/Platform_Base.php:677
+#, php-format
+msgid "The request %1$s to the storage failed."
+msgstr "Die Anfrage %1$s an den Speicher ist fehlgeschlagen."
+
+#. translators: %1$s will be replaced by the name of the platform (e.g. Wasabi).
+#: app/Platform_Base.php:833
+#, php-format
+msgid "Go to %1$s"
+msgstr "Zu %1$s"
+
+#: app/Platforms/AwsS3.php:142
 msgid "Choose file(s) from your AWS S3 server"
 msgstr "Wähle Datei(en) von deinem AWS S3 Server"
 
-#: app/Platforms/AwsS3.php:159 app/Platforms/BackblazeS3.php:153
-#: app/Platforms/CloudflareR2.php:152 app/Platforms/DigitalOceanSpaces.php:153
+#: app/Platforms/AwsS3.php:164 app/Platforms/BackblazeS3.php:160 app/Platforms/CloudflareR2.php:159 app/Platforms/DigitalOceanSpaces.php:160 app/Platforms/S3Compatible.php:280
 msgid "Import"
 msgstr "Importieren"
 
-#: app/Platforms/AwsS3.php:161 app/Platforms/BackblazeS3.php:155
-#: app/Platforms/CloudflareR2.php:154 app/Platforms/DigitalOceanSpaces.php:155
+#: app/Platforms/AwsS3.php:166 app/Platforms/BackblazeS3.php:162 app/Platforms/CloudflareR2.php:161 app/Platforms/DigitalOceanSpaces.php:162 app/Platforms/S3Compatible.php:282
 msgid "File-type is not supported"
 msgstr "Der Dateityp wird nicht unterstützt"
 
-#: app/Platforms/AwsS3.php:177
-msgid "Go to S3 Bucket"
-msgstr "Gehe zu deinem S3 Bucket"
-
-#: app/Platforms/AwsS3.php:181 app/Platforms/BackblazeS3.php:171
-#: app/Platforms/CloudflareR2.php:170 app/Platforms/DigitalOceanSpaces.php:171
+#: app/Platforms/AwsS3.php:193 app/Platforms/BackblazeS3.php:189 app/Platforms/CloudflareR2.php:188 app/Platforms/DigitalOceanSpaces.php:189 app/Platforms/S3Compatible.php:298
 msgid "Import active directory"
 msgstr "Importiere aktuelles Verzeichnis"
 
-#: app/Platforms/AwsS3.php:185 app/Platforms/BackblazeS3.php:175
-#: app/Platforms/CloudflareR2.php:174 app/Platforms/DigitalOceanSpaces.php:175
+#: app/Platforms/AwsS3.php:197 app/Platforms/BackblazeS3.php:193 app/Platforms/CloudflareR2.php:192 app/Platforms/DigitalOceanSpaces.php:193 app/Platforms/S3Compatible.php:302
 msgid "Save active directory as your external source"
 msgstr "Speicher das aktuelle Verzeichnis als externe Quelle"
 
-#: app/Platforms/AwsS3.php:203
+#: app/Platforms/AwsS3.php:215
 msgid "No credentials set for this S3 connection!"
 msgstr "Keine Zugangsdaten für die S3 Verbindung gesetzt!"
 
-#. translators: %1$d will be replaced by an HTTP-status code like 403.
-#: app/Platforms/AwsS3.php:224 app/Platform_Base.php:547
-#, php-format
-msgid ""
-"Credentials and/or bucket are not valid. The S3 returns with HTTP-Status "
-"%1$d!"
-msgstr ""
-"Anmeldedaten und/oder Bucket sind ungültig. Der S3 gibt den HTTP-Status %1$d "
-"zurück!"
-
 #. translators: %1$d will be replaced by an HTTP-status (like 301).
-#: app/Platforms/AwsS3.php:231
+#: app/Platforms/AwsS3.php:243
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. The S3 returns with HTTP-Status "
-"%1$d! Error:"
-msgstr ""
-"Zugangsdaten und/oder Bucket sind ungültig. Der S3 gibt den HTTP-Status %1$d "
-"zurück! Fehler:"
+msgid "Credentials and/or bucket are not valid. The S3 returns with HTTP-Status %1$d! Error:"
+msgstr "Zugangsdaten und/oder Bucket sind ungültig. Der S3 gibt den HTTP-Status %1$d zurück! Fehler:"
 
-#: app/Platforms/AwsS3.php:388 app/Platforms/AwsS3.php:546
-#: app/Platforms/AwsS3.php:668 app/Platforms/BackblazeS3.php:312
-#: app/Platforms/BackblazeS3.php:387 app/Platforms/BackblazeS3.php:447
-#: app/Platforms/CloudflareR2.php:336 app/Platforms/CloudflareR2.php:424
-#: app/Platforms/CloudflareR2.php:496 app/Platforms/DigitalOceanSpaces.php:312
-#: app/Platforms/DigitalOceanSpaces.php:387
-#: app/Platforms/DigitalOceanSpaces.php:447
+#: app/Platforms/AwsS3.php:393 app/Platforms/AwsS3.php:402 app/Platforms/AwsS3.php:600 app/Platforms/AwsS3.php:758 app/Platforms/BackblazeS3.php:322 app/Platforms/BackblazeS3.php:332 app/Platforms/BackblazeS3.php:417 app/Platforms/BackblazeS3.php:477 app/Platforms/CloudflareR2.php:352 app/Platforms/CloudflareR2.php:362 app/Platforms/CloudflareR2.php:460 app/Platforms/CloudflareR2.php:532 app/Platforms/DigitalOceanSpaces.php:322 app/Platforms/DigitalOceanSpaces.php:332 app/Platforms/DigitalOceanSpaces.php:417 app/Platforms/DigitalOceanSpaces.php:477 app/Platforms/S3Compatible.php:616
 msgid "Access key"
 msgstr "Zugriffstoken"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:390 app/Platforms/AwsS3.php:548
-#: app/Platforms/BackblazeS3.php:314 app/Platforms/CloudflareR2.php:338
-#: app/Platforms/DigitalOceanSpaces.php:314
+#: app/Platforms/AwsS3.php:404 app/Platforms/AwsS3.php:602 app/Platforms/BackblazeS3.php:334 app/Platforms/CloudflareR2.php:364 app/Platforms/DigitalOceanSpaces.php:334
 #, php-format
-msgid ""
-"Get your access key as described <a href=\"%1$s\" target=\"_blank\">here "
-"(opens in a new window)</a>."
-msgstr ""
-"Erhalte deinen Zugangstoken wie <a href=\"%1$s\" target=\"_blank\">hier "
-"(öffnet neues Fenster)</a> beschrieben."
+msgid "Get your access key as described <a href=\"%1$s\" target=\"_blank\">here (opens in a new window)</a>."
+msgstr "Erhalte deinen Zugangstoken wie <a href=\"%1$s\" target=\"_blank\">hier (öffnet neues Fenster)</a> beschrieben."
 
-#: app/Platforms/AwsS3.php:391 app/Platforms/AwsS3.php:550
-#: app/Platforms/AwsS3.php:669 app/Platforms/BackblazeS3.php:315
-#: app/Platforms/BackblazeS3.php:389 app/Platforms/BackblazeS3.php:448
-#: app/Platforms/CloudflareR2.php:339 app/Platforms/CloudflareR2.php:417
-#: app/Platforms/CloudflareR2.php:426 app/Platforms/CloudflareR2.php:497
-#: app/Platforms/DigitalOceanSpaces.php:315
-#: app/Platforms/DigitalOceanSpaces.php:389
-#: app/Platforms/DigitalOceanSpaces.php:448
+#: app/Platforms/AwsS3.php:405 app/Platforms/AwsS3.php:604 app/Platforms/AwsS3.php:759 app/Platforms/BackblazeS3.php:335 app/Platforms/BackblazeS3.php:419 app/Platforms/BackblazeS3.php:478 app/Platforms/CloudflareR2.php:365 app/Platforms/CloudflareR2.php:453 app/Platforms/CloudflareR2.php:462 app/Platforms/CloudflareR2.php:533 app/Platforms/DigitalOceanSpaces.php:335 app/Platforms/DigitalOceanSpaces.php:419 app/Platforms/DigitalOceanSpaces.php:478 app/Platforms/S3Compatible.php:617
 msgid "The access key"
 msgstr "Der Zugriffstoken"
 
-#: app/Platforms/AwsS3.php:402 app/Platforms/AwsS3.php:553
-#: app/Platforms/AwsS3.php:677 app/Platforms/BackblazeS3.php:327
-#: app/Platforms/BackblazeS3.php:392 app/Platforms/BackblazeS3.php:456
-#: app/Platforms/CloudflareR2.php:351 app/Platforms/CloudflareR2.php:429
-#: app/Platforms/CloudflareR2.php:505 app/Platforms/DigitalOceanSpaces.php:327
-#: app/Platforms/DigitalOceanSpaces.php:392
-#: app/Platforms/DigitalOceanSpaces.php:456
+#: app/Platforms/AwsS3.php:410 app/Platforms/AwsS3.php:419 app/Platforms/AwsS3.php:607 app/Platforms/AwsS3.php:767 app/Platforms/BackblazeS3.php:340 app/Platforms/BackblazeS3.php:350 app/Platforms/BackblazeS3.php:422 app/Platforms/BackblazeS3.php:486 app/Platforms/CloudflareR2.php:370 app/Platforms/CloudflareR2.php:380 app/Platforms/CloudflareR2.php:465 app/Platforms/CloudflareR2.php:541 app/Platforms/DigitalOceanSpaces.php:340 app/Platforms/DigitalOceanSpaces.php:350 app/Platforms/DigitalOceanSpaces.php:422 app/Platforms/DigitalOceanSpaces.php:486 app/Platforms/S3Compatible.php:625
 msgid "Secret key"
 msgstr "Geheimer Schlüssel"
 
-#: app/Platforms/AwsS3.php:403 app/Platforms/AwsS3.php:555
-#: app/Platforms/AwsS3.php:678 app/Platforms/BackblazeS3.php:328
-#: app/Platforms/BackblazeS3.php:394 app/Platforms/BackblazeS3.php:457
-#: app/Platforms/CloudflareR2.php:352 app/Platforms/CloudflareR2.php:431
-#: app/Platforms/CloudflareR2.php:506 app/Platforms/DigitalOceanSpaces.php:328
-#: app/Platforms/DigitalOceanSpaces.php:394
-#: app/Platforms/DigitalOceanSpaces.php:457
+#: app/Platforms/AwsS3.php:420 app/Platforms/AwsS3.php:609 app/Platforms/AwsS3.php:768 app/Platforms/BackblazeS3.php:351 app/Platforms/BackblazeS3.php:424 app/Platforms/BackblazeS3.php:487 app/Platforms/CloudflareR2.php:381 app/Platforms/CloudflareR2.php:467 app/Platforms/CloudflareR2.php:542 app/Platforms/DigitalOceanSpaces.php:351 app/Platforms/DigitalOceanSpaces.php:424 app/Platforms/DigitalOceanSpaces.php:487 app/Platforms/S3Compatible.php:626
 msgid "The secret key"
 msgstr "Der geheime Schlüssel"
 
-#: app/Platforms/AwsS3.php:412 app/Platforms/AwsS3.php:558
-#: app/Platforms/AwsS3.php:686 app/Platforms/BackblazeS3.php:338
-#: app/Platforms/BackblazeS3.php:397 app/Platforms/BackblazeS3.php:465
-#: app/Platforms/CloudflareR2.php:364 app/Platforms/CloudflareR2.php:434
-#: app/Platforms/CloudflareR2.php:514 app/Platforms/DigitalOceanSpaces.php:338
-#: app/Platforms/DigitalOceanSpaces.php:397
-#: app/Platforms/DigitalOceanSpaces.php:465
-msgid "Bucket"
-msgstr "Bucket"
-
-#: app/Platforms/AwsS3.php:413 app/Platforms/BackblazeS3.php:339
-#: app/Platforms/CloudflareR2.php:365 app/Platforms/DigitalOceanSpaces.php:339
+#: app/Platforms/AwsS3.php:433 app/Platforms/BackblazeS3.php:365 app/Platforms/CloudflareR2.php:397 app/Platforms/DigitalOceanSpaces.php:365
 msgid "The bucket you want to use."
 msgstr "Das Bucket was du nutzen willst."
 
-#: app/Platforms/AwsS3.php:424 app/Platforms/BackblazeS3.php:350
-#: app/Platforms/CloudflareR2.php:388 app/Platforms/DigitalOceanSpaces.php:350
+#: app/Platforms/AwsS3.php:438 app/Platforms/AwsS3.php:446 app/Platforms/AwsS3.php:623 app/Platforms/AwsS3.php:793
+msgid "Amazon CloudFront domain (optional)"
+msgstr "Amazon-CloudFront-Domain (optional)"
+
+#: app/Platforms/AwsS3.php:448 app/Platforms/AwsS3.php:626 app/Platforms/AwsS3.php:794
+msgid "d111111abcdef8.cloudfront.net"
+msgstr "d111111abcdef8.cloudfront.net"
+
+#: app/Platforms/AwsS3.php:453 app/Platforms/AwsS3.php:461 app/Platforms/AwsS3.php:629 app/Platforms/AwsS3.php:802
+msgid "Amazon CloudFront distribution ID (optional)"
+msgstr "Amazon-CloudFront-Distribution-ID (optional)"
+
+#: app/Platforms/AwsS3.php:463 app/Platforms/AwsS3.php:632 app/Platforms/AwsS3.php:803
+msgid "E2QWRUHAPOMQZL"
+msgstr "E2QWRUHAPOMQZL"
+
+#: app/Platforms/AwsS3.php:475 app/Platforms/BackblazeS3.php:377 app/Platforms/CloudflareR2.php:424 app/Platforms/DigitalOceanSpaces.php:377 app/Platforms/S3Compatible.php:571
 msgid "Hint"
 msgstr "Hinweis"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:426 app/Platforms/BackblazeS3.php:352
-#: app/Platforms/CloudflareR2.php:390 app/Platforms/DigitalOceanSpaces.php:352
+#: app/Platforms/AwsS3.php:477 app/Platforms/BackblazeS3.php:379 app/Platforms/CloudflareR2.php:426 app/Platforms/DigitalOceanSpaces.php:379 app/Platforms/S3Compatible.php:573
 #, php-format
-msgid ""
-"Each user will find its settings in his own <a href=\"%1$s\">user profile</"
-"a>."
-msgstr ""
-"Jeder Benutzer findet seine Einstellungen in seinem eigenem <a "
-"href=\"%1$s\">Benutzerprofil</a>."
+msgid "Each user will find its settings in his own <a href=\"%1$s\">user profile</a>."
+msgstr "Jeder Benutzer findet seine Einstellungen in seinem eigenem <a href=\"%1$s\">Benutzerprofil</a>."
 
-#: app/Platforms/AwsS3.php:436 app/Platforms/BackblazeS3.php:362
-#: app/Platforms/DigitalOceanSpaces.php:362
+#: app/Platforms/AwsS3.php:482 app/Platforms/AwsS3.php:489 app/Platforms/BackblazeS3.php:384 app/Platforms/BackblazeS3.php:391 app/Platforms/DigitalOceanSpaces.php:384 app/Platforms/DigitalOceanSpaces.php:391
 msgid "Choose the region"
 msgstr "Wähle die Region"
 
-#: app/Platforms/AwsS3.php:446 app/Platforms/BackblazeS3.php:372
-#: app/Platforms/CloudflareR2.php:400 app/Platforms/DigitalOceanSpaces.php:372
+#: app/Platforms/AwsS3.php:500 app/Platforms/BackblazeS3.php:402 app/Platforms/CloudflareR2.php:436 app/Platforms/DigitalOceanSpaces.php:402
 msgid "Max. files to load during import per iteration"
 msgstr "Maximale Anzahl Dateien pro Durchlauf"
 
-#: app/Platforms/AwsS3.php:447 app/Platforms/BackblazeS3.php:373
-#: app/Platforms/CloudflareR2.php:401 app/Platforms/DigitalOceanSpaces.php:373
-msgid ""
-"This value specifies how many files should be loaded during a directory "
-"import. The higher the value, the greater the likelihood of timeouts during "
-"import."
-msgstr ""
-"Dieser Wert gibt an, wie viele Dateien beim Importieren eines Verzeichnisses "
-"geladen werden sollen. Je höher der Wert, desto größer ist die "
-"Wahrscheinlichkeit, dass es während des Imports zu Zeitüberschreitungen "
-"kommt."
+#: app/Platforms/AwsS3.php:501 app/Platforms/BackblazeS3.php:403 app/Platforms/CloudflareR2.php:437 app/Platforms/DigitalOceanSpaces.php:403
+msgid "This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import."
+msgstr "Dieser Wert gibt an, wie viele Dateien beim Importieren eines Verzeichnisses geladen werden sollen. Je höher der Wert, desto größer ist die Wahrscheinlichkeit, dass es während des Imports zu Zeitüberschreitungen kommt."
 
-#: app/Platforms/AwsS3.php:560 app/Platforms/AwsS3.php:687
-#: app/Platforms/BackblazeS3.php:399 app/Platforms/BackblazeS3.php:466
-#: app/Platforms/CloudflareR2.php:436 app/Platforms/CloudflareR2.php:515
-#: app/Platforms/DigitalOceanSpaces.php:399
-#: app/Platforms/DigitalOceanSpaces.php:466
+#: app/Platforms/AwsS3.php:614 app/Platforms/AwsS3.php:777 app/Platforms/BackblazeS3.php:429 app/Platforms/BackblazeS3.php:496 app/Platforms/CloudflareR2.php:472 app/Platforms/CloudflareR2.php:551 app/Platforms/DigitalOceanSpaces.php:429 app/Platforms/DigitalOceanSpaces.php:496 app/Platforms/S3Compatible.php:635
 msgid "The bucket you want to use"
 msgstr "Das Bucket das du verwenden willst"
 
-#: app/Platforms/AwsS3.php:563 app/Platforms/BackblazeS3.php:402
-#: app/Platforms/DigitalOceanSpaces.php:402
+#: app/Platforms/AwsS3.php:617 app/Platforms/BackblazeS3.php:432 app/Platforms/DigitalOceanSpaces.php:432
 msgid "Choose your region"
 msgstr "Wähle deine Region"
 
-#: app/Platforms/AwsS3.php:694 app/Platforms/BackblazeS3.php:473
-#: app/Platforms/DigitalOceanSpaces.php:473
+#: app/Platforms/AwsS3.php:784 app/Platforms/BackblazeS3.php:503 app/Platforms/DigitalOceanSpaces.php:503 app/Platforms/S3Compatible.php:605 app/Platforms/S3Compatible.php:1415
 msgid "Region"
 msgstr "Region"
 
-#: app/Platforms/AwsS3.php:695 app/Platforms/BackblazeS3.php:474
-#: app/Platforms/DigitalOceanSpaces.php:474
+#: app/Platforms/AwsS3.php:785 app/Platforms/BackblazeS3.php:504 app/Platforms/DigitalOceanSpaces.php:504
 msgid "The region the bucket is located in"
 msgstr "Die Region in der das Bucket lokalisiert ist"
 
-#: app/Platforms/AwsS3.php:715
+#: app/Platforms/AwsS3.php:823
 msgid "Connect to your AWS S3"
 msgstr "Verbinde zu deinem AWS S3"
 
-#: app/Platforms/AwsS3.php:719 app/Platforms/BackblazeS3.php:498
-#: app/Platforms/CloudflareR2.php:547 app/Platforms/DigitalOceanSpaces.php:498
+#: app/Platforms/AwsS3.php:827 app/Platforms/BackblazeS3.php:528 app/Platforms/CloudflareR2.php:583 app/Platforms/DigitalOceanSpaces.php:528 app/Platforms/S3Compatible.php:1049
 msgid "Enter your credentials"
 msgstr "Gibt deine Zugangsdaten ein"
 
-#: app/Platforms/AwsS3.php:734
-msgid ""
-"An authentication JSON has already been set by an administrator in the "
-"plugin settings. Just connect for show the files."
-msgstr ""
-"Eine Authentifizierungs-JSON wurde bereits von einem Administrator in den "
-"Plugin-Einstellungen festgelegt. Stelle einfach eine Verbindung her, um die "
-"Dateien anzuzeigen."
+#: app/Platforms/AwsS3.php:842
+msgid "An authentication JSON has already been set by an administrator in the plugin settings. Just connect for show the files."
+msgstr "Eine Authentifizierungs-JSON wurde bereits von einem Administrator in den Plugin-Einstellungen festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
-#: app/Platforms/AwsS3.php:738
-msgid ""
-"An authentication JSON must be set by an administrator in the plugin "
-"settings."
-msgstr ""
-"Eine Authentifizierungs-JSON muss von einem Administrator in den Plugin-"
-"Einstellungen festgelegt werden."
+#: app/Platforms/AwsS3.php:846
+msgid "An authentication JSON must be set by an administrator in the plugin settings."
+msgstr "Eine Authentifizierungs-JSON muss von einem Administrator in den Plugin-Einstellungen festgelegt werden."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:743
+#: app/Platforms/AwsS3.php:851
 #, php-format
 msgid "Set your authentication JSON <a href=\"%1$s\">here</a>."
 msgstr "Lege deine Authentifizierungs-JSON <a href=\"%1$s\">hier</a> fest."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:747
+#: app/Platforms/AwsS3.php:855
 #, php-format
-msgid ""
-"Your access token is already set <a href=\"%1$s\">here</a>. Just connect for "
-"show the files."
-msgstr ""
-"Dein Zugriffstoken ist bereits <a href=\"%1$s\">hier</a> eingerichtet. "
-"Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
+msgid "Your access token is already set <a href=\"%1$s\">here</a>. Just connect for show the files."
+msgstr "Dein Zugriffstoken ist bereits <a href=\"%1$s\">hier</a> eingerichtet. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:754
+#: app/Platforms/AwsS3.php:862
 #, php-format
 msgid "Set your authentication JSON <a href=\"%1$s\">in your profile</a>."
-msgstr ""
-"Lege deine Authentifizierungs-JSON <a href=\"%1$s\">in deinem Profil</a> "
-"fest."
+msgstr "Lege deine Authentifizierungs-JSON <a href=\"%1$s\">in deinem Profil</a> fest."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:758
+#: app/Platforms/AwsS3.php:866
 #, php-format
-msgid ""
-"Your authentication JSON is already set <a href=\"%1$s\">in your profile</"
-"a>. Just connect for show the files."
-msgstr ""
-"Deine Authentifizierungs-JSON ist bereits <a href=\"%1$s\">in deinem Profil</"
-"a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
+msgid "Your authentication JSON is already set <a href=\"%1$s\">in your profile</a>. Just connect for show the files."
+msgstr "Deine Authentifizierungs-JSON ist bereits <a href=\"%1$s\">in deinem Profil</a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/AwsS3.php:762
+#: app/Platforms/AwsS3.php:870
 #, php-format
-msgid ""
-"Enter your S3 credentials in this form. How to get them for AWS S3 is "
-"described <a href=\"%1$s\">here</a>."
-msgstr ""
-"Gibt deine S3 Zugangsdaten in diesem Formular ein. Wie du diese erhältst, "
-"ist <a href=\"%1$s\">hier</a> beschrieben."
+msgid "Enter your S3 credentials in this form. How to get them for AWS S3 is described <a href=\"%1$s\">here</a>."
+msgstr "Gibt deine S3 Zugangsdaten in diesem Formular ein. Wie du diese erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
+
+#: app/Platforms/AwsS3.php:1064
+msgid "Origin Access Control"
+msgstr "Origin Access Control"
+
+#: app/Platforms/AwsS3.php:1066
+msgid "(opens in a new window)"
+msgstr "(öffnet in einem neuen Fenster)"
+
+#. translators: %1$s will be replaced by the name of the AWS feature "Origin Access Control".
+#: app/Platforms/AwsS3.php:1070
+#, php-format
+msgid "Set the domain of your Amazon CloudFront distribution (e.g., \"d111111abcdef8.cloudfront.net\" or your own domain like \"cdn.example.com\") to deliver the files via CloudFront. Your bucket can then stay private if CloudFront is allowed to access it via %1$s. The distribution must use the bucket as origin without an origin path."
+msgstr "Trage die Domain deiner Amazon-CloudFront-Distribution ein (z. B. „d111111abcdef8.cloudfront.net“ oder deine eigene Domain wie „cdn.example.com“), um die Dateien über CloudFront auszuliefern. Dein Bucket kann dann privat bleiben, wenn CloudFront über %1$s darauf zugreifen darf. Die Distribution muss den Bucket als Ursprung ohne Ursprungspfad nutzen."
+
+#: app/Platforms/AwsS3.php:1079
+msgid "Optional: set the ID of your Amazon CloudFront distribution to invalidate the CloudFront cache for files which are overwritten or deleted in the bucket by this plugin. The access key needs the permission \"cloudfront:CreateInvalidation\" for this. Leave empty to disable this. Hint: AWS may charge invalidations beyond the free monthly quota."
+msgstr "Optional: Trage die ID deiner Amazon-CloudFront-Distribution ein, um den CloudFront-Cache für Dateien zu invalidieren, die dieses Plugin im Bucket überschreibt oder löscht. Der Zugriffsschlüssel benötigt dafür die Berechtigung „cloudfront:CreateInvalidation“. Leer lassen, um das zu deaktivieren. Hinweis: AWS kann Invalidierungen über das kostenlose monatliche Kontingent hinaus berechnen."
+
+#. translators: %1$s will be replaced by the checked URL.
+#: app/Platforms/AwsS3.php:1204
+#, php-format
+msgid "The configured Amazon CloudFront domain did not return the file at %1$s. Check whether the domain is correct, the bucket is the origin of the distribution without an origin path and CloudFront is allowed to read the bucket."
+msgstr "Die eingetragene Amazon-CloudFront-Domain hat die Datei unter %1$s nicht geliefert. Prüfe, ob die Domain stimmt, der Bucket ohne Ursprungspfad der Ursprung der Distribution ist und CloudFront den Bucket lesen darf."
+
+#: app/Platforms/AwsS3.php:1246
+msgid "The Amazon CloudFront cache could not be invalidated as the CloudFront client is missing in the bundled AWS SDK."
+msgstr "Der Amazon-CloudFront-Cache konnte nicht invalidiert werden, da der CloudFront-Client im mitgelieferten AWS SDK fehlt."
+
+#: app/Platforms/AwsS3.php:1301
+msgid "The Amazon CloudFront cache could not be invalidated. Error:"
+msgstr "Der Amazon-CloudFront-Cache konnte nicht invalidiert werden. Fehler:"
+
+#. translators: %1$s will be replaced by a list of paths.
+#: app/Platforms/AwsS3.php:1309
+#, php-format
+msgid "Invalidation of the Amazon CloudFront cache requested for %1$s."
+msgstr "Invalidierung des Amazon-CloudFront-Caches für %1$s angefordert."
 
 #: app/Platforms/AwsS3/Configuration.php:40
 msgid "Use only AWS S3"
 msgstr "Verwende ausschließlich AWS S3"
 
 #: app/Platforms/AwsS3/Configuration.php:50
-msgid "This will disable all other services except AWS S3."
-msgstr ""
-"Dadurch werden alle anderen Dienste mit Ausnahme von AWS S3 deaktiviert."
+msgid "After that, you will only be able to see and use AWS S3 for external sources."
+msgstr "Danach kannst du AWS S3 nur noch für externe Quellen anzeigen und nutzen."
 
 #: app/Platforms/AwsS3/Configuration.php:50
-msgid ""
-"After that, you will only be able to see and use AWS S3 for external sources."
-msgstr ""
-"Danach kannst du AWS S3 nur noch für externe Quellen anzeigen und nutzen."
+msgid "This will disable all other services except AWS S3."
+msgstr "Dadurch werden alle anderen Dienste mit Ausnahme von AWS S3 deaktiviert."
 
-#: app/Platforms/BackblazeS3.php:131
+#: app/Platforms/BackblazeS3.php:138
 msgid "Choose file(s) from your Backblaze S3 bucket"
 msgstr "Wähle Datei(en) von deinem Backblaze S3 Bucket"
 
-#: app/Platforms/BackblazeS3.php:193
+#: app/Platforms/BackblazeS3.php:211
 msgid "No credentials set for this Backblaze S3 connection!"
 msgstr "Keine Zugangsdaten für die Backblaze S3 Verbindung gesetzt!"
 
 #. translators: %1$d will be replaced by an HTTP-status code like 403.
-#: app/Platforms/BackblazeS3.php:214
+#: app/Platforms/BackblazeS3.php:232
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. Backblaze S3 returns with HTTP-"
-"Status %1$d!"
-msgstr ""
-"Anmeldedaten und/oder Bucket sind ungültig. Backblaze S3 gibt den HTTP-"
-"Status %1$d zurück!"
+msgid "Credentials and/or bucket are not valid. Backblaze S3 returns with HTTP-Status %1$d!"
+msgstr "Anmeldedaten und/oder Bucket sind ungültig. Backblaze S3 gibt den HTTP-Status %1$d zurück!"
 
 #. translators: %1$d will be replaced by an HTTP-status (like 301).
-#: app/Platforms/BackblazeS3.php:221
+#: app/Platforms/BackblazeS3.php:239
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. Backblaze S3 returns with HTTP-"
-"Status %1$d! Error:"
-msgstr ""
-"Zugangsdaten und/oder Bucket sind ungültig. Backblaze S3 gibt den HTTP-"
-"Status %1$d zurück! Fehler:"
+msgid "Credentials and/or bucket are not valid. Backblaze S3 returns with HTTP-Status %1$d! Error:"
+msgstr "Zugangsdaten und/oder Bucket sind ungültig. Backblaze S3 gibt den HTTP-Status %1$d zurück! Fehler:"
 
-#: app/Platforms/BackblazeS3.php:494
+#: app/Platforms/BackblazeS3.php:524
 msgid "Connect to your Backblaze S3 bucket"
 msgstr "Verbinde zu deinem Backblaze S3 Bucket"
 
-#: app/Platforms/BackblazeS3.php:513 app/Platforms/CloudflareR2.php:562
-#: app/Platforms/DigitalOceanSpaces.php:513
-msgid ""
-"An authentication data has already been set by an administrator in the "
-"plugin settings. Just connect for show the files."
-msgstr ""
-"Authentifizierungsdaten wurde bereits von einem Administrator in den Plugin-"
-"Einstellungen festgelegt. Stelle einfach eine Verbindung her, um die Dateien "
-"anzuzeigen."
+#: app/Platforms/BackblazeS3.php:543 app/Platforms/CloudflareR2.php:598 app/Platforms/DigitalOceanSpaces.php:543 app/Platforms/S3Compatible.php:1064
+msgid "An authentication data has already been set by an administrator in the plugin settings. Just connect for show the files."
+msgstr "Authentifizierungsdaten wurde bereits von einem Administrator in den Plugin-Einstellungen festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
-#: app/Platforms/BackblazeS3.php:517 app/Platforms/CloudflareR2.php:566
-#: app/Platforms/DigitalOceanSpaces.php:517
-msgid ""
-"An authentication data must be set by an administrator in the plugin "
-"settings."
-msgstr ""
-"Authentifizierungsdaten müssen von einem Administrator in den Plugin-"
-"Einstellungen festgelegt werden."
+#: app/Platforms/BackblazeS3.php:547 app/Platforms/CloudflareR2.php:602 app/Platforms/DigitalOceanSpaces.php:547 app/Platforms/S3Compatible.php:1068
+msgid "An authentication data must be set by an administrator in the plugin settings."
+msgstr "Authentifizierungsdaten müssen von einem Administrator in den Plugin-Einstellungen festgelegt werden."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/BackblazeS3.php:522 app/Platforms/CloudflareR2.php:571
-#: app/Platforms/DigitalOceanSpaces.php:522
+#: app/Platforms/BackblazeS3.php:552 app/Platforms/CloudflareR2.php:607 app/Platforms/DigitalOceanSpaces.php:552 app/Platforms/S3Compatible.php:1073
 #, php-format
 msgid "Set your authentication data <a href=\"%1$s\">here</a>."
 msgstr "Lege deine Authentifizierungsdaten <a href=\"%1$s\">hier</a> fest."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/BackblazeS3.php:526 app/Platforms/CloudflareR2.php:575
-#: app/Platforms/DigitalOceanSpaces.php:526
+#: app/Platforms/BackblazeS3.php:556 app/Platforms/CloudflareR2.php:611 app/Platforms/DigitalOceanSpaces.php:556 app/Platforms/S3Compatible.php:1077
 #, php-format
-msgid ""
-"Your authentication data are already set <a href=\"%1$s\">here</a>. Just "
-"connect for show the files."
-msgstr ""
-"Deine Authentifizierungsdaten sind bereits <a href=\"%1$s\">in deinem "
-"Profil</a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien "
-"anzuzeigen."
+msgid "Your authentication data are already set <a href=\"%1$s\">here</a>. Just connect for show the files."
+msgstr "Deine Authentifizierungsdaten sind bereits <a href=\"%1$s\">in deinem Profil</a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/BackblazeS3.php:533 app/Platforms/CloudflareR2.php:582
-#: app/Platforms/DigitalOceanSpaces.php:533
+#: app/Platforms/BackblazeS3.php:563 app/Platforms/CloudflareR2.php:618 app/Platforms/DigitalOceanSpaces.php:563 app/Platforms/S3Compatible.php:1084
 #, php-format
 msgid "Set your authentication data <a href=\"%1$s\">in your profile</a>."
-msgstr ""
-"Lege deine Authentifizierungsdaten <a href=\"%1$s\">in deinem Profil</a> "
-"fest."
+msgstr "Lege deine Authentifizierungsdaten <a href=\"%1$s\">in deinem Profil</a> fest."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/BackblazeS3.php:537 app/Platforms/CloudflareR2.php:586
-#: app/Platforms/DigitalOceanSpaces.php:537
+#: app/Platforms/BackblazeS3.php:567 app/Platforms/CloudflareR2.php:622 app/Platforms/DigitalOceanSpaces.php:567 app/Platforms/S3Compatible.php:1088
 #, php-format
-msgid ""
-"Your authentication data are already set <a href=\"%1$s\">in your profile</"
-"a>. Just connect for show the files."
-msgstr ""
-"Deine Authentifizierungsdaten sind bereits <a href=\"%1$s\">in deinem "
-"Profil</a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien "
-"anzuzeigen."
+msgid "Your authentication data are already set <a href=\"%1$s\">in your profile</a>. Just connect for show the files."
+msgstr "Deine Authentifizierungsdaten sind bereits <a href=\"%1$s\">in deinem Profil</a> festgelegt. Stelle einfach eine Verbindung her, um die Dateien anzuzeigen."
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/BackblazeS3.php:541
+#: app/Platforms/BackblazeS3.php:571
 #, php-format
-msgid ""
-"Enter your Backblaze S3 credentials in this form. How to get them for "
-"Backblaze S3 is described <a href=\"%1$s\">here</a>."
-msgstr ""
-"Gibt deine Backblaze S3 Zugangsdaten in diesem Formular ein. Wie du diese "
-"erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
+msgid "Enter your Backblaze S3 credentials in this form. How to get them for Backblaze S3 is described <a href=\"%1$s\">here</a>."
+msgstr "Gibt deine Backblaze S3 Zugangsdaten in diesem Formular ein. Wie du diese erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
 
 #: app/Platforms/BackblazeS3/Configuration.php:40
 msgid "Use only Backblaze S3"
 msgstr "Verwende nur Backblaze S3"
 
 #: app/Platforms/BackblazeS3/Configuration.php:50
+msgid "After that, you will only be able to see and use Backblaze S3 for external sources."
+msgstr "Danach wirst du nur noch Backblaze S3 als  externe Quelle sehen und verwenden können."
+
+#: app/Platforms/BackblazeS3/Configuration.php:50
 msgid "This will disable all other services except Backblaze S3."
 msgstr "Das wird alle anderen Dienste außer Backblaze S3 deaktivieren."
 
-#: app/Platforms/BackblazeS3/Configuration.php:50
-msgid ""
-"After that, you will only be able to see and use Backblaze S3 for external "
-"sources."
-msgstr ""
-"Danach wirst du nur noch Backblaze S3 als  externe Quelle sehen und "
-"verwenden können."
-
-#: app/Platforms/CloudflareR2.php:130
+#: app/Platforms/CloudflareR2.php:137
 msgid "Choose file(s) from your Cloudflare R2 server"
 msgstr "Wähle Datei(en) von deinem Cloudflare R2 Server"
 
-#: app/Platforms/CloudflareR2.php:192
+#: app/Platforms/CloudflareR2.php:210
 msgid "No credentials set for this Cloudflare R2 connection!"
 msgstr "Keine Zugangsdaten für die Cloudflare R2 Verbindung gesetzt!"
 
 #. translators: %1$d will be replaced by an HTTP-status code like 403.
-#: app/Platforms/CloudflareR2.php:213
+#: app/Platforms/CloudflareR2.php:231
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. Cloudflare R2 returns with HTTP-"
-"Status %1$d!"
-msgstr ""
-"Anmeldedaten und/oder Bucket sind ungültig. Cloudflare R2 gibt den HTTP-"
-"Status %1$d zurück!"
+msgid "Credentials and/or bucket are not valid. Cloudflare R2 returns with HTTP-Status %1$d!"
+msgstr "Anmeldedaten und/oder Bucket sind ungültig. Cloudflare R2 gibt den HTTP-Status %1$d zurück!"
 
 #. translators: %1$d will be replaced by an HTTP-status (like 301).
-#: app/Platforms/CloudflareR2.php:220
+#: app/Platforms/CloudflareR2.php:238
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. Cloudflare R2 returns with HTTP-"
-"Status %1$d! Error:"
-msgstr ""
-"Zugangsdaten und/oder Bucket sind ungültig. Cloudflare R2 gibt den HTTP-"
-"Status %1$d zurück! Fehler:"
+msgid "Credentials and/or bucket are not valid. Cloudflare R2 returns with HTTP-Status %1$d! Error:"
+msgstr "Zugangsdaten und/oder Bucket sind ungültig. Cloudflare R2 gibt den HTTP-Status %1$d zurück! Fehler:"
 
-#: app/Platforms/CloudflareR2.php:311 app/Platforms/CloudflareR2.php:415
-#: app/Platforms/CloudflareR2.php:479
+#: app/Platforms/CloudflareR2.php:321 app/Platforms/CloudflareR2.php:331 app/Platforms/CloudflareR2.php:451 app/Platforms/CloudflareR2.php:515
 msgid "Account ID"
 msgstr "Account ID"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/CloudflareR2.php:313
+#: app/Platforms/CloudflareR2.php:333
 #, php-format
-msgid ""
-"Get your account ID as described <a href=\"%1$s\" target=\"_blank\">here "
-"(opens in a new window)</a>."
-msgstr ""
-"Erhalte deinen Zugangstoken wie <a href=\"%1$s\" target=\"_blank\">hier "
-"(öffnet neues Fenster)</a> beschrieben."
+msgid "Get your account ID as described <a href=\"%1$s\" target=\"_blank\">here (opens in a new window)</a>."
+msgstr "Erhalte deinen Zugangstoken wie <a href=\"%1$s\" target=\"_blank\">hier (öffnet neues Fenster)</a> beschrieben."
 
-#: app/Platforms/CloudflareR2.php:314 app/Platforms/CloudflareR2.php:480
+#: app/Platforms/CloudflareR2.php:334 app/Platforms/CloudflareR2.php:516
 msgid "The account ID"
 msgstr "Die Account ID"
 
-#: app/Platforms/CloudflareR2.php:324 app/Platforms/CloudflareR2.php:420
-#: app/Platforms/CloudflareR2.php:488
+#: app/Platforms/CloudflareR2.php:339 app/Platforms/CloudflareR2.php:347 app/Platforms/CloudflareR2.php:456 app/Platforms/CloudflareR2.php:524
 msgid "EU-storage"
 msgstr "EU-Speicherplatz"
 
-#: app/Platforms/CloudflareR2.php:375 app/Platforms/CloudflareR2.php:439
-#: app/Platforms/CloudflareR2.php:522
+#: app/Platforms/CloudflareR2.php:402 app/Platforms/CloudflareR2.php:410 app/Platforms/CloudflareR2.php:475 app/Platforms/CloudflareR2.php:558
 msgid "Custom domain (optional)"
 msgstr "Eigene Domain (optional)"
 
-#: app/Platforms/CloudflareR2.php:376 app/Platforms/CloudflareR2.php:524
-msgid ""
-"Set your custom domain for the given bucket to use external hosted files."
-msgstr ""
-"Lege deine benutzerdefinierte Domain für den angegebenen Bucket fest, um "
-"extern gehostete Dateien zu verwenden."
+#: app/Platforms/CloudflareR2.php:411 app/Platforms/CloudflareR2.php:560
+msgid "Set your custom domain for the given bucket to use external hosted files."
+msgstr "Lege deine benutzerdefinierte Domain für den angegebenen Bucket fest, um extern gehostete Dateien zu verwenden."
 
-#: app/Platforms/CloudflareR2.php:377 app/Platforms/CloudflareR2.php:441
-#: app/Platforms/CloudflareR2.php:523
+#: app/Platforms/CloudflareR2.php:412 app/Platforms/CloudflareR2.php:477 app/Platforms/CloudflareR2.php:559
 msgid "example.com"
 msgstr "example.com"
 
-#: app/Platforms/CloudflareR2.php:543
+#: app/Platforms/CloudflareR2.php:579
 msgid "Connect to your Cloudflare R2"
 msgstr "Verbinde zu deinem Cloudflare R2"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/CloudflareR2.php:590
+#: app/Platforms/CloudflareR2.php:626
 #, php-format
-msgid ""
-"Enter your Cloudflare R2 credentials in this form. How to get them for "
-"Cloudflare R2 is described <a href=\"%1$s\">here</a>."
-msgstr ""
-"Gibt deine Cloudflare R2 Zugangsdaten in diesem Formular ein. Wie du diese "
-"erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
+msgid "Enter your Cloudflare R2 credentials in this form. How to get them for Cloudflare R2 is described <a href=\"%1$s\">here</a>."
+msgstr "Gibt deine Cloudflare R2 Zugangsdaten in diesem Formular ein. Wie du diese erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
 
 #. translators: %1$s will be replaced by the checked URL.
-#: app/Platforms/CloudflareR2.php:815
+#: app/Platforms/CloudflareR2.php:851
 #, php-format
-msgid ""
-"Configured public domain for Cloudflare R2 did not return the file at %1$s. "
-"Check whether the domain is correct and public access is actually enabled "
-"for this bucket in Cloudflare."
-msgstr ""
-"Die für Cloudflare R2 konfigurierte öffentliche Domain hat die Datei unter "
-"%1$s nicht zurückgegeben. Überprüfe, ob die Domain korrekt ist und der "
-"öffentliche Zugriff für diesen Bucket in Cloudflare tatsächlich aktiviert "
-"ist."
+msgid "Configured public domain for Cloudflare R2 did not return the file at %1$s. Check whether the domain is correct and public access is actually enabled for this bucket in Cloudflare."
+msgstr "Die für Cloudflare R2 konfigurierte öffentliche Domain hat die Datei unter %1$s nicht zurückgegeben. Überprüfe, ob die Domain korrekt ist und der öffentliche Zugriff für diesen Bucket in Cloudflare tatsächlich aktiviert ist."
 
 #: app/Platforms/CloudflareR2/Configuration.php:40
 msgid "Use only Cloudflare R2"
 msgstr "Verwende einzig Cloudflare R2"
 
 #: app/Platforms/CloudflareR2/Configuration.php:50
+msgid "After that, you will only be able to see and use Cloudflare R2 for external sources."
+msgstr "Danach wirst du nur noch Cloudflare R2 als externe Quelle sehen und verwenden können."
+
+#: app/Platforms/CloudflareR2/Configuration.php:50
 msgid "This will disable all other services except Cloudflare R2."
 msgstr "Dadurch werden alle Dienste außer Cloudflare R2 deaktiviert."
 
-#: app/Platforms/CloudflareR2/Configuration.php:50
-msgid ""
-"After that, you will only be able to see and use Cloudflare R2 for external "
-"sources."
-msgstr ""
-"Danach wirst du nur noch Cloudflare R2 als externe Quelle sehen und "
-"verwenden können."
-
-#: app/Platforms/DigitalOceanSpaces.php:131
+#: app/Platforms/DigitalOceanSpaces.php:138
 msgid "Choose file(s) from your DigitalOcean Spaces bucket"
 msgstr "Wähle Datei(en) von deinem DigitalOcean Spaces Bucket"
 
-#: app/Platforms/DigitalOceanSpaces.php:193
+#: app/Platforms/DigitalOceanSpaces.php:211
 msgid "No credentials set for this DigitalOcean Spaces connection!"
 msgstr "Keine Zugangsdaten für die DigitalOcean Space Verbindung gesetzt!"
 
 #. translators: %1$d will be replaced by an HTTP-status code like 403.
-#: app/Platforms/DigitalOceanSpaces.php:214
+#: app/Platforms/DigitalOceanSpaces.php:232
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. DigitalOcean Spaces returns with "
-"HTTP-Status %1$d!"
-msgstr ""
-"Anmeldedaten und/oder Bucket sind ungültig. DigitalOcean Space gibt den HTTP-"
-"Status %1$d zurück!"
+msgid "Credentials and/or bucket are not valid. DigitalOcean Spaces returns with HTTP-Status %1$d!"
+msgstr "Anmeldedaten und/oder Bucket sind ungültig. DigitalOcean Space gibt den HTTP-Status %1$d zurück!"
 
 #. translators: %1$d will be replaced by an HTTP-status (like 301).
-#: app/Platforms/DigitalOceanSpaces.php:221
+#: app/Platforms/DigitalOceanSpaces.php:239
 #, php-format
-msgid ""
-"Credentials and/or bucket are not valid. DigitalOcean Spaces returns with "
-"HTTP-Status %1$d! Error:"
-msgstr ""
-"Zugangsdaten und/oder Bucket sind ungültig. DigitalOcean Space gibt den HTTP-"
-"Status %1$d zurück! Fehler:"
+msgid "Credentials and/or bucket are not valid. DigitalOcean Spaces returns with HTTP-Status %1$d! Error:"
+msgstr "Zugangsdaten und/oder Bucket sind ungültig. DigitalOcean Space gibt den HTTP-Status %1$d zurück! Fehler:"
 
-#: app/Platforms/DigitalOceanSpaces.php:494
+#: app/Platforms/DigitalOceanSpaces.php:524
 msgid "Connect to your DigitalOcean Spaces bucket"
 msgstr "Verbinde zu deinem DigitalOcean Space Bucket"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Platforms/DigitalOceanSpaces.php:541
+#: app/Platforms/DigitalOceanSpaces.php:571
 #, php-format
-msgid ""
-"Enter your DigitalSpace Ocean credentials in this form. How to get them for "
-"DigitalSpace Ocean is described <a href=\"%1$s\">here</a>."
-msgstr ""
-"Gibt deine DigitalOcean Space Zugangsdaten in diesem Formular ein. Wie du "
-"diese erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
+msgid "Enter your DigitalSpace Ocean credentials in this form. How to get them for DigitalSpace Ocean is described <a href=\"%1$s\">here</a>."
+msgstr "Gibt deine DigitalOcean Space Zugangsdaten in diesem Formular ein. Wie du diese erhältst, ist <a href=\"%1$s\">hier</a> beschrieben."
 
 #: app/Platforms/DigitalOceanSpaces/Configuration.php:40
 msgid "Use only DigitalOcean Spaces"
 msgstr "Verwende einzig DigitalOcean Space"
 
 #: app/Platforms/DigitalOceanSpaces/Configuration.php:50
+msgid "After that, you will only be able to see and use DigitalOcean Spaces for external sources."
+msgstr "Danach wirst du nur noch DigitalOcean Spaces als externe Quelle sehen und verwenden können."
+
+#: app/Platforms/DigitalOceanSpaces/Configuration.php:50
 msgid "This will disable all other services except DigitalOcean Spaces."
 msgstr "Dadurch werden alle Dienste außer DigitalOcean Space deaktiviert."
 
-#: app/Platforms/DigitalOceanSpaces/Configuration.php:50
-msgid ""
-"After that, you will only be able to see and use DigitalOcean Spaces for "
-"external sources."
-msgstr ""
-"Danach wirst du nur noch DigitalOcean Spaces als externe Quelle sehen und "
-"verwenden können."
+#: app/Platforms/S3Compatible.php:152
+msgid "S3-compatible storage"
+msgstr "S3-kompatibler Speicher"
 
-#: app/Platform_Base.php:295
-msgid "AWS S3"
-msgstr "AWS S3"
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible.php:178
+#, php-format
+msgid "Choose file(s) from your %1$s bucket"
+msgstr "Wähle Datei(en) aus deinem %1$s-Bucket"
 
-#: app/Platform_Base.php:420
-msgid "No files returned from AWS S3."
-msgstr "Keine Dateien von AWS S3 erhalten."
+#: app/Platforms/S3Compatible.php:306
+msgid "Run complete connection test"
+msgstr "Vollständigen Verbindungstest starten"
 
-#: app/Protocol_Base.php:295
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible.php:325
+#, php-format
+msgid "No credentials set for this %1$s connection!"
+msgstr "Für diese %1$s-Verbindung sind keine Zugangsdaten hinterlegt!"
+
+#: app/Platforms/S3Compatible.php:374
+msgid "The storage could not be reached."
+msgstr "Der Speicher konnte nicht erreicht werden."
+
+#. translators: %1$d will be replaced by an HTTP status like 403, %2$s by an error code like "AccessDenied".
+#: app/Platforms/S3Compatible.php:377
+#, php-format
+msgid "The storage returns with HTTP status %1$d and the error code %2$s."
+msgstr "Der Speicher antwortet mit dem HTTP-Status %1$d und dem Fehlercode %2$s."
+
+#: app/Platforms/S3Compatible.php:381
+msgid "Check the log for details."
+msgstr "Details findest du im Protokoll."
+
+#: app/Platforms/S3Compatible.php:395
+msgid "Check the endpoint URL and whether your hosting is allowed to connect to it."
+msgstr "Prüfe die Endpunkt-URL und ob dein Hosting Verbindungen dorthin zulässt."
+
+#: app/Platforms/S3Compatible.php:401
+msgid "Check the access key."
+msgstr "Prüfe den Zugriffsschlüssel."
+
+#: app/Platforms/S3Compatible.php:403
+msgid "Check the secret key and the region."
+msgstr "Prüfe den geheimen Schlüssel und die Region."
+
+#: app/Platforms/S3Compatible.php:407
+msgid "Check the region of the bucket."
+msgstr "Prüfe die Region des Buckets."
+
+#: app/Platforms/S3Compatible.php:409
+msgid "Check the name of the bucket, the region and the setting for path-style URLs."
+msgstr "Prüfe den Namen des Buckets, die Region und die Einstellung für Path-Style-URLs."
+
+#: app/Platforms/S3Compatible.php:411
+msgid "The access key is not allowed to do this. Check its permissions for the bucket."
+msgstr "Der Zugriffsschlüssel darf das nicht. Prüfe seine Berechtigungen für den Bucket."
+
+#: app/Platforms/S3Compatible.php:416
+msgid "The storage does not support a part of the request. Try the option to send checksums only if required."
+msgstr "Der Speicher unterstützt einen Teil der Anfrage nicht. Probiere die Option, Prüfsummen nur bei Bedarf zu senden."
+
+#: app/Platforms/S3Compatible.php:421
+msgid "Check the region of the bucket and the setting for path-style URLs."
+msgstr "Prüfe die Region des Buckets und die Einstellung für Path-Style-URLs."
+
+#: app/Platforms/S3Compatible.php:424
+msgid "Check the credentials and the permissions of the access key."
+msgstr "Prüfe die Zugangsdaten und die Berechtigungen des Zugriffsschlüssels."
+
+#: app/Platforms/S3Compatible.php:427
+msgid "Check the name of the bucket and the setting for path-style URLs."
+msgstr "Prüfe den Namen des Buckets und die Einstellung für Path-Style-URLs."
+
+#: app/Platforms/S3Compatible.php:431
+msgid "Please contact the provider of your storage with the details from the log."
+msgstr "Bitte wende dich mit den Details aus dem Protokoll an den Anbieter deines Speichers."
+
+#: app/Platforms/S3Compatible.php:593
+msgid "Endpoint URL"
+msgstr "Endpunkt-URL"
+
+#: app/Platforms/S3Compatible.php:595
+msgid "The URL of the S3 API of your storage provider, e.g. https://s3.example.com."
+msgstr "Die URL der S3-API deines Speicheranbieters, z. B. https://s3.example.com."
+
+#: app/Platforms/S3Compatible.php:607
+msgid "The region of your bucket. Use \"us-east-1\", if your provider does not use regions."
+msgstr "Die Region deines Buckets. Nutze „us-east-1“, wenn dein Anbieter keine Regionen verwendet."
+
+#: app/Platforms/S3Compatible.php:646
+msgid "Use path-style URLs"
+msgstr "Path-Style-URLs verwenden"
+
+#: app/Platforms/S3Compatible.php:648
+msgid "If enabled, the bucket is part of the path (https://s3.example.com/bucket/file.jpg), otherwise of the hostname (https://bucket.s3.example.com/file.jpg). Most self-hosted storages like MinIO need path-style URLs."
+msgstr "Wenn aktiviert, ist der Bucket Teil des Pfads (https://s3.example.com/bucket/file.jpg), sonst Teil des Hostnamens (https://bucket.s3.example.com/file.jpg). Die meisten selbst gehosteten Speicher wie MinIO benötigen Path-Style-URLs."
+
+#: app/Platforms/S3Compatible.php:658
+msgid "Public URL (optional)"
+msgstr "Öffentliche URL (optional)"
+
+#: app/Platforms/S3Compatible.php:660
+msgid "The URL under which the files of your bucket are public available, e.g. your own domain or a CDN. If empty, the URL of the bucket is used."
+msgstr "Die URL, unter der die Dateien deines Buckets öffentlich erreichbar sind, z. B. deine eigene Domain oder ein CDN. Ist sie leer, wird die URL des Buckets verwendet."
+
+#: app/Platforms/S3Compatible.php:669
+msgid "Send checksums only if required"
+msgstr "Prüfsummen nur bei Bedarf senden"
+
+#: app/Platforms/S3Compatible.php:671
+msgid "Enable this only if uploads fail with an error like \"InvalidArgument\" or \"NotImplemented\" and your provider does not support the checksums the AWS SDK sends by default."
+msgstr "Aktiviere das nur, wenn Uploads mit einem Fehler wie „InvalidArgument“ oder „NotImplemented“ scheitern und dein Anbieter die Prüfsummen nicht unterstützt, die das AWS SDK standardmäßig sendet."
+
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible.php:1045
+#, php-format
+msgid "Connect to your %1$s bucket"
+msgstr "Mit deinem %1$s-Bucket verbinden"
+
+#. translators: %1$s will be replaced by the name of the platform, %2$s by a URL.
+#: app/Platforms/S3Compatible.php:1092
+#, php-format
+msgid "Enter your %1$s credentials in this form. How to get them is described <a href=\"%2$s\" target=\"_blank\">here (opens in a new window)</a>."
+msgstr "Trage deine %1$s-Zugangsdaten in dieses Formular ein. Wie du sie erhältst, ist <a href=\"%2$s\" target=\"_blank\">hier (öffnet in einem neuen Fenster)</a> beschrieben."
+
+#: app/Platforms/S3Compatible.php:1414
+msgid "Endpoint"
+msgstr "Endpunkt"
+
+#: app/Platforms/S3Compatible.php:1416 app/Platforms/S3Compatible.php:1417
+msgid "No"
+msgstr "Nein"
+
+#: app/Platforms/S3Compatible.php:1416
+msgid "Path-style URLs"
+msgstr "Path-Style-URLs"
+
+#: app/Platforms/S3Compatible.php:1416 app/Platforms/S3Compatible.php:1417
+msgid "Yes"
+msgstr "Ja"
+
+#: app/Platforms/S3Compatible.php:1417
+msgid "Checksums only if required"
+msgstr "Prüfsummen nur bei Bedarf"
+
+#: app/Platforms/S3Compatible.php:1418
+msgid "Public URL"
+msgstr "Öffentliche URL"
+
+#. translators: %1$s will be replaced by a URL.
+#: app/Platforms/S3Compatible.php:1483
+#, php-format
+msgid "The file is not public available under the URL %1$s."
+msgstr "Die Datei ist unter der URL %1$s nicht öffentlich erreichbar."
+
+#: app/Platforms/S3Compatible.php:1489
+msgid "The files must be public readable to use them as external files. Check the permissions of the bucket (e.g. its policy or public access) or set the public URL."
+msgstr "Die Dateien müssen öffentlich lesbar sein, um sie als externe Dateien zu nutzen. Prüfe die Berechtigungen des Buckets (z. B. seine Richtlinie oder den öffentlichen Zugriff) oder trage die öffentliche URL ein."
+
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible.php:1514
+#, php-format
+msgid "Starting the connection test for %1$s."
+msgstr "Starte den Verbindungstest für %1$s."
+
+#: app/Platforms/S3Compatible.php:1519
+msgid "Connect and list the bucket"
+msgstr "Verbinden und Bucket auflisten"
+
+#: app/Platforms/S3Compatible.php:1525
+msgid "Upload a test file"
+msgstr "Testdatei hochladen"
+
+#: app/Platforms/S3Compatible.php:1531
+msgid "Check the public availability of the test file"
+msgstr "Öffentliche Erreichbarkeit der Testdatei prüfen"
+
+#: app/Platforms/S3Compatible.php:1537
+msgid "Delete the test file"
+msgstr "Testdatei löschen"
+
+#: app/Platforms/S3Compatible.php:1547
+msgid "The endpoint or the bucket is missing."
+msgstr "Der Endpunkt oder der Bucket fehlt."
+
+#: app/Platforms/S3Compatible.php:1564
+msgid "The bucket could be listed."
+msgstr "Der Bucket konnte aufgelistet werden."
+
+#: app/Platforms/S3Compatible.php:1577
+msgid "This is a test file of the plugin \"External files from AWS S3\". It could be deleted."
+msgstr "Dies ist eine Testdatei des Plugins „External files from AWS S3“. Sie kann gelöscht werden."
+
+#. translators: %1$s will be replaced by a file name.
+#: app/Platforms/S3Compatible.php:1587
+#, php-format
+msgid "The test file %1$s has been uploaded."
+msgstr "Die Testdatei %1$s wurde hochgeladen."
+
+#. translators: %1$s will be replaced by a URL.
+#: app/Platforms/S3Compatible.php:1604
+#, php-format
+msgid "The test file is public available under %1$s."
+msgstr "Die Testdatei ist unter %1$s öffentlich erreichbar."
+
+#. translators: %1$s will be replaced by a URL.
+#: app/Platforms/S3Compatible.php:1607
+#, php-format
+msgid "The test file is not public available under %1$s. Files could be imported, but not exported to this bucket. Check the permissions of the bucket or the public URL."
+msgstr "Die Testdatei ist unter %1$s nicht öffentlich erreichbar. Dateien können importiert, aber nicht in diesen Bucket exportiert werden. Prüfe die Berechtigungen des Buckets oder die öffentliche URL."
+
+#: app/Platforms/S3Compatible.php:1620
+msgid "The test file has been deleted."
+msgstr "Die Testdatei wurde gelöscht."
+
+#. translators: %1$s will be replaced by a file name.
+#: app/Platforms/S3Compatible.php:1623
+#, php-format
+msgid "Please delete the test file %1$s manually."
+msgstr "Bitte lösche die Testdatei %1$s manuell."
+
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible/Configuration.php:58
+#, php-format
+msgid "Use only %1$s"
+msgstr "Verwende ausschließlich %1$s"
+
+#: app/Platforms/S3Compatible/Configuration.php:72
+#, php-format
+msgid "After that, you will only be able to see and use %1$s for external sources."
+msgstr "Danach kannst du nur noch %1$s für externe Quellen anzeigen und nutzen."
+
+#. translators: %1$s will be replaced by the name of the platform.
+#: app/Platforms/S3Compatible/Configuration.php:72
+#, php-format
+msgid "This will disable all other services except %1$s."
+msgstr "Dadurch werden alle anderen Dienste mit Ausnahme von %1$s deaktiviert."
+
+#: app/Plugin/Connection_Test.php:101
+msgid "Connection test is running"
+msgstr "Verbindungstest läuft"
+
+#: app/Plugin/Connection_Test.php:102
+msgid "Please wait a moment."
+msgstr "Bitte warte einen Moment."
+
+#: app/Plugin/Connection_Test.php:148
+msgid "Connection test"
+msgstr "Verbindungstest"
+
+#: app/Plugin/Connection_Test.php:154
+msgid "OK"
+msgstr "OK"
+
+#: app/Plugin/Connection_Test.php:166
+msgid "The connection test could not be run."
+msgstr "Der Verbindungstest konnte nicht ausgeführt werden."
+
+#: app/Plugin/Connection_Test.php:178
+msgid "Access not allowed!"
+msgstr "Zugriff nicht erlaubt!"
+
+#: app/Plugin/Connection_Test.php:201
+msgid "Skipped"
+msgstr "Übersprungen"
+
+#: app/Plugin/Connection_Test.php:203
+msgid "Successful"
+msgstr "Erfolgreich"
+
+#: app/Plugin/Connection_Test.php:205
+msgid "Failed"
+msgstr "Fehlgeschlagen"
+
+#: app/Plugin/Connection_Test.php:214
+msgid "Connection test failed"
+msgstr "Verbindungstest fehlgeschlagen"
+
+#: app/Plugin/Connection_Test.php:214
+msgid "Connection test successful"
+msgstr "Verbindungstest erfolgreich"
+
+#. translators: %1$s will be replaced by a URL.
+#: app/Plugin/Connection_Test.php:217
+#, php-format
+msgid "All steps are logged with their details in the <a href=\"%1$s\">log</a>. Use them if you contact the support or the provider of your storage."
+msgstr "Alle Schritte sind mit ihren Details im <a href=\"%1$s\">Protokoll</a> erfasst. Nutze sie, wenn du dich an den Support oder den Anbieter deines Speichers wendest."
+
+#: app/Protocol_Base.php:165
+msgid "Private file could not be loaded from S3. Error:"
+msgstr "Die private Datei konnte nicht aus S3 geladen werden. Fehler:"
+
+#: app/Protocol_Base.php:235
+msgid "Pre-signed URL for private file could not be created. Error:"
+msgstr "Die signierte URL für die private Datei konnte nicht erstellt werden. Fehler:"
+
+#: app/Protocol_Base.php:465
 msgid "Response from S3 for this file:"
 msgstr "Antwort von S3 zu dieser Datei:"
 
 #. translators: %1$s will be replaced by a URL.
-#: app/Protocol_Base.php:341
+#: app/Protocol_Base.php:511
 #, php-format
-msgid ""
-"Error during request of S3 file. <a href=\"%1$s\">Check the log</a> for "
-"details."
-msgstr ""
-"Fehler bei Anfrage einer S3 Datei. <a href=\"%1$s\">Prüfe das Protokoll</a> "
-"für Details."
+msgid "Error during request of S3 file. <a href=\"%1$s\">Check the log</a> for details."
+msgstr "Fehler bei Anfrage einer S3 Datei. <a href=\"%1$s\">Prüfe das Protokoll</a> für Details."
 
-#: app/Protocol_Base.php:342
+#: app/Protocol_Base.php:512
 msgid "Error during request of S3 file:"
 msgstr "Fehler beim Abrufen einer S3 Datei:"
 
-#: app/Protocol_Base.php:421
+#: app/Protocol_Base.php:591
 msgid "Specified URL already exist in your media library."
 msgstr "Die angegebene URL ist bereits in Ihrer Medienbibliothek vorhanden."

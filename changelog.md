@@ -7,11 +7,11 @@
 - Added optional Amazon CloudFront domain for AWS S3 to deliver files via CloudFront, also from private buckets
 - Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
 - Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront
-- Added possibility to define credentials and settings of each platform via constants, e.g. in wp-config.php (requires External Files in Media Library 5.7.0)
+- Added possibility to define credentials and settings of each platform via constants, e.g. in wp-config.php (requires External Files in Media Library 6.0.0)
 - Constants of a platform are only used if the constants for all its required fields are defined
 - Settings show hints instead of input fields for values defined via constants
 - Saved external sources for other buckets than the one defined via constants are not usable as long as the constants are defined, files imported before are still delivered
-- Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 5.7.0)
+- Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 6.0.0)
 - Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
 - Added S3-compatible storage with own endpoint for any provider or self-hosted storage with S3 API (e.g. MinIO, Garage or Ceph)
 - Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
@@ -21,10 +21,15 @@
 - Added detailed log entries for failed requests to S3-compatible storages incl. HTTP status, error code, request IDs and connection details (without credentials)
 - Added capabilities for new platforms after an update of this plugin
 - Added integration tests against a real S3 server and a GitHub workflow for them
-- Added support for the folder structure of exported files for all platforms (requires External Files in Media Library 5.7.0)
+- Added support for the folder structure of exported files for all platforms (requires External Files in Media Library 6.0.0)
+- Added support for private files for all platforms (requires External Files in Media Library 6.0.0): files are exported without the check for public availability and delivered via pre-signed URLs or the cache of the proxy
+- Added hook "efmlawss3_signed_url" to change the pre-signed URLs
+- Added link to the platform of each file in its info box, e.g. to the AWS console, the Cloudflare dashboard or the consoles of Backblaze, DigitalOcean and the presets (requires External Files in Media Library 6.0.0)
+- The directory listing of each platform with a known web interface now links to it ("Go to …"), before only AWS S3
 
 ### Changed
 
+- Updated German translations
 - Optimized the option for use auto-updates for this plugin
 - The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
 

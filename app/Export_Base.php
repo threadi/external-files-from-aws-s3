@@ -128,8 +128,8 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			return false;
 		}
 
-		// bail if the file is not public available.
-		if ( ! $s3_obj->is_file_public_available( $key, $s3_client ) ) {
+		// bail if the file is not public available (not necessary for private files).
+		if ( empty( $credentials['private'] ) && ! $s3_obj->is_file_public_available( $key, $s3_client ) ) {
 			// log this event.
 			Log::get_instance()->create( __( 'File would not be public available on your S3 bucket. Check the settings in the bucket to use the export of files.', 'external-files-from-aws-s3' ), $target, 'error' );
 
@@ -365,5 +365,19 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 	 */
 	protected function get_directory_listing_object(): Platform_Base|false {
 		return false;
+	}
+
+	/**
+	 * Return whether this service could save exported files privately.
+	 *
+	 * Private files are delivered via the proxy of External Files in Media Library, from its cache or via a
+	 * redirect to a pre-signed URL.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return bool
+	 */
+	public function supports_private_files(): bool {
+		return true;
 	}
 }

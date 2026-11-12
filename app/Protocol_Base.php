@@ -10,8 +10,11 @@ namespace ExternalFilesFromAwsS3;
 // prevent direct access.
 defined( 'ABSPATH' ) || exit;
 
+use Aws\Exception\AwsException;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use Exception;
+use ExternalFilesInMediaLibrary\ExternalFiles\File;
 use ExternalFilesInMediaLibrary\ExternalFiles\Files;
 use ExternalFilesInMediaLibrary\ExternalFiles\Import;
 use ExternalFilesInMediaLibrary\ExternalFiles\Protocols\Http;
@@ -100,12 +103,179 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	 * @return bool|string
 	 */
 	public function get_temp_file( string $url, WP_Filesystem_Base $filesystem ): bool|string {
+		// load private files via the S3 client, as they are not public available.
+		$external_file_obj = Files::get_instance()->get_file_by_url( $url );
+		if ( $external_file_obj instanceof File && method_exists( $external_file_obj, 'is_private' ) && $external_file_obj->is_private() ) {
+			return $this->get_private_temp_file( $url, $external_file_obj );
+		}
+
 		// get the HTTP protocol handler.
 		$http_protocol_handler = new Http( $url );
 		$http_protocol_handler->set_fields( $this->get_fields() );
 
 		// return the results from the HTTP handler.
 		return $http_protocol_handler->get_temp_file( $url, $filesystem );
+	}
+
+	/**
+	 * Return a temporary file for a private file, loaded via the S3 client.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $url               The URL of the file.
+	 * @param File   $external_file_obj The external file object.
+	 *
+	 * @return bool|string
+	 */
+	private function get_private_temp_file( string $url, File $external_file_obj ): bool|string {
+		// get our own service object.
+		$s3 = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3 instanceof Platform_Base ) {
+			return false;
+		}
+
+		// set the fields.
+		$s3->set_fields( $this->get_fields() );
+
+		// get the key of the file.
+		$key = $this->get_object_key( $url, $external_file_obj );
+
+		// bail if no key could be found.
+		if ( '' === $key ) {
+			return false;
+		}
+
+		// get the tmp file name.
+		$tmp_file = wp_tempnam();
+
+		// set the query for the file and save it in the tmp file.
+		$query = array(
+			'Bucket' => $s3->get_bucket_name(),
+			'Key'    => $key,
+			'SaveAs' => $tmp_file,
+		);
+
+		// load the file.
+		try {
+			$s3->get_s3_client()->getObject( $query );
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'Private file could not be loaded from S3. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $url, 'error' );
+
+			// delete the tmp file.
+			wp_delete_file( $tmp_file );
+
+			// return false as we do not get the file.
+			return false;
+		}
+
+		// return the path to the tmp file.
+		return $tmp_file;
+	}
+
+	/**
+	 * Return a pre-signed URL for a private file, valid in the given time range.
+	 *
+	 * The signature is created locally without a request to the S3 API. For the same time range the same URL is
+	 * created, so browsers and caches can reuse it.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $url     The URL of the file (as saved on the external file).
+	 * @param int    $start   The start of the validity as timestamp.
+	 * @param int    $expires The end of the validity as timestamp.
+	 *
+	 * @return string
+	 */
+	public function get_signed_url( string $url, int $start, int $expires ): string {
+		// bail if URL is empty or the time range is not valid.
+		if ( empty( $url ) || $expires <= $start ) {
+			return '';
+		}
+
+		// get our own service object.
+		$s3 = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3 instanceof Platform_Base ) {
+			return '';
+		}
+
+		// set the fields.
+		$s3->set_fields( $this->get_fields() );
+
+		// get the key of the file.
+		$key = $this->get_object_key( $url, Files::get_instance()->get_file_by_url( $url ) );
+
+		// bail if no key could be found.
+		if ( '' === $key ) {
+			return '';
+		}
+
+		// create the pre-signed URL.
+		try {
+			// get the S3 client.
+			$s3_client = $s3->get_s3_client();
+
+			// create the command to get the file.
+			$command = $s3_client->getCommand(
+				'GetObject',
+				array(
+					'Bucket' => $s3->get_bucket_name(),
+					'Key'    => $key,
+				)
+			);
+
+			// create the pre-signed request for the given time range.
+			$request = $s3_client->createPresignedRequest( $command, $expires, array( 'start_time' => $start ) );
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'Pre-signed URL for private file could not be created. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $url, 'error' );
+
+			// return empty string to use the cache instead.
+			return '';
+		}
+
+		// get the URL.
+		$signed_url = (string) $request->getUri();
+
+		$instance = $this;
+		/**
+		 * Filter the pre-signed URL for a private file.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param string $signed_url The pre-signed URL.
+		 * @param string $key The key of the file.
+		 * @param Protocol_Base $instance The protocol object.
+		 */
+		return (string) apply_filters( 'efmlawss3_signed_url', $signed_url, $key, $instance );
+	}
+
+	/**
+	 * Return the key of the object for the given URL.
+	 *
+	 * Uses the key saved during the export, if the file is known, otherwise the key from the URL.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string     $url               The URL of the file.
+	 * @param File|false $external_file_obj The external file object, if known.
+	 *
+	 * @return string
+	 */
+	protected function get_object_key( string $url, File|false $external_file_obj ): string {
+		// use the saved key, if available.
+		if ( $external_file_obj instanceof File ) {
+			$key = get_post_meta( $external_file_obj->get_id(), 'efml_s3_key', true );
+			if ( is_string( $key ) && '' !== $key ) {
+				return $key;
+			}
+		}
+
+		// return the key from the URL.
+		return rawurldecode( $this->get_key_of_file( $url ) );
 	}
 
 	/**

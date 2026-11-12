@@ -110,4 +110,15 @@ class HetznerObjectStorage extends S3Compatible_Preset {
 	public function get_documentation_url(): string {
 		return 'https://docs.hetzner.com/storage/object-storage/';
 	}
+
+	/**
+	 * Return the URL of the web interface of Hetzner (the Hetzner Console).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://console.hetzner.com/';
+	}
 }

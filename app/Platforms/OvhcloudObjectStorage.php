@@ -150,4 +150,15 @@ class OvhcloudObjectStorage extends S3Compatible_Preset {
 	public function get_documentation_url(): string {
 		return 'https://docs.ovhcloud.com/en/guides/storage-and-backup/object-storage/s3-getting-started-with-object-storage';
 	}
+
+	/**
+	 * Return the URL of the web interface of OVHcloud (the OVHcloud Control Panel).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://manager.eu.ovhcloud.com/';
+	}
 }
