@@ -88,6 +88,24 @@ define( 'EFML_HETZNER_OBJECT_STORAGE_CHECKSUM_WHEN_REQUIRED', 1 ); // optional
 
 Die möglichen Regionen stehen in der [Dokumentation des S3-kompatiblen Speichers](s3-compatible_de.md#voreinstellungen).
 
+## Mehrere Verbindungen
+
+Du kannst je Plattform mehrere Verbindungen festlegen, z. B. für zwei Buckets. Liste die Namen der Verbindungen in `EFML_` + Name der Plattform + `_CONNECTIONS` auf und ergänze den Namen der Verbindung in den Namen ihrer Konstanten. Ist mehr als eine Verbindung vollständig, zeigt das Formular für eine neue externe Quelle das Feld „Verbindung“. Ohne gewählte Verbindung gilt die Verbindung, die zum Bucket (und zur Region bzw. zum Endpunkt) passt. Details stehen in der [Dokumentation des Hauptplugins](https://github.com/threadi/external-files-in-media-library/blob/master/docs/constants_de.md#mehrere-verbindungen).
+
+```php
+define( 'EFML_AWS_S3_CONNECTIONS', 'bilder,downloads' );
+
+define( 'EFML_AWS_S3_BILDER_ACCESS_KEY', 'dein-access-key' );
+define( 'EFML_AWS_S3_BILDER_SECRET', 'dein-secret-key' );
+define( 'EFML_AWS_S3_BILDER_BUCKET', 'dein-bilder-bucket' );
+define( 'EFML_AWS_S3_BILDER_REGION', 'eu-central-1' );
+
+define( 'EFML_AWS_S3_DOWNLOADS_ACCESS_KEY', 'anderer-access-key' );
+define( 'EFML_AWS_S3_DOWNLOADS_SECRET', 'anderer-secret-key' );
+define( 'EFML_AWS_S3_DOWNLOADS_BUCKET', 'dein-download-bucket' );
+define( 'EFML_AWS_S3_DOWNLOADS_REGION', 'eu-west-1' );
+```
+
 ## Hooks
 
 * `efml_service_field_constant_name` - ändert den Namen der Konstante für ein Feld.

@@ -1375,4 +1375,15 @@ class Platform_Base extends Service_Base {
 		// set the service name.
 		$external_file_obj->set_service_name( $service );
 	}
+
+	/**
+	 * Return further search terms of this service, separated by commas (e.g. for the command palette).
+	 *
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @return string
+	 */
+	protected function get_keywords(): string {
+		return 'S3, object storage, bucket, cloud';
+	}
 }

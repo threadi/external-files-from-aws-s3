@@ -11,6 +11,7 @@
 - Constants of a platform are only used if the constants for all its required fields are defined
 - Settings show hints instead of input fields for values defined via constants
 - Saved external sources for other buckets than the one defined via constants are not usable as long as the constants are defined, files imported before are still delivered
+- Added possibility to define several connections per platform via constants, e.g. two buckets (requires External Files in Media Library 6.0.0)
 - Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 6.0.0)
 - Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
 - Added S3-compatible storage with own endpoint for any provider or self-hosted storage with S3 API (e.g. MinIO, Garage or Ceph)
@@ -30,6 +31,7 @@
 - Added optional custom domain (e.g. of a CDN) for Backblaze B2 and DigitalOcean Spaces, also via constants
 - Folders are imported file by file via the import of External Files in Media Library 6.0.0: also folders with tens of thousands of files, in the background if necessary
 - Added integration tests for the file list of a folder with 10,000 files and the import of a folder with 1,100 files
+- Added search terms for the command palette of WordPress, e.g. other names of the service (requires External Files in Media Library 6.0.0)
 
 ### Changed
 

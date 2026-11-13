@@ -53,6 +53,7 @@ class Constants extends externalFilesFromAwsS3Tests {
 		++self::$counter;
 		$this->prefix = 'EFMLAWSTEST' . self::$counter . '_';
 		add_filter( 'efml_service_field_constant_name', array( $this, 'set_constant_name' ) );
+		add_filter( 'efml_service_connections_constant_name', array( $this, 'set_constant_name' ) );
 	}
 
 	/**
@@ -62,6 +63,7 @@ class Constants extends externalFilesFromAwsS3Tests {
 	 */
 	public function tear_down(): void {
 		remove_filter( 'efml_service_field_constant_name', array( $this, 'set_constant_name' ) );
+		remove_filter( 'efml_service_connections_constant_name', array( $this, 'set_constant_name' ) );
 		foreach ( array( AwsS3::get_instance(), BackblazeS3::get_instance(), CloudflareR2::get_instance(), S3Compatible::get_instance(), HetznerObjectStorage::get_instance() ) as $platform ) {
 			$platform->set_fields( array() );
 		}
@@ -311,5 +313,88 @@ class Constants extends externalFilesFromAwsS3Tests {
 
 		// the generic storage is not affected.
 		$this->assertFalse( S3Compatible::get_instance()->is_mode_forced_by_constants() );
+	}
+
+	/**
+	 * Test several connections for AWS S3: the connection is chosen or detected by the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_several_connections(): void {
+		$this->define_aws_constants();
+		$this->define_constants(
+			array(
+				'EFML_AWS_S3_CONNECTIONS'          => 'downloads',
+				'EFML_AWS_S3_DOWNLOADS_ACCESS_KEY' => 'downloads-key',
+				'EFML_AWS_S3_DOWNLOADS_SECRET'     => 'downloads-secret',
+				'EFML_AWS_S3_DOWNLOADS_BUCKET'     => 'downloads-bucket',
+				'EFML_AWS_S3_DOWNLOADS_REGION'     => 'eu-west-1',
+			)
+		);
+		$platform = AwsS3::get_instance();
+
+		// the field to choose the connection.
+		$platform->set_fields( array() );
+		$fields = $platform->get_fields();
+		$this->assertArrayHasKey( 'efml_connection', $fields );
+		$this->assertEquals( array( 'default', 'downloads' ), array_column( $fields['efml_connection']['options'], 'value' ) );
+		$this->assertEquals( 'downloads (downloads-bucket)', $fields['efml_connection']['options'][1]['label'] );
+
+		// the chosen connection is used.
+		$platform->set_fields( array( 'efml_connection' => array( 'value' => 'downloads' ) ) + $this->get_source_fields( '' ) );
+		$fields = $platform->get_fields();
+		$this->assertEquals( 'downloads-secret', $fields['secret']['value'] );
+		$this->assertEquals( 'downloads-bucket', $fields['bucket']['value'] );
+		$this->assertEquals( 'eu-west-1', $fields['region']['value'] );
+
+		// without a chosen connection, the connection is detected by the bucket.
+		$this->assertEquals( 'downloads', $platform->get_connection_for_fields( $this->get_source_fields( 'downloads-bucket' ) ) );
+		$this->assertEquals( 'default', $platform->get_connection_for_fields( $this->get_source_fields( 'constant-bucket' ) ) );
+		$this->assertTrue( $platform->is_target_blocked_by_constants( '', $this->get_source_fields( 'other-bucket' ) ) );
+		$this->assertFalse( $platform->is_target_blocked_by_constants( '', $this->get_source_fields( 'downloads-bucket' ) ) );
+	}
+
+	/**
+	 * Test several connections for the S3-compatible storage: the endpoint is compared in its normalized form.
+	 *
+	 * @return void
+	 */
+	public function test_several_connections_of_s3_compatible(): void {
+		$this->define_constants(
+			array(
+				'EFML_S3_COMPATIBLE_CONNECTIONS'       => 'first,second',
+				'EFML_S3_COMPATIBLE_FIRST_ENDPOINT'    => 'https://s3.first.example.com/',
+				'EFML_S3_COMPATIBLE_FIRST_REGION'      => 'eu-central-1',
+				'EFML_S3_COMPATIBLE_FIRST_ACCESS_KEY'  => 'first-key',
+				'EFML_S3_COMPATIBLE_FIRST_SECRET'      => 'first-secret',
+				'EFML_S3_COMPATIBLE_FIRST_BUCKET'      => 'bucket',
+				'EFML_S3_COMPATIBLE_SECOND_ENDPOINT'   => 'https://s3.second.example.com',
+				'EFML_S3_COMPATIBLE_SECOND_REGION'     => 'eu-central-1',
+				'EFML_S3_COMPATIBLE_SECOND_ACCESS_KEY' => 'second-key',
+				'EFML_S3_COMPATIBLE_SECOND_SECRET'     => 'second-secret',
+				'EFML_S3_COMPATIBLE_SECOND_BUCKET'     => 'bucket',
+				'EFML_S3_COMPATIBLE_SECOND_PUBLIC_URL' => 'https://cdn.second.example.com',
+			)
+		);
+		$platform = S3Compatible::get_instance();
+		$this->assertEquals( array( 'first', 'second' ), array_keys( $platform->get_connections() ) );
+
+		// a source for the second endpoint in another notation uses its constants.
+		$fields = array(
+			'endpoint'   => array( 'value' => 'https://S3.Second.example.com/' ),
+			'region'     => array( 'value' => '' ),
+			'access_key' => array( 'value' => '' ),
+			'secret'     => array( 'value' => '' ),
+			'bucket'     => array( 'value' => 'bucket' ),
+			'public_url' => array( 'value' => '' ),
+		);
+		$this->assertEquals( 'second', $platform->get_connection_for_fields( $fields ) );
+		$platform->set_fields( $fields );
+		$this->assertEquals( 'second-secret', $platform->get_fields()['secret']['value'] );
+		$this->assertEquals( 'https://cdn.second.example.com/example.jpg', $platform->get_public_url_of_file( 'example.jpg', $platform->get_fields() ) );
+
+		// a source for another endpoint is blocked.
+		$fields['endpoint']['value'] = 'https://s3.third.example.com';
+		$this->assertTrue( $platform->is_target_blocked_by_constants( '', $fields ) );
 	}
 }

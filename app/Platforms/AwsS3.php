@@ -1298,4 +1298,15 @@ class AwsS3 extends Platform_Base implements Service {
 		// return true as invalidation has been requested.
 		return true;
 	}
+
+	/**
+	 * Return further search terms of this service, separated by commas (e.g. for the command palette).
+	 *
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @return string
+	 */
+	protected function get_keywords(): string {
+		return 'AWS, Amazon, S3, CloudFront, object storage, bucket, cloud';
+	}
 }

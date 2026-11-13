@@ -763,19 +763,20 @@ class S3Compatible extends Platform_Base implements Service {
 
 	/**
 	 * Return whether the values of the target fields in the given fields are empty or equal to the values
-	 * defined via constants.
+	 * defined via constants for the given connection.
 	 *
 	 * The endpoint is compared in its normalized form, so e.g. a trailing slash does not matter.
 	 *
 	 * Requires "External Files in Media Library" 6.0.0 or newer.
 	 *
-	 * @param array<string,mixed> $fields List of fields.
+	 * @param array<string,mixed> $fields     List of fields.
+	 * @param string              $connection The name of the connection.
 	 *
 	 * @return bool
 	 */
-	public function is_fields_matching_constants( array $fields ): bool {
+	public function is_fields_matching_connection( array $fields, string $connection ): bool {
 		// get the endpoint defined via constant.
-		$constant_endpoint = $this->get_constant_value( 'endpoint' );
+		$constant_endpoint = $this->get_constant_value( 'endpoint', $connection );
 
 		// use the notation of the constant, if both endpoints are the same.
 		$endpoint = $this->get_field_value( $fields, 'endpoint' );
@@ -784,7 +785,7 @@ class S3Compatible extends Platform_Base implements Service {
 		}
 
 		// return the result of the check.
-		return parent::is_fields_matching_constants( $fields );
+		return parent::is_fields_matching_connection( $fields, $connection );
 	}
 
 	/**
@@ -1510,5 +1511,16 @@ class S3Compatible extends Platform_Base implements Service {
 
 		// return the resulting list.
 		return $regions_for_react;
+	}
+
+	/**
+	 * Return further search terms of this service, separated by commas (e.g. for the command palette).
+	 *
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @return string
+	 */
+	protected function get_keywords(): string {
+		return 'S3, MinIO, Linode, Akamai, Vultr, endpoint, object storage, bucket, cloud';
 	}
 }
