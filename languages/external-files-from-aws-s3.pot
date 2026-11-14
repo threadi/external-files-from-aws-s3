@@ -796,3 +796,7 @@ msgstr ""
 #: app/Protocol_Base.php:591
 msgid "Specified URL already exist in your media library."
 msgstr ""
+
+#: app/Platform_Base.php:454
+msgid "The object does not exist in the bucket."
+msgstr ""

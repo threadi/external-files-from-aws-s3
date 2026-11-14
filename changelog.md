@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added support for the migration from other offload plugins (WP Offload Media, Advanced Media Offloader, Stowaway, Offload Media – Cloud Storage) via the quickstart of External Files in Media Library 6.0.0: files in the bucket are used as external files without uploading them again
+- Added hook "efmlawss3_offloaded_object_url"
 - Added optional Amazon CloudFront domain for AWS S3 to deliver files via CloudFront, also from private buckets
 - Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
 - Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront

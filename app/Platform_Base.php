@@ -416,6 +416,61 @@ class Platform_Base extends Service_Base {
 	}
 
 	/**
+	 * Return the name of the post meta, in which the key of an object in the bucket is saved.
+	 *
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_offloaded_object_meta_key(): string {
+		return 'efml_s3_key';
+	}
+
+	/**
+	 * Return the URL of an object, which has been saved in the bucket by another plugin (e.g. by another offload
+	 * plugin), to use it as external file.
+	 *
+	 * The fields of the external source must be set before. Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $key        The key of the object.
+	 * @param bool   $is_private Whether the object is not public available.
+	 *
+	 * @return string|WP_Error
+	 */
+	public function get_url_of_offloaded_object( string $key, bool $is_private ): string|WP_Error {
+		try {
+			// check whether the object exists.
+			$exists = $this->get_s3_client()->doesObjectExistV2( $this->get_bucket_name(), $key );
+		} catch ( Exception $e ) {
+			return new WP_Error( 'efmlawss3_object_check_failed', $e->getMessage() );
+		}
+
+		// bail if the object does not exist.
+		if ( ! $exists ) {
+			return new WP_Error( 'efmlawss3_object_missing', __( 'The object does not exist in the bucket.', 'external-files-from-aws-s3' ) );
+		}
+
+		// get the URL, like it is used for exported files.
+		$url = $this->get_public_url_of_file( $key, $this->get_fields() );
+
+		$instance = $this;
+		/**
+		 * Filter the URL of an object, which has been saved in the bucket by another plugin.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param string        $url        The URL.
+		 * @param string        $key        The key of the object.
+		 * @param bool          $is_private Whether the object is not public available.
+		 * @param Platform_Base $instance   The platform object.
+		 */
+		return apply_filters( 'efmlawss3_offloaded_object_url', $url, $key, $is_private, $instance );
+	}
+
+	/**
 	 * Return the bucket from fields.
 	 *
 	 * @return string

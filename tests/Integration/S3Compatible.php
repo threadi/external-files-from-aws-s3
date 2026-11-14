@@ -425,4 +425,59 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 		$this->assertNotEmpty( $entries );
 		$this->assertStringContainsString( 'ListObjectsV2', $entries[0]['log'] );
 	}
+
+	/**
+	 * Test the use of an object, which has been saved by another offload plugin: the attachment becomes an external
+	 * file, which uses the object, and its local file is kept.
+	 *
+	 * @return void
+	 */
+	public function test_migration_of_offloaded_file(): void {
+		$platform = $this->get_platform();
+		$fields   = $this->set_platform_fields( $platform, $this->get_values() );
+
+		// an attachment, whose file has been saved in the bucket by another plugin.
+		$attachment_id = $this->create_local_attachment();
+		$local_file    = (string) get_attached_file( $attachment_id, true );
+		$key           = 'wp-content/uploads/' . get_post_meta( $attachment_id, '_wp_attached_file', true );
+		$platform->get_s3_client()->putObject(
+			array(
+				'Bucket'      => $this->bucket,
+				'Key'         => $key,
+				'Body'        => (string) file_get_contents( UNIT_TESTS_DATA_PLUGIN_DIR . 'example.jpg' ), // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				'ContentType' => 'image/jpeg',
+				'ACL'         => 'public-read',
+			)
+		);
+
+		// the URL of the object.
+		$url = $platform->get_url_of_offloaded_object( $key, false );
+		$this->assertIsString( $url );
+		$this->assertStringEndsWith( $key, $url );
+		$this->assertEquals( 'efml_s3_key', $platform->get_offloaded_object_meta_key() );
+
+		// an object, which does not exist.
+		$this->assertInstanceOf( \WP_Error::class, $platform->get_url_of_offloaded_object( 'not-existing.jpg', false ) );
+
+		// migrate the attachment.
+		$term_id = \easyDirectoryListingForWordPress\Taxonomy::get_instance()->add( $platform->get_name(), $platform->get_directory(), $fields );
+		$result  = \ExternalFilesInMediaLibrary\ExternalFiles\Migrations::get_instance()->migrate_file(
+			new \ExternalFilesInMediaLibrary\ExternalFiles\Migrations\WpOffloadMedia(),
+			$platform,
+			$term_id,
+			$fields,
+			array(
+				'attachment_id' => $attachment_id,
+				'key'           => $key,
+				'private'       => false,
+			)
+		);
+		$this->assertEquals( 'done', $result );
+		$external_file_obj = \ExternalFilesInMediaLibrary\ExternalFiles\Files::get_instance()->get_file( $attachment_id );
+		$this->assertTrue( $external_file_obj->is_valid() );
+		$this->assertEquals( $url, $external_file_obj->get_url( true ) );
+		$this->assertEquals( $key, get_post_meta( $attachment_id, 'efml_s3_key', true ) );
+		$this->assertFileExists( $local_file );
+		$this->assertEquals( 200, wp_remote_retrieve_response_code( wp_remote_head( (string) $url ) ) );
+	}
 }
