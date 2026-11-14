@@ -121,4 +121,28 @@ class HetznerObjectStorage extends S3Compatible_Preset {
 	public function get_platform_url(): string {
 		return 'https://console.hetzner.com/';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create S3 credentials in the Hetzner Console: open your project, then Security → S3 credentials → Generate credentials.', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Copy the access key and the secret key: the secret key is only shown once.', 'external-files-from-aws-s3' ),
+				__( 'Choose the location of your bucket as region, e.g. <code>fsn1</code>.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'S3 credentials are valid for all buckets of the project. Use an own project for this website, if you would like to separate them.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Generating S3 keys', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.hetzner.com/storage/object-storage/getting-started/generating-s3-keys',
+				),
+			),
+		);
+	}
 }

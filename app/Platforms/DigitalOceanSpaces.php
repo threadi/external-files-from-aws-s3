@@ -915,4 +915,29 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 		 */
 		return (bool) apply_filters( 'efmlawss3_service_digitalocean_spaces_hide_file', $false, $file, $directory );
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an access key in the DigitalOcean control panel (Spaces Object Storage → Access Keys → Create Access Key).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Limit the key to your bucket with the permission "Read/Write/Delete", or use a key with full access.', 'external-files-from-aws-s3' ),
+				__( 'Copy the access key and the secret key: the secret key is only shown once.', 'external-files-from-aws-s3' ),
+				__( 'Choose the region of your bucket, e.g. <code>fra1</code>.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'Keys limited to a bucket do not work together with bucket policies of this bucket.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Manage access to Spaces', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.digitalocean.com/products/spaces/how-to/manage-access/',
+				),
+			),
+		);
+	}
 }

@@ -801,3 +801,269 @@ msgstr "Die angegebene URL ist bereits in Ihrer Medienbibliothek vorhanden."
 #: app/Platform_Base.php:454
 msgid "The object does not exist in the bucket."
 msgstr "Das Objekt existiert nicht im Bucket."
+
+#. translators: %1$s will be replaced by the name of a permission.
+#: app/Platform_Base.php:1009
+#, php-format
+msgid "The access key is missing the permission %1$s. Add it to the permissions of the access key, see \"Where do I find these details?\" in the form of this platform."
+msgstr "Dem Zugriffsschlüssel fehlt die Berechtigung %1$s. Ergänze sie in den Berechtigungen des Zugriffsschlüssels, siehe „Wo finde ich diese Angaben?“ im Formular dieser Plattform."
+
+#: app/Platforms/CloudflareR2.php:915
+msgid "Create an API token for R2 in the Cloudflare dashboard (Storage & databases → R2 → Overview → Manage API tokens)."
+msgstr "Erstelle im Cloudflare-Dashboard ein API-Token für R2 (Storage & databases → R2 → Overview → Manage API tokens)."
+
+#: app/Platforms/CloudflareR2.php:917
+msgid "Create an account API token with the permission \"Object Read & Write\" and restrict it to your bucket."
+msgstr "Erstelle ein Account-API-Token mit der Berechtigung „Object Read & Write“ und beschränke es auf deinen Bucket."
+
+#: app/Platforms/CloudflareR2.php:918
+msgid "After the creation, Cloudflare shows the values for S3 clients once: use the \"Access Key ID\" as access key and the \"Secret Access Key\" as secret key."
+msgstr "Nach dem Erstellen zeigt Cloudflare einmalig die Werte für S3-Clients: Nutze die „Access Key ID“ als Zugriffsschlüssel und den „Secret Access Key“ als geheimen Schlüssel."
+
+#: app/Platforms/CloudflareR2.php:919
+msgid "You find the account ID in the S3 API URL of your bucket (bucket → Settings): <code>https://ACCOUNT-ID.r2.cloudflarestorage.com</code>."
+msgstr "Die Account-ID findest du in der S3-API-URL deines Buckets (Bucket → Settings): <code>https://ACCOUNT-ID.r2.cloudflarestorage.com</code>."
+
+#: app/Platforms/CloudflareR2.php:920
+msgid "Enable the EU option, if you have created the bucket with the jurisdiction EU (its S3 API URL contains <code>.eu.</code>)."
+msgstr "Aktiviere die EU-Option, wenn du den Bucket mit der Jurisdiktion EU angelegt hast (seine S3-API-URL enthält <code>.eu.</code>)."
+
+#: app/Platforms/CloudflareR2.php:923
+msgid "The \"Token value\" shown with the API token is not the secret key. With it, the connection fails with \"Unauthorized\"."
+msgstr "Der beim API-Token angezeigte „Token value“ ist nicht der geheime Schlüssel. Damit scheitert die Verbindung mit „Unauthorized“."
+
+#: app/Platforms/CloudflareR2.php:924
+msgid "Files are delivered via a public domain of your bucket: a custom domain or the r2.dev URL, which you enable in the settings of the bucket."
+msgstr "Dateien werden über eine öffentliche Domain deines Buckets ausgeliefert: eine eigene Domain oder die r2.dev-URL, die du in den Einstellungen des Buckets aktivierst."
+
+#: app/Platforms/CloudflareR2.php:928
+msgid "R2 API tokens"
+msgstr "R2-API-Tokens"
+
+#: app/Platforms/DigitalOceanSpaces.php:926
+msgid "Create an access key in the DigitalOcean control panel (Spaces Object Storage → Access Keys → Create Access Key)."
+msgstr "Erstelle im Control Panel von DigitalOcean einen Zugriffsschlüssel (Spaces Object Storage → Access Keys → Create Access Key)."
+
+#: app/Platforms/DigitalOceanSpaces.php:928
+msgid "Limit the key to your bucket with the permission \"Read/Write/Delete\", or use a key with full access."
+msgstr "Beschränke den Schlüssel auf deinen Bucket mit der Berechtigung „Read/Write/Delete“ oder nutze einen Schlüssel mit vollem Zugriff."
+
+#: app/Platforms/DigitalOceanSpaces.php:929 app/Platforms/ScalewayObjectStorage.php:139 app/Platforms/HetznerObjectStorage.php:134
+msgid "Copy the access key and the secret key: the secret key is only shown once."
+msgstr "Kopiere den Zugriffsschlüssel und den geheimen Schlüssel: Der geheime Schlüssel wird nur einmal angezeigt."
+
+#: app/Platforms/DigitalOceanSpaces.php:930
+msgid "Choose the region of your bucket, e.g. <code>fra1</code>."
+msgstr "Wähle die Region deines Buckets, z. B. <code>fra1</code>."
+
+#: app/Platforms/DigitalOceanSpaces.php:933
+msgid "Keys limited to a bucket do not work together with bucket policies of this bucket."
+msgstr "Auf einen Bucket beschränkte Schlüssel funktionieren nicht zusammen mit Bucket-Richtlinien dieses Buckets."
+
+#: app/Platforms/DigitalOceanSpaces.php:937
+msgid "Manage access to Spaces"
+msgstr "Zugriff auf Spaces verwalten"
+
+#: app/Platforms/Wasabi.php:184
+msgid "Create an access key in the Wasabi console (Access Keys → Create Access Key), preferably for a sub-user with programmatic access and a policy for your bucket."
+msgstr "Erstelle in der Wasabi-Konsole einen Zugriffsschlüssel (Access Keys → Create Access Key), am besten für einen Sub-User mit programmatischem Zugriff und einer Richtlinie für deinen Bucket."
+
+#: app/Platforms/Wasabi.php:186
+msgid "Copy the access key and the secret key, which you can show once after the creation."
+msgstr "Kopiere den Zugriffsschlüssel und den geheimen Schlüssel, den du nach dem Erstellen einmalig anzeigen kannst."
+
+#: app/Platforms/Wasabi.php:187 app/Platforms/IonosObjectStorage.php:147
+msgid "Choose the region of your bucket."
+msgstr "Wähle die Region deines Buckets."
+
+#: app/Platforms/Wasabi.php:190
+msgid "Avoid the access keys of the root user, they allow access to all your buckets."
+msgstr "Vermeide die Zugriffsschlüssel des Root-Users, sie erlauben den Zugriff auf alle deine Buckets."
+
+#: app/Platforms/Wasabi.php:194
+msgid "Creating a new access key"
+msgstr "Einen neuen Zugriffsschlüssel erstellen"
+
+#: app/Platforms/OvhcloudObjectStorage.php:172
+msgid "Create an Object Storage user in the OVHcloud Control Panel (Public Cloud → your project → Object Storage → Object Storage users)."
+msgstr "Erstelle im OVHcloud Control Panel einen Object-Storage-Benutzer (Public Cloud → dein Projekt → Object Storage → Object Storage users)."
+
+#: app/Platforms/OvhcloudObjectStorage.php:174
+msgid "Give the user the role \"ObjectStore operator\" or \"Administrator\"."
+msgstr "Gib dem Benutzer die Rolle „ObjectStore operator“ oder „Administrator“."
+
+#: app/Platforms/OvhcloudObjectStorage.php:175
+msgid "Show the credentials of the user and copy the access key and the secret key."
+msgstr "Lass dir die Zugangsdaten des Benutzers anzeigen und kopiere den Zugriffsschlüssel und den geheimen Schlüssel."
+
+#: app/Platforms/OvhcloudObjectStorage.php:176
+msgid "Choose the region of your bucket, e.g. <code>gra</code>."
+msgstr "Wähle die Region deines Buckets, z. B. <code>gra</code>."
+
+#: app/Platforms/OvhcloudObjectStorage.php:179
+msgid "The user must be linked to your bucket."
+msgstr "Der Benutzer muss mit deinem Bucket verknüpft sein."
+
+#: app/Platforms/OvhcloudObjectStorage.php:183
+msgid "Identity and access management"
+msgstr "Identitäts- und Zugriffsverwaltung"
+
+#: app/Platforms/IonosObjectStorage.php:144
+msgid "Create an access key in the Data Center Designer of IONOS (Menu → Storage → IONOS Object Storage → Key management → Access keys → Generate key)."
+msgstr "Erstelle im Data Center Designer von IONOS einen Zugriffsschlüssel (Menu → Storage → IONOS Object Storage → Key management → Access keys → Generate key)."
+
+#: app/Platforms/IonosObjectStorage.php:146
+msgid "Copy the access key and the secret key, or download the key pair as backup."
+msgstr "Kopiere den Zugriffsschlüssel und den geheimen Schlüssel oder lade das Schlüsselpaar als Sicherung herunter."
+
+#: app/Platforms/IonosObjectStorage.php:151
+msgid "Generate a key"
+msgstr "Einen Schlüssel erzeugen"
+
+#: app/Platforms/ScalewayObjectStorage.php:136
+msgid "Create an API key in the Scaleway console (IAM → API keys → Generate API key), preferably for an IAM application with the permission set \"ObjectStorageFullAccess\" for your project."
+msgstr "Erstelle in der Scaleway-Konsole einen API-Schlüssel (IAM → API keys → Generate API key), am besten für eine IAM-Anwendung mit dem Berechtigungsset „ObjectStorageFullAccess“ für dein Projekt."
+
+#: app/Platforms/ScalewayObjectStorage.php:138
+msgid "Choose the project of your bucket as preferred project for Object Storage."
+msgstr "Wähle das Projekt deines Buckets als bevorzugtes Projekt für Object Storage."
+
+#: app/Platforms/ScalewayObjectStorage.php:140
+msgid "Choose the region of your bucket, e.g. <code>fr-par</code>."
+msgstr "Wähle die Region deines Buckets, z. B. <code>fr-par</code>."
+
+#: app/Platforms/ScalewayObjectStorage.php:143
+msgid "Without the right preferred project, your bucket is not found."
+msgstr "Ohne das richtige bevorzugte Projekt wird dein Bucket nicht gefunden."
+
+#: app/Platforms/ScalewayObjectStorage.php:147
+msgid "Create API keys"
+msgstr "API-Schlüssel erstellen"
+
+#: app/Platforms/ScalewayObjectStorage.php:151
+msgid "Using API keys with Object Storage"
+msgstr "API-Schlüssel mit Object Storage nutzen"
+
+#: app/Platforms/AwsS3.php:1325
+msgid "Create an own IAM user for this website in the AWS console. It only needs the permissions of the policy below for your bucket, not access to your whole AWS account."
+msgstr "Erstelle in der AWS-Konsole einen eigenen IAM-Benutzer für diese Website. Er braucht nur die Berechtigungen der Richtlinie unten für deinen Bucket, keinen Zugriff auf dein ganzes AWS-Konto."
+
+#: app/Platforms/AwsS3.php:1327
+msgid "Open the IAM console, create a user without access to the AWS Management Console."
+msgstr "Öffne die IAM-Konsole und erstelle einen Benutzer ohne Zugriff auf die AWS Management Console."
+
+#: app/Platforms/AwsS3.php:1328
+msgid "Add the policy below to this user as inline policy (Permissions → Add permissions → Create inline policy → JSON)."
+msgstr "Füge diesem Benutzer die Richtlinie unten als Inline-Richtlinie hinzu (Permissions → Add permissions → Create inline policy → JSON)."
+
+#: app/Platforms/AwsS3.php:1329
+msgid "Create an access key for the user under Security credentials (use case \"Other\"). Copy the access key ID and the secret access key: the secret is only shown once."
+msgstr "Erstelle für den Benutzer unter Security credentials einen Zugriffsschlüssel (Anwendungsfall „Other“). Kopiere die Access Key ID und den Secret Access Key: Der geheime Schlüssel wird nur einmal angezeigt."
+
+#: app/Platforms/AwsS3.php:1330
+msgid "Enter the bucket and choose the region of the bucket."
+msgstr "Gib den Bucket ein und wähle die Region des Buckets."
+
+#: app/Platforms/AwsS3.php:1333
+msgid "IAM policy for the user"
+msgstr "IAM-Richtlinie für den Benutzer"
+
+#: app/Platforms/AwsS3.php:1335
+msgid "Replace <code>YOUR-BUCKET</code> with the name of your bucket, or enter the bucket first and open this help again."
+msgstr "Ersetze <code>YOUR-BUCKET</code> durch den Namen deines Buckets oder gib zuerst den Bucket ein und öffne diese Hilfe erneut."
+
+#: app/Platforms/AwsS3.php:1335
+msgid "If you only import files, the permissions <code>s3:ListBucket</code>, <code>s3:GetObject</code> and <code>s3:GetObjectAcl</code> are sufficient. The other permissions are needed for the export."
+msgstr "Wenn du nur Dateien importierst, reichen die Berechtigungen <code>s3:ListBucket</code>, <code>s3:GetObject</code> und <code>s3:GetObjectAcl</code>. Die übrigen Berechtigungen braucht der Export."
+
+#: app/Platforms/AwsS3.php:1338
+msgid "Never use the access keys of the root user of your AWS account."
+msgstr "Nutze nie die Zugriffsschlüssel des Root-Users deines AWS-Kontos."
+
+#: app/Platforms/AwsS3.php:1339
+msgid "If you use Amazon CloudFront, also enter its distribution ID: then the policy contains the permission to clear the cache of changed files."
+msgstr "Wenn du Amazon CloudFront nutzt, gib auch die Distribution-ID ein: Dann enthält die Richtlinie die Berechtigung, den Cache geänderter Dateien zu leeren."
+
+#: app/Platforms/AwsS3.php:1340
+msgid "If the connection test reports a missing permission, it names the permission. Add it to the policy of the user."
+msgstr "Meldet der Verbindungstest eine fehlende Berechtigung, nennt er sie. Ergänze sie in der Richtlinie des Benutzers."
+
+#: app/Platforms/AwsS3.php:1344
+msgid "IAM console"
+msgstr "IAM-Konsole"
+
+#: app/Platforms/AwsS3.php:1348
+msgid "Manage access keys for IAM users"
+msgstr "Zugriffsschlüssel für IAM-Benutzer verwalten"
+
+#: app/Platforms/BackblazeS3.php:915
+msgid "Create an application key in the Backblaze web console (B2 Cloud Storage → Application Keys → Add a New Application Key)."
+msgstr "Erstelle in der Weboberfläche von Backblaze einen Application Key (B2 Cloud Storage → Application Keys → Add a New Application Key)."
+
+#: app/Platforms/BackblazeS3.php:917
+msgid "Restrict the key to your bucket and allow \"Read and Write\"."
+msgstr "Beschränke den Schlüssel auf deinen Bucket und erlaube „Read and Write“."
+
+#: app/Platforms/BackblazeS3.php:918
+msgid "Use the \"keyID\" as access key and the \"applicationKey\" as secret key. The application key is only shown once."
+msgstr "Nutze die „keyID“ als Zugriffsschlüssel und den „applicationKey“ als geheimen Schlüssel. Der Application Key wird nur einmal angezeigt."
+
+#: app/Platforms/BackblazeS3.php:919
+msgid "The region is part of the S3 endpoint of your bucket, e.g. <code>eu-central-003</code> for <code>s3.eu-central-003.backblazeb2.com</code>."
+msgstr "Die Region ist Teil des S3-Endpunkts deines Buckets, z. B. <code>eu-central-003</code> bei <code>s3.eu-central-003.backblazeb2.com</code>."
+
+#: app/Platforms/BackblazeS3.php:922
+msgid "The master application key does not work with the S3 API, create an own key."
+msgstr "Der Master Application Key funktioniert nicht mit der S3-API, erstelle einen eigenen Schlüssel."
+
+#: app/Platforms/BackblazeS3.php:923
+msgid "Buckets created before May 2020 are not S3-compatible."
+msgstr "Buckets, die vor Mai 2020 angelegt wurden, sind nicht S3-kompatibel."
+
+#: app/Platforms/BackblazeS3.php:927
+msgid "Create and manage application keys"
+msgstr "Application Keys erstellen und verwalten"
+
+#: app/Platforms/HetznerObjectStorage.php:132
+msgid "Create S3 credentials in the Hetzner Console: open your project, then Security → S3 credentials → Generate credentials."
+msgstr "Erstelle in der Hetzner Console S3-Zugangsdaten: Öffne dein Projekt, dann Security → S3 credentials → Generate credentials."
+
+#: app/Platforms/HetznerObjectStorage.php:135
+msgid "Choose the location of your bucket as region, e.g. <code>fsn1</code>."
+msgstr "Wähle den Standort deines Buckets als Region, z. B. <code>fsn1</code>."
+
+#: app/Platforms/HetznerObjectStorage.php:138
+msgid "S3 credentials are valid for all buckets of the project. Use an own project for this website, if you would like to separate them."
+msgstr "S3-Zugangsdaten gelten für alle Buckets des Projekts. Nutze ein eigenes Projekt für diese Website, wenn du sie trennen möchtest."
+
+#: app/Platforms/HetznerObjectStorage.php:142
+msgid "Generating S3 keys"
+msgstr "S3-Zugangsdaten erzeugen"
+
+#: app/Platforms/S3Compatible.php:1534
+msgid "You get the endpoint, the access key and the secret key from the provider of your storage, usually in its customer area. For a storage you run yourself, e.g. MinIO, its administrator creates them."
+msgstr "Endpunkt, Zugriffsschlüssel und geheimen Schlüssel bekommst du vom Anbieter deines Speichers, meist in seinem Kundenbereich. Bei einem selbst betriebenen Speicher, z. B. MinIO, erstellt sie dessen Administrator."
+
+#: app/Platforms/S3Compatible.php:1536
+msgid "Enter the URL of the S3 API as endpoint, e.g. <code>https://s3.example.com</code>."
+msgstr "Gib die URL der S3-API als Endpunkt ein, z. B. <code>https://s3.example.com</code>."
+
+#: app/Platforms/S3Compatible.php:1537
+msgid "Enter the region of your bucket. If your provider does not use regions, keep <code>us-east-1</code>."
+msgstr "Gib die Region deines Buckets ein. Nutzt dein Anbieter keine Regionen, behalte <code>us-east-1</code>."
+
+#: app/Platforms/S3Compatible.php:1538
+msgid "Enable path-style URLs, if your storage needs them. This is often the case for storages you run yourself."
+msgstr "Aktiviere Path-Style-URLs, wenn dein Speicher sie braucht. Das ist bei selbst betriebenen Speichern oft der Fall."
+
+#: app/Platforms/S3Compatible.php:1541
+msgid "The access key needs the permissions to list, read, write and delete the files in your bucket."
+msgstr "Der Zugriffsschlüssel braucht die Berechtigungen, die Dateien in deinem Bucket aufzulisten, zu lesen, zu schreiben und zu löschen."
+
+#: app/Platforms/S3Compatible.php:1542
+msgid "For the delivery, your files must be public readable, or you enter a public URL, e.g. of a CDN."
+msgstr "Für die Auslieferung müssen deine Dateien öffentlich lesbar sein, oder du gibst eine öffentliche URL ein, z. B. eines CDN."
+
+#: app/Platforms/S3Compatible.php:1546
+msgid "Documentation for S3-compatible storages"
+msgstr "Dokumentation für S3-kompatible Speicher"

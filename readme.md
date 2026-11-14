@@ -17,6 +17,7 @@ This repository provides the features of the WordPress plugin _External files fr
 
 * [Credentials via constants](docs/constants.md) ([German](docs/constants_de.md))
 * [S3-compatible storages](docs/s3-compatible.md) ([German](docs/s3-compatible_de.md))
+* [Permissions of the access key, IAM policy for AWS S3](docs/permissions.md) ([German](docs/permissions_de.md))
 * [What is possible with External Files in Media Library](https://github.com/threadi/external-files-in-media-library/blob/master/docs/features.md)
 
 ## Hints

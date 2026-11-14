@@ -800,3 +800,269 @@ msgstr ""
 #: app/Platform_Base.php:454
 msgid "The object does not exist in the bucket."
 msgstr ""
+
+#. translators: %1$s will be replaced by the name of a permission.
+#: app/Platform_Base.php:1009
+#, php-format
+msgid "The access key is missing the permission %1$s. Add it to the permissions of the access key, see \"Where do I find these details?\" in the form of this platform."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:915
+msgid "Create an API token for R2 in the Cloudflare dashboard (Storage & databases → R2 → Overview → Manage API tokens)."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:917
+msgid "Create an account API token with the permission \"Object Read & Write\" and restrict it to your bucket."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:918
+msgid "After the creation, Cloudflare shows the values for S3 clients once: use the \"Access Key ID\" as access key and the \"Secret Access Key\" as secret key."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:919
+msgid "You find the account ID in the S3 API URL of your bucket (bucket → Settings): <code>https://ACCOUNT-ID.r2.cloudflarestorage.com</code>."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:920
+msgid "Enable the EU option, if you have created the bucket with the jurisdiction EU (its S3 API URL contains <code>.eu.</code>)."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:923
+msgid "The \"Token value\" shown with the API token is not the secret key. With it, the connection fails with \"Unauthorized\"."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:924
+msgid "Files are delivered via a public domain of your bucket: a custom domain or the r2.dev URL, which you enable in the settings of the bucket."
+msgstr ""
+
+#: app/Platforms/CloudflareR2.php:928
+msgid "R2 API tokens"
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:926
+msgid "Create an access key in the DigitalOcean control panel (Spaces Object Storage → Access Keys → Create Access Key)."
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:928
+msgid "Limit the key to your bucket with the permission \"Read/Write/Delete\", or use a key with full access."
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:929 app/Platforms/ScalewayObjectStorage.php:139 app/Platforms/HetznerObjectStorage.php:134
+msgid "Copy the access key and the secret key: the secret key is only shown once."
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:930
+msgid "Choose the region of your bucket, e.g. <code>fra1</code>."
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:933
+msgid "Keys limited to a bucket do not work together with bucket policies of this bucket."
+msgstr ""
+
+#: app/Platforms/DigitalOceanSpaces.php:937
+msgid "Manage access to Spaces"
+msgstr ""
+
+#: app/Platforms/Wasabi.php:184
+msgid "Create an access key in the Wasabi console (Access Keys → Create Access Key), preferably for a sub-user with programmatic access and a policy for your bucket."
+msgstr ""
+
+#: app/Platforms/Wasabi.php:186
+msgid "Copy the access key and the secret key, which you can show once after the creation."
+msgstr ""
+
+#: app/Platforms/Wasabi.php:187 app/Platforms/IonosObjectStorage.php:147
+msgid "Choose the region of your bucket."
+msgstr ""
+
+#: app/Platforms/Wasabi.php:190
+msgid "Avoid the access keys of the root user, they allow access to all your buckets."
+msgstr ""
+
+#: app/Platforms/Wasabi.php:194
+msgid "Creating a new access key"
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:172
+msgid "Create an Object Storage user in the OVHcloud Control Panel (Public Cloud → your project → Object Storage → Object Storage users)."
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:174
+msgid "Give the user the role \"ObjectStore operator\" or \"Administrator\"."
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:175
+msgid "Show the credentials of the user and copy the access key and the secret key."
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:176
+msgid "Choose the region of your bucket, e.g. <code>gra</code>."
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:179
+msgid "The user must be linked to your bucket."
+msgstr ""
+
+#: app/Platforms/OvhcloudObjectStorage.php:183
+msgid "Identity and access management"
+msgstr ""
+
+#: app/Platforms/IonosObjectStorage.php:144
+msgid "Create an access key in the Data Center Designer of IONOS (Menu → Storage → IONOS Object Storage → Key management → Access keys → Generate key)."
+msgstr ""
+
+#: app/Platforms/IonosObjectStorage.php:146
+msgid "Copy the access key and the secret key, or download the key pair as backup."
+msgstr ""
+
+#: app/Platforms/IonosObjectStorage.php:151
+msgid "Generate a key"
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:136
+msgid "Create an API key in the Scaleway console (IAM → API keys → Generate API key), preferably for an IAM application with the permission set \"ObjectStorageFullAccess\" for your project."
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:138
+msgid "Choose the project of your bucket as preferred project for Object Storage."
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:140
+msgid "Choose the region of your bucket, e.g. <code>fr-par</code>."
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:143
+msgid "Without the right preferred project, your bucket is not found."
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:147
+msgid "Create API keys"
+msgstr ""
+
+#: app/Platforms/ScalewayObjectStorage.php:151
+msgid "Using API keys with Object Storage"
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1325
+msgid "Create an own IAM user for this website in the AWS console. It only needs the permissions of the policy below for your bucket, not access to your whole AWS account."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1327
+msgid "Open the IAM console, create a user without access to the AWS Management Console."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1328
+msgid "Add the policy below to this user as inline policy (Permissions → Add permissions → Create inline policy → JSON)."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1329
+msgid "Create an access key for the user under Security credentials (use case \"Other\"). Copy the access key ID and the secret access key: the secret is only shown once."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1330
+msgid "Enter the bucket and choose the region of the bucket."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1333
+msgid "IAM policy for the user"
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1335
+msgid "Replace <code>YOUR-BUCKET</code> with the name of your bucket, or enter the bucket first and open this help again."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1335
+msgid "If you only import files, the permissions <code>s3:ListBucket</code>, <code>s3:GetObject</code> and <code>s3:GetObjectAcl</code> are sufficient. The other permissions are needed for the export."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1338
+msgid "Never use the access keys of the root user of your AWS account."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1339
+msgid "If you use Amazon CloudFront, also enter its distribution ID: then the policy contains the permission to clear the cache of changed files."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1340
+msgid "If the connection test reports a missing permission, it names the permission. Add it to the policy of the user."
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1344
+msgid "IAM console"
+msgstr ""
+
+#: app/Platforms/AwsS3.php:1348
+msgid "Manage access keys for IAM users"
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:915
+msgid "Create an application key in the Backblaze web console (B2 Cloud Storage → Application Keys → Add a New Application Key)."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:917
+msgid "Restrict the key to your bucket and allow \"Read and Write\"."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:918
+msgid "Use the \"keyID\" as access key and the \"applicationKey\" as secret key. The application key is only shown once."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:919
+msgid "The region is part of the S3 endpoint of your bucket, e.g. <code>eu-central-003</code> for <code>s3.eu-central-003.backblazeb2.com</code>."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:922
+msgid "The master application key does not work with the S3 API, create an own key."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:923
+msgid "Buckets created before May 2020 are not S3-compatible."
+msgstr ""
+
+#: app/Platforms/BackblazeS3.php:927
+msgid "Create and manage application keys"
+msgstr ""
+
+#: app/Platforms/HetznerObjectStorage.php:132
+msgid "Create S3 credentials in the Hetzner Console: open your project, then Security → S3 credentials → Generate credentials."
+msgstr ""
+
+#: app/Platforms/HetznerObjectStorage.php:135
+msgid "Choose the location of your bucket as region, e.g. <code>fsn1</code>."
+msgstr ""
+
+#: app/Platforms/HetznerObjectStorage.php:138
+msgid "S3 credentials are valid for all buckets of the project. Use an own project for this website, if you would like to separate them."
+msgstr ""
+
+#: app/Platforms/HetznerObjectStorage.php:142
+msgid "Generating S3 keys"
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1534
+msgid "You get the endpoint, the access key and the secret key from the provider of your storage, usually in its customer area. For a storage you run yourself, e.g. MinIO, its administrator creates them."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1536
+msgid "Enter the URL of the S3 API as endpoint, e.g. <code>https://s3.example.com</code>."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1537
+msgid "Enter the region of your bucket. If your provider does not use regions, keep <code>us-east-1</code>."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1538
+msgid "Enable path-style URLs, if your storage needs them. This is often the case for storages you run yourself."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1541
+msgid "The access key needs the permissions to list, read, write and delete the files in your bucket."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1542
+msgid "For the delivery, your files must be public readable, or you enter a public URL, e.g. of a CDN."
+msgstr ""
+
+#: app/Platforms/S3Compatible.php:1546
+msgid "Documentation for S3-compatible storages"
+msgstr ""

@@ -161,4 +161,29 @@ class OvhcloudObjectStorage extends S3Compatible_Preset {
 	public function get_platform_url(): string {
 		return 'https://manager.eu.ovhcloud.com/';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an Object Storage user in the OVHcloud Control Panel (Public Cloud → your project → Object Storage → Object Storage users).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Give the user the role "ObjectStore operator" or "Administrator".', 'external-files-from-aws-s3' ),
+				__( 'Show the credentials of the user and copy the access key and the secret key.', 'external-files-from-aws-s3' ),
+				__( 'Choose the region of your bucket, e.g. <code>gra</code>.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'The user must be linked to your bucket.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Identity and access management', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.ovhcloud.com/en/guides/storage-and-backup/object-storage/s3-identity-and-access-management',
+				),
+			),
+		);
+	}
 }

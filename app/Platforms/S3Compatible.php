@@ -1523,4 +1523,30 @@ class S3Compatible extends Platform_Base implements Service {
 	protected function get_keywords(): string {
 		return 'S3, MinIO, Linode, Akamai, Vultr, endpoint, object storage, bucket, cloud';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'You get the endpoint, the access key and the secret key from the provider of your storage, usually in its customer area. For a storage you run yourself, e.g. MinIO, its administrator creates them.', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Enter the URL of the S3 API as endpoint, e.g. <code>https://s3.example.com</code>.', 'external-files-from-aws-s3' ),
+				__( 'Enter the region of your bucket. If your provider does not use regions, keep <code>us-east-1</code>.', 'external-files-from-aws-s3' ),
+				__( 'Enable path-style URLs, if your storage needs them. This is often the case for storages you run yourself.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'The access key needs the permissions to list, read, write and delete the files in your bucket.', 'external-files-from-aws-s3' ),
+				__( 'For the delivery, your files must be public readable, or you enter a public URL, e.g. of a CDN.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Documentation for S3-compatible storages', 'external-files-from-aws-s3' ),
+					'url'   => 'https://github.com/threadi/external-files-from-aws-s3/blob/master/docs/s3-compatible.md',
+				),
+			),
+		);
+	}
 }

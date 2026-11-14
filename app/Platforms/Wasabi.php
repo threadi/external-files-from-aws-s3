@@ -173,4 +173,28 @@ class Wasabi extends S3Compatible_Preset {
 	public function get_platform_url(): string {
 		return 'https://console.wasabisys.com/';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an access key in the Wasabi console (Access Keys → Create Access Key), preferably for a sub-user with programmatic access and a policy for your bucket.', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Copy the access key and the secret key, which you can show once after the creation.', 'external-files-from-aws-s3' ),
+				__( 'Choose the region of your bucket.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'Avoid the access keys of the root user, they allow access to all your buckets.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Creating a new access key', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.wasabi.com/docs/creating-a-new-access-key',
+				),
+			),
+		);
+	}
 }

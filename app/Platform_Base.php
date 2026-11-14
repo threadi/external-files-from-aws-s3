@@ -1002,8 +1002,38 @@ class Platform_Base extends Service_Base {
 			$text = sprintf( __( 'The storage returns with HTTP status %1$d and the error code %2$s.', 'external-files-from-aws-s3' ), $status, '' !== $error_code ? $error_code : '-' );
 		}
 
+		// get the hint, which names the missing permission, if the storage returns it.
+		$permission = $this->get_missing_permission( (string) $e->getAwsErrorMessage() );
+		if ( '' !== $permission ) {
+			/* translators: %1$s will be replaced by the name of a permission, e.g. "s3:PutObject". */
+			$hint = sprintf( __( 'The access key is missing the permission %1$s. Add it to the permissions of the access key, see "Where do I find these details?" in the form of this platform.', 'external-files-from-aws-s3' ), $permission );
+		} else {
+			$hint = $this->get_hint_for_error( $status, $error_code );
+		}
+
 		// return the text with the hint.
-		return $text . ' ' . $this->get_hint_for_error( $status, $error_code ) . ' ' . __( 'Check the log for details.', 'external-files-from-aws-s3' );
+		return $text . ' ' . $hint . ' ' . __( 'Check the log for details.', 'external-files-from-aws-s3' );
+	}
+
+	/**
+	 * Return the permission, which is missing according to the given error message of the storage.
+	 *
+	 * AWS names it in its messages, e.g. "User: ... is not authorized to perform: s3:PutObject on resource: ...".
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $message The error message.
+	 *
+	 * @return string
+	 */
+	public function get_missing_permission( string $message ): string {
+		// bail if the message does not contain a permission.
+		if ( ! preg_match( '/not authorized to perform:?\s*([a-z0-9-]+:[A-Za-z0-9*]+)/i', $message, $matches ) ) {
+			return '';
+		}
+
+		// return the permission.
+		return $matches[1];
 	}
 
 	/**

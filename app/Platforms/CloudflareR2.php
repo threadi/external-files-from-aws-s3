@@ -904,4 +904,31 @@ class CloudflareR2 extends Platform_Base implements Service {
 		 */
 		return (bool) apply_filters( 'efmlawss3_service_cloudflare_r2_hide_file', $false, $file, $directory );
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an API token for R2 in the Cloudflare dashboard (Storage & databases → R2 → Overview → Manage API tokens).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Create an account API token with the permission "Object Read & Write" and restrict it to your bucket.', 'external-files-from-aws-s3' ),
+				__( 'After the creation, Cloudflare shows the values for S3 clients once: use the "Access Key ID" as access key and the "Secret Access Key" as secret key.', 'external-files-from-aws-s3' ),
+				__( 'You find the account ID in the S3 API URL of your bucket (bucket → Settings): <code>https://ACCOUNT-ID.r2.cloudflarestorage.com</code>.', 'external-files-from-aws-s3' ),
+				__( 'Enable the EU option, if you have created the bucket with the jurisdiction EU (its S3 API URL contains <code>.eu.</code>).', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'The "Token value" shown with the API token is not the secret key. With it, the connection fails with "Unauthorized".', 'external-files-from-aws-s3' ),
+				__( 'Files are delivered via a public domain of your bucket: a custom domain or the r2.dev URL, which you enable in the settings of the bucket.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'R2 API tokens', 'external-files-from-aws-s3' ),
+					'url'   => 'https://developers.cloudflare.com/r2/api/tokens/',
+				),
+			),
+		);
+	}
 }

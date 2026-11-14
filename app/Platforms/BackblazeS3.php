@@ -904,4 +904,30 @@ class BackblazeS3 extends Platform_Base implements Service {
 		 */
 		return (bool) apply_filters( 'efmlawss3_service_backblaze_s3_hide_file', $false, $file, $directory );
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an application key in the Backblaze web console (B2 Cloud Storage → Application Keys → Add a New Application Key).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Restrict the key to your bucket and allow "Read and Write".', 'external-files-from-aws-s3' ),
+				__( 'Use the "keyID" as access key and the "applicationKey" as secret key. The application key is only shown once.', 'external-files-from-aws-s3' ),
+				__( 'The region is part of the S3 endpoint of your bucket, e.g. <code>eu-central-003</code> for <code>s3.eu-central-003.backblazeb2.com</code>.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'The master application key does not work with the S3 API, create an own key.', 'external-files-from-aws-s3' ),
+				__( 'Buckets created before May 2020 are not S3-compatible.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Create and manage application keys', 'external-files-from-aws-s3' ),
+					'url'   => 'https://www.backblaze.com/docs/cloud-storage-create-and-manage-app-keys',
+				),
+			),
+		);
+	}
 }

@@ -1309,4 +1309,105 @@ class AwsS3 extends Platform_Base implements Service {
 	protected function get_keywords(): string {
 		return 'AWS, Amazon, S3, CloudFront, object storage, bucket, cloud';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		// get the bucket and the CloudFront distribution for the policy.
+		$fields          = $this->get_fields();
+		$bucket          = $this->get_bucket_name();
+		$distribution_id = $this->get_cloudfront_distribution_id( $fields );
+
+		return array(
+			'intro' => __( 'Create an own IAM user for this website in the AWS console. It only needs the permissions of the policy below for your bucket, not access to your whole AWS account.', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Open the IAM console, create a user without access to the AWS Management Console.', 'external-files-from-aws-s3' ),
+				__( 'Add the policy below to this user as inline policy (Permissions → Add permissions → Create inline policy → JSON).', 'external-files-from-aws-s3' ),
+				__( 'Create an access key for the user under Security credentials (use case "Other"). Copy the access key ID and the secret access key: the secret is only shown once.', 'external-files-from-aws-s3' ),
+				__( 'Enter the bucket and choose the region of the bucket.', 'external-files-from-aws-s3' ),
+			),
+			'code'  => array(
+				'label'   => __( 'IAM policy for the user', 'external-files-from-aws-s3' ),
+				'content' => $this->get_iam_policy( $bucket, $distribution_id ),
+				'hint'    => '' === $bucket ? __( 'Replace <code>YOUR-BUCKET</code> with the name of your bucket, or enter the bucket first and open this help again.', 'external-files-from-aws-s3' ) : __( 'If you only import files, the permissions <code>s3:ListBucket</code>, <code>s3:GetObject</code> and <code>s3:GetObjectAcl</code> are sufficient. The other permissions are needed for the export.', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'Never use the access keys of the root user of your AWS account.', 'external-files-from-aws-s3' ),
+				__( 'If you use Amazon CloudFront, also enter its distribution ID: then the policy contains the permission to clear the cache of changed files.', 'external-files-from-aws-s3' ),
+				__( 'If the connection test reports a missing permission, it names the permission. Add it to the policy of the user.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'IAM console', 'external-files-from-aws-s3' ),
+					'url'   => 'https://console.aws.amazon.com/iam/',
+				),
+				array(
+					'label' => __( 'Manage access keys for IAM users', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html',
+				),
+			),
+		);
+	}
+
+	/**
+	 * Return the IAM policy with the permissions this plugin needs for the given bucket as JSON.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param string $bucket          The name of the bucket.
+	 * @param string $distribution_id The ID of the CloudFront distribution (optional).
+	 *
+	 * @return string
+	 */
+	public function get_iam_policy( string $bucket, string $distribution_id = '' ): string {
+		// use a placeholder, if no bucket is given.
+		if ( '' === $bucket ) {
+			$bucket = 'YOUR-BUCKET';
+		}
+
+		// the permissions for the bucket and its files.
+		$policy = array(
+			'Version'   => '2012-10-17',
+			'Statement' => array(
+				array(
+					'Sid'      => 'ListBucket',
+					'Effect'   => 'Allow',
+					'Action'   => array( 's3:ListBucket' ),
+					'Resource' => 'arn:aws:s3:::' . $bucket,
+				),
+				array(
+					'Sid'      => 'UseFiles',
+					'Effect'   => 'Allow',
+					'Action'   => array( 's3:GetObject', 's3:GetObjectAcl', 's3:PutObject', 's3:PutObjectAcl', 's3:DeleteObject' ),
+					'Resource' => 'arn:aws:s3:::' . $bucket . '/*',
+				),
+			),
+		);
+
+		// add the permission to clear the cache of CloudFront.
+		if ( '' !== $distribution_id ) {
+			$policy['Statement'][] = array(
+				'Sid'      => 'ClearCloudFrontCache',
+				'Effect'   => 'Allow',
+				'Action'   => array( 'cloudfront:CreateInvalidation' ),
+				'Resource' => 'arn:aws:cloudfront::*:distribution/' . $distribution_id,
+			);
+		}
+
+		/**
+		 * Filter the IAM policy, which is shown as help for the setup of AWS S3.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param array<string,mixed> $policy The policy.
+		 * @param string $bucket The name of the bucket.
+		 * @param string $distribution_id The ID of the CloudFront distribution.
+		 */
+		$policy = apply_filters( 'efmlawss3_iam_policy', $policy, $bucket, $distribution_id );
+
+		// return it as formatted JSON.
+		return (string) wp_json_encode( $policy, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+	}
 }

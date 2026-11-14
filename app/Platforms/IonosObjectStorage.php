@@ -133,4 +133,25 @@ class IonosObjectStorage extends S3Compatible_Preset {
 	public function get_platform_url(): string {
 		return 'https://dcd.ionos.com/';
 	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an access key in the Data Center Designer of IONOS (Menu → Storage → IONOS Object Storage → Key management → Access keys → Generate key).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Copy the access key and the secret key, or download the key pair as backup.', 'external-files-from-aws-s3' ),
+				__( 'Choose the region of your bucket.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'Generate a key', 'external-files-from-aws-s3' ),
+					'url'   => 'https://docs.ionos.com/cloud/backup-and-storage/ionos-object-storage/get-started/generate-key',
+				),
+			),
+		);
+	}
 }
