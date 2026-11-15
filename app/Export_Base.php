@@ -252,6 +252,162 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 	}
 
 	/**
+	 * Return whether this service could export the sizes of images.
+	 *
+	 * Requires "External Files in Media Library" 6.0.0 or newer.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return bool
+	 */
+	public function supports_sizes(): bool {
+		return true;
+	}
+
+	/**
+	 * Export an additional file of an attachment (e.g. a size of an image) to the bucket.
+	 *
+	 * The key is created like for the attachment itself, the post meta of the attachment is not changed.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param int                 $attachment_id The attachment ID.
+	 * @param string              $source        The absolute path of the local file.
+	 * @param string              $target        The target of the file.
+	 * @param array<string,mixed> $credentials   The credentials.
+	 *
+	 * @return string|bool
+	 */
+	public function export_size( int $attachment_id, string $source, string $target, array $credentials ): string|bool {
+		// get our own service object.
+		$s3_obj = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3_obj instanceof Platform_Base ) {
+			return false;
+		}
+
+		// set the credentials.
+		$s3_obj->set_fields( isset( $credentials['fields'] ) ? $credentials['fields'] : array() );
+
+		// bail if the given URL is not an S3 URL or the file does not exist.
+		if ( ! str_starts_with( $target, $s3_obj->get_directory() ) || ! Helper::get_wp_filesystem()->exists( $source ) ) {
+			return false;
+		}
+
+		// get the key for this file.
+		$key = $this->get_key_for_filename( $this->get_folder_from_target( $target, $credentials ) . basename( $target ), $credentials, $s3_obj );
+
+		// get the S3Client.
+		$s3_client = $s3_obj->get_s3_client();
+
+		// check whether the file exists already, which would be overwritten (only if a cache must be invalidated then).
+		$file_exists = false;
+		if ( $s3_obj->is_cache_invalidation_enabled() ) {
+			try {
+				$file_exists = $s3_client->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
+			} catch ( AwsException | Exception $e ) {
+				$file_exists = true;
+			}
+		}
+
+		// get the upload parameters with the content type of this file.
+		$params    = $this->get_upload_params( $attachment_id, $source, $key, $s3_obj );
+		$file_type = wp_check_filetype( basename( $source ) );
+		if ( is_string( $file_type['type'] ) && '' !== $file_type['type'] ) {
+			$params['ContentType'] = $file_type['type'];
+		}
+
+		// open the file as stream.
+		$handle = fopen( $source, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		// bail if file could not be opened.
+		if ( ! $handle ) {
+			return false;
+		}
+
+		// upload the file.
+		try {
+			$s3_client->upload( $s3_obj->get_bucket_name(), $key, $handle, 'private', array( 'params' => $params ) );
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'File could not be uploaded to the S3 bucket. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+
+			// do nothing more.
+			return false;
+		} finally {
+			if ( is_resource( $handle ) ) {
+				fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+			}
+		}
+
+		// invalidate the cache for an overwritten file.
+		if ( $file_exists ) {
+			$s3_obj->invalidate_cache( array( $key ) );
+		}
+
+		// return the public URL of this file.
+		return $s3_obj->get_public_url_of_file( $key, $s3_obj->get_fields() );
+	}
+
+	/**
+	 * Delete an additional file of an attachment in the bucket.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param int                 $attachment_id The attachment ID.
+	 * @param string              $url           The URL of the file.
+	 * @param string              $target        The target of the file.
+	 * @param array<string,mixed> $credentials   The credentials.
+	 *
+	 * @return bool
+	 */
+	public function delete_size( int $attachment_id, string $url, string $target, array $credentials ): bool {
+		// get our own service object.
+		$s3_obj = $this->get_directory_listing_object();
+
+		// bail if no "Platform_Base" object could be loaded.
+		if ( ! $s3_obj instanceof Platform_Base ) {
+			return false;
+		}
+
+		// set the credentials.
+		$s3_obj->set_fields( isset( $credentials['fields'] ) ? $credentials['fields'] : array() );
+
+		// bail if the given target is not an S3 URL.
+		if ( ! str_starts_with( $target, $s3_obj->get_directory() ) ) {
+			return false;
+		}
+
+		// get the key of this file.
+		$key = $this->get_key_for_filename( $this->get_folder_from_target( $target, $credentials ) . basename( $target ), $credentials, $s3_obj );
+
+		// delete the file.
+		try {
+			$s3_obj->get_s3_client()->deleteObject(
+				array(
+					'Bucket' => $s3_obj->get_bucket_name(),
+					'Key'    => $key,
+				)
+			);
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'File could not be deleted! Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+
+			// do nothing more.
+			return false;
+		}
+
+		// invalidate the cache for the deleted file.
+		if ( $s3_obj->is_cache_invalidation_enabled() ) {
+			$s3_obj->invalidate_cache( array( $key ) );
+		}
+
+		// return true as the file has been deleted.
+		return true;
+	}
+
+	/**
 	 * Return whether this service supports folders for exported files.
 	 *
 	 * S3 uses the folders as part of the key of the file, so no folders must be created.
