@@ -45,6 +45,11 @@ class Protocol extends Protocol_Base {
 			return true;
 		}
 
+		// bail if the actual external source belongs to another platform: its custom domain is not ours.
+		if ( $this->is_source_of_other_platform() ) {
+			return false;
+		}
+
 		// return whether the URL is on the custom domain.
 		return '' !== BackblazeS3::get_instance()->get_key_from_custom_domain_url( $this->get_url(), $this->get_fields() );
 	}

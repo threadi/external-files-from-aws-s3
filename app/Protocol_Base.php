@@ -288,6 +288,39 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	}
 
 	/**
+	 * Return whether the actual import or synchronization uses an external source of another platform.
+	 *
+	 * The fields of an external source are used to recognize URLs on its public or custom domain. Other platforms
+	 * must not claim these URLs, as the fields (e.g. the public domain) are not theirs: otherwise the first platform
+	 * in the list of protocols would be used for the files of e.g. a Cloudflare R2 bucket on a custom domain.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return bool
+	 */
+	protected function is_source_of_other_platform(): bool {
+		// bail if the actual external source is unknown (older versions of External Files in Media Library).
+		if ( ! method_exists( Import::get_instance(), 'get_term_id' ) ) {
+			return false;
+		}
+
+		// bail if no external source is used for the actual import (e.g. a single URL in the import dialog).
+		$term_id = Import::get_instance()->get_term_id();
+		if ( 0 === $term_id ) {
+			return false;
+		}
+
+		// bail if the platform of this protocol is unknown.
+		$platform = $this->get_directory_listing_object();
+		if ( ! $platform instanceof Platform_Base ) {
+			return false;
+		}
+
+		// return whether the external source belongs to another platform.
+		return $platform->get_name() !== (string) get_term_meta( $term_id, 'type', true );
+	}
+
+	/**
 	 * Return whether this protocol could list the files of a directory page by page.
 	 *
 	 * @return bool

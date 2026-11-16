@@ -53,6 +53,7 @@
 
 ### Fixed
 
+- Fixed synchronization of buckets with public or custom domain (e.g. Cloudflare R2): their files were assigned to another platform (e.g. DigitalOcean Spaces), whose check of the custom domain used the fields of the external source, and could not be imported ("region" missing)
 - Fixed import and export of AWS S3 files if the access key is not allowed to read object ACLs
 - Fixed usage of the custom domain for Cloudflare R2 in user-specific mode
 - Fixed missing content type of exported files, which resulted in "binary/octet-stream" for every file

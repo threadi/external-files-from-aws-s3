@@ -61,8 +61,9 @@ class Protocol extends Protocol_Base {
 	 * @return bool
 	 */
 	public function is_url_compatible(): bool {
-		// bail if the URL is from the fields of this protocol.
-		if ( $this->get_platform()->is_url_of_fields( $this->get_url(), $this->get_fields() ) ) {
+		// bail if the URL is from the fields of this protocol (not, if the actual external source belongs to another
+		// platform, as its fields are not ours).
+		if ( ! $this->is_source_of_other_platform() && $this->get_platform()->is_url_of_fields( $this->get_url(), $this->get_fields() ) ) {
 			return true;
 		}
 
