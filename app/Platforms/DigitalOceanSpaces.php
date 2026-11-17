@@ -325,8 +325,8 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 				$setting->set_autoload( false );
 				$setting->set_type( 'string' );
 				$setting->set_default( '' );
-				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_digital_ocean_spaces_access_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_digital_ocean_spaces_access_key' ) );
 				$field = new Text( $settings_obj );
 				$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
 				/* translators: %1$s will be replaced by a URL. */
@@ -343,8 +343,8 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 				$setting->set_autoload( false );
 				$setting->set_type( 'string' );
 				$setting->set_default( '' );
-				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_digital_ocean_spaces_secret_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_digital_ocean_spaces_secret_key' ) );
 				$field = new Password( $settings_obj );
 				$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
 				$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
@@ -604,8 +604,8 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['access_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_access_key', '' ) );
-			$values['secret_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_digital_ocean_spaces_secret_key', '' ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( (string) get_option( 'eml_digital_ocean_spaces_access_key', '' ), 'option:eml_digital_ocean_spaces_access_key' );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( (string) get_option( 'eml_digital_ocean_spaces_secret_key', '' ), 'option:eml_digital_ocean_spaces_secret_key' );
 			$values['bucket']        = get_option( 'eml_digital_ocean_spaces_bucket', '' );
 			$values['region']        = get_option( 'eml_digital_ocean_spaces_region', '' );
 			$values['public_domain'] = get_option( 'eml_digital_ocean_spaces_public_domain', '' );
@@ -622,11 +622,11 @@ class DigitalOceanSpaces extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['access_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_access_key', true ) );
-			$values['secret_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_secret_key', true ) );
-			$values['bucket']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_bucket', true ) );
-			$values['region']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_digital_ocean_spaces_region', true ) );
-			$values['public_domain'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_public_domain', true ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_access_key', true ), 'usermeta:efml_digital_ocean_spaces_access_key' );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_secret_key', true ), 'usermeta:efml_digital_ocean_spaces_secret_key' );
+			$values['bucket']        = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_bucket', true ), 'usermeta:efml_digital_ocean_spaces_bucket' );
+			$values['region']        = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_region', true ), 'usermeta:efml_digital_ocean_spaces_region' );
+			$values['public_domain'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_digital_ocean_spaces_public_domain', true ), 'usermeta:efml_digital_ocean_spaces_public_domain' );
 		}
 
 		// return the resulting list of values.

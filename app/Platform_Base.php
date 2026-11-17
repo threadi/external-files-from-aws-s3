@@ -14,6 +14,7 @@ use Aws\Exception\AwsException;
 use Aws\CommandInterface;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
+use easyDirectoryListingForWordPress\Crypt;
 use easySettingsForWordPress\Section;
 use ExternalFilesInMediaLibrary\ExternalFiles\File;
 use ExternalFilesInMediaLibrary\ExternalFiles\ImportDialog;
@@ -32,6 +33,57 @@ use WP_User;
  * Object for handle tasks for each platform object.
  */
 class Platform_Base extends Service_Base {
+	/**
+	 * List of the callbacks to encrypt and decrypt settings with their context.
+	 *
+	 * @var array<string,callable>
+	 */
+	private array $crypt_callbacks = array();
+
+	/**
+	 * Return whether the user settings of this service are encrypted with a context.
+	 *
+	 * The main plugin saves the user settings with the context "usermeta:efml_<name>", if this returns true.
+	 *
+	 * @return bool
+	 */
+	public function is_crypt_context_supported(): bool {
+		return true;
+	}
+
+	/**
+	 * Return the callback to encrypt ("save") or decrypt ("read") a setting with its context.
+	 *
+	 * Values saved without context (by older versions) stay readable. With a main plugin, which does not
+	 * support contexts, the callbacks without context are used.
+	 *
+	 * @param string $type    The type: "save" or "read".
+	 * @param string $context The context, e.g. "option:" and the name of the option.
+	 *
+	 * @return callable
+	 */
+	protected function get_crypt_callback( string $type, string $context ): callable {
+		// return the callback, if it has been created before (the same object is needed for has_filter()).
+		$key = $type . ':' . $context;
+		if ( isset( $this->crypt_callbacks[ $key ] ) ) {
+			return $this->crypt_callbacks[ $key ];
+		}
+
+		// get the crypt object.
+		$crypt_obj = Crypt::get_instance();
+
+		// create the callback.
+		if ( 'save' === $type ) {
+			$callback = method_exists( $crypt_obj, 'get_save_callback' ) ? $crypt_obj->get_save_callback( $context ) : array( $this, 'encrypt_value' );
+		} else {
+			$callback = method_exists( $crypt_obj, 'get_read_callback' ) ? $crypt_obj->get_read_callback( $context ) : array( $this, 'decrypt_value' );
+		}
+
+		// remember and return it.
+		$this->crypt_callbacks[ $key ] = $callback;
+		return $callback;
+	}
+
 	/**
 	 * Whether failed checks of the public availability should be logged with all details.
 	 *

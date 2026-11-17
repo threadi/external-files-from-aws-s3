@@ -413,8 +413,15 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 		// remove the domain from URL to get the Key (aka path to the file in S3).
 		$url = $s3->get_requested_url( $this->get_url(), $fields );
 
-		// get the S3Client.
-		$s3_client = $s3->get_s3_client();
+		// get the S3Client (the SDK throws an exception, if its configuration is incomplete, e.g. without region).
+		try {
+			$s3_client = $s3->get_s3_client();
+		} catch ( \InvalidArgumentException $e ) {
+			/* translators: %1$s will be replaced by a URL. */
+			Log::get_instance()->create( sprintf( __( 'Error during request of S3 file. <a href="%1$s">Check the log</a> for details.', 'external-files-from-aws-s3' ), esc_url( Settings::get_instance()->get_url( 'eml_logs' ) ) ), $this->get_url(), 'error', 0, Import::get_instance()->get_identifier() );
+			Log::get_instance()->create( __( 'Error during request of S3 file:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $this->get_url(), 'error' );
+			return array();
+		}
 
 		// get list of directories and files in given bucket.
 		try {

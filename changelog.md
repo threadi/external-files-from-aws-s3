@@ -43,6 +43,7 @@
 
 ### Changed
 
+- Encrypted settings and access data are bound to their purpose (requires External Files in Media Library 6.0.0): an encrypted value copied into another field cannot be decrypted there; values saved by older versions stay readable and are bound to their purpose when they are saved again
 - Updated German translations
 - Optimized the option for use auto-updates for this plugin
 - The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
@@ -53,6 +54,7 @@
 
 ### Fixed
 
+- Fixed error 500 during the import of a file, if the configuration of the platform is incomplete (e.g. without region): the error is logged
 - Fixed synchronization of buckets with public or custom domain (e.g. Cloudflare R2): their files were assigned to another platform (e.g. DigitalOcean Spaces), whose check of the custom domain used the fields of the external source, and could not be imported ("region" missing)
 - Fixed import and export of AWS S3 files if the access key is not allowed to read object ACLs
 - Fixed usage of the custom domain for Cloudflare R2 in user-specific mode

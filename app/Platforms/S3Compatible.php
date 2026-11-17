@@ -495,8 +495,8 @@ class S3Compatible extends Platform_Base implements Service {
 					case 'password':
 						$setting->set_type( 'string' );
 						$setting->set_default( '' );
-						$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-						$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+						$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:' . $this->get_option_name( $field_name ) ) );
+						$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:' . $this->get_option_name( $field_name ) ) );
 						$field = new Password( $settings_obj );
 						$field->set_placeholder( $definition['placeholder'] );
 						break;
@@ -504,8 +504,8 @@ class S3Compatible extends Platform_Base implements Service {
 						$setting->set_type( 'string' );
 						$setting->set_default( $definition['default'] );
 						if ( $definition['credential'] ) {
-							$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-							$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+							$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:' . $this->get_option_name( $field_name ) ) );
+							$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:' . $this->get_option_name( $field_name ) ) );
 						}
 						$field = new Text( $settings_obj );
 						$field->set_placeholder( $definition['placeholder'] );
@@ -1075,7 +1075,7 @@ class S3Compatible extends Platform_Base implements Service {
 
 				// decrypt credentials.
 				if ( $definition['credential'] ) {
-					$value = Crypt::get_instance()->decrypt( (string) $value );
+					$value = Crypt::get_instance()->decrypt( (string) $value, 'option:' . $this->get_option_name( $field_name ) );
 				}
 
 				// convert checkboxes.
@@ -1101,7 +1101,7 @@ class S3Compatible extends Platform_Base implements Service {
 			// get the values.
 			foreach ( $definitions as $field_name => $definition ) {
 				// get the value.
-				$value = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_' . $this->get_user_setting_name( $field_name ), true ) );
+				$value = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_' . $this->get_user_setting_name( $field_name ), true ), 'usermeta:efml_' . $this->get_user_setting_name( $field_name ) );
 
 				// use the default value, if no value is set.
 				if ( '' === $value ) {

@@ -284,7 +284,7 @@ class AwsS3 extends Platform_Base implements Service {
 			}
 
 			// return the region from settings.
-			return Crypt::get_instance()->decrypt( $region );
+			return Crypt::get_instance()->decrypt( $region, 'usermeta:efml_s3_region' );
 		}
 
 		// return empty string.
@@ -395,8 +395,8 @@ class AwsS3 extends Platform_Base implements Service {
 				$setting->set_section( $section );
 				$setting->set_autoload( false );
 				$setting->set_type( 'string' );
-				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_s3_access_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_s3_access_key' ) );
 				$field = new Text( $settings_obj );
 				$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
 				/* translators: %1$s will be replaced by a URL. */
@@ -412,8 +412,8 @@ class AwsS3 extends Platform_Base implements Service {
 				$setting->set_section( $section );
 				$setting->set_autoload( false );
 				$setting->set_type( 'string' );
-				$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-				$setting->set_save_callback( array( $this, 'encrypt_value' ) );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_s3_secret_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_s3_secret_key' ) );
 				$field = new Password( $settings_obj );
 				$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
 				$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
@@ -875,8 +875,8 @@ class AwsS3 extends Platform_Base implements Service {
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_access_key', '' ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_option( 'eml_s3_secret_key', '' ) );
+			$values['access_key'] = Crypt::get_instance()->decrypt( (string) get_option( 'eml_s3_access_key', '' ), 'option:eml_s3_access_key' );
+			$values['secret_key'] = Crypt::get_instance()->decrypt( (string) get_option( 'eml_s3_secret_key', '' ), 'option:eml_s3_secret_key' );
 			$values['bucket']     = get_option( 'eml_s3_bucket', '' );
 
 			// get the optional CloudFront settings.
@@ -895,14 +895,14 @@ class AwsS3 extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['access_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_access_key', true ) );
-			$values['secret_key'] = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_secret_key', true ) );
-			$values['bucket']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_bucket', true ) );
-			$values['region']     = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_s3_region', true ) );
+			$values['access_key'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_access_key', true ), 'usermeta:efml_s3_access_key' );
+			$values['secret_key'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_secret_key', true ), 'usermeta:efml_s3_secret_key' );
+			$values['bucket']     = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_bucket', true ), 'usermeta:efml_s3_bucket' );
+			$values['region']     = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_region', true ), 'usermeta:efml_s3_region' );
 
 			// get the optional CloudFront settings (saved encrypted like all user settings).
-			$values['cloudfront_domain']          = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_cloudfront_domain', true ) );
-			$values['cloudfront_distribution_id'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_cloudfront_distribution_id', true ) );
+			$values['cloudfront_domain']          = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_cloudfront_domain', true ), 'usermeta:efml_s3_cloudfront_domain' );
+			$values['cloudfront_distribution_id'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_s3_cloudfront_distribution_id', true ), 'usermeta:efml_s3_cloudfront_distribution_id' );
 		}
 
 		// return the resulting list of values.
