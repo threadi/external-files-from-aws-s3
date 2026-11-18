@@ -114,7 +114,7 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 				$handle,
 				'private',
 				array(
-					'params' => $this->get_upload_params( $attachment_id, $file_path, $key, $s3_obj ),
+					'params' => $this->get_upload_params( $attachment_id, $file_path, $key, $s3_obj, ! empty( $credentials['private'] ) ),
 				)
 			);
 		} catch ( AwsException | Exception $e ) {
@@ -356,7 +356,7 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		}
 
 		// get the upload parameters with the content type of this file.
-		$params    = $this->get_upload_params( $attachment_id, $source, $key, $s3_obj );
+		$params    = $this->get_upload_params( $attachment_id, $source, $key, $s3_obj, ! empty( $credentials['private'] ) );
 		$file_type = wp_check_filetype( basename( $source ) );
 		if ( is_string( $file_type['type'] ) && '' !== $file_type['type'] ) {
 			$params['ContentType'] = $file_type['type'];
@@ -525,10 +525,11 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 	 * @param string        $file_path The absolute path to the local file.
 	 * @param string        $key The key of the file in the bucket.
 	 * @param Platform_Base $s3_obj The platform object.
+	 * @param bool          $is_private Whether the file is saved privately.
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function get_upload_params( int $attachment_id, string $file_path, string $key, Platform_Base $s3_obj ): array {
+	protected function get_upload_params( int $attachment_id, string $file_path, string $key, Platform_Base $s3_obj, bool $is_private = false ): array {
 		// get the content type from the attachment.
 		$content_type = (string) get_post_mime_type( $attachment_id );
 
@@ -542,6 +543,15 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		$params = array();
 		if ( ! empty( $content_type ) ) {
 			$params['ContentType'] = $content_type;
+		}
+
+		// let browsers and CDNs cache the file, as External Files in Media Library defines it (since its version 6.0.0).
+		$export_obj = \ExternalFilesInMediaLibrary\ExternalFiles\Export::get_instance();
+		if ( method_exists( $export_obj, 'get_cache_control' ) ) { // @phpstan-ignore function.alreadyNarrowedType
+			$cache_control = $export_obj->get_cache_control( $attachment_id, $is_private );
+			if ( '' !== $cache_control ) {
+				$params['CacheControl'] = $cache_control;
+			}
 		}
 
 		/**

@@ -249,6 +249,7 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 		$this->assertTrue( $export->file_exists_on_target( $directory . $file_name, $credentials ) );
 		$this->assertEquals( 200, wp_remote_retrieve_response_code( wp_remote_head( (string) $url ) ) );
 		$this->assertEquals( 'image/jpeg', wp_remote_retrieve_header( wp_remote_head( (string) $url ), 'content-type' ) );
+		$this->assertEquals( 'public, max-age=86400', wp_remote_retrieve_header( wp_remote_head( (string) $url ), 'cache-control' ) );
 
 		// test 2: the import of the exported file.
 		$protocol = new Protocol( (string) $url );

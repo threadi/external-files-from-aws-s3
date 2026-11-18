@@ -4,6 +4,7 @@
 
 ### Added
 
+- Exported files get the header "Cache-Control" for browsers and CDNs, as defined by External Files in Media Library 6.0.0 (one day, with object versioning one week, private files none)
 - Added export of the sizes of images and their original image together with them (requires External Files in Media Library 6.0.0): they are delivered like the images themselves, via the proxy or from the bucket
 - Added help "Where do I find these details?" to the forms of all platforms and to the quickstart (requires External Files in Media Library 6.0.0): where to get the access data, which permissions they need and typical pitfalls
 - The help for AWS S3 contains the IAM policy with the name of the bucket and, if used, the permission for Amazon CloudFront

@@ -227,6 +227,9 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$this->assertEquals( 'my-bucket', $uploads[0]['Bucket'] );
 		$this->assertEquals( $key, $uploads[0]['Key'] );
 		$this->assertEquals( file_get_contents( $file_path ), $this->get_s3_command_body( $uploads[0] ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		// browsers and CDNs could cache the file for one day, as defined by the main plugin.
+		$this->assertEquals( 'public, max-age=86400', $uploads[0]['CacheControl'] );
 	}
 
 	/**
@@ -567,5 +570,40 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 			}
 		);
 		$this->assertLessThanOrEqual( 1, count( $acl_checks ) );
+
+		// private files get no header for the caching.
+		$uploads = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'PutObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertNotEmpty( $uploads );
+		$this->assertArrayNotHasKey( 'CacheControl', end( $uploads )->toArray() );
+	}
+
+	/**
+	 * Test the header "Cache-Control" of uploaded files with object versioning: one week.
+	 *
+	 * @return void
+	 */
+	public function test_cache_control_with_object_versioning(): void {
+		$folders   = get_option( 'eml_export_folders' );
+		$structure = get_option( 'eml_export_folder_structure' );
+		$yearmonth = get_option( 'uploads_use_yearmonth_folders' );
+		update_option( 'eml_export_folders', 1 );
+		update_option( 'eml_export_folder_structure', '%year%/%timestamp%' );
+		update_option( 'uploads_use_yearmonth_folders', 1 );
+
+		$method = new \ReflectionMethod( \ExternalFilesFromAwsS3\Export_Base::class, 'get_upload_params' );
+		$params = $method->invoke( \ExternalFilesFromAwsS3\Platforms\AwsS3\Export::get_instance(), 0, UNIT_TESTS_DATA_PLUGIN_DIR . 'example.jpg', 'example.jpg', \ExternalFilesFromAwsS3\Platforms\AwsS3::get_instance() );
+
+		update_option( 'eml_export_folders', $folders );
+		update_option( 'eml_export_folder_structure', $structure );
+		update_option( 'uploads_use_yearmonth_folders', $yearmonth );
+
+		$this->assertEquals( 'public, max-age=604800', $params['CacheControl'] );
 	}
 }
