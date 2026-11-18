@@ -1067,3 +1067,11 @@ msgstr "Für die Auslieferung müssen deine Dateien öffentlich lesbar sein, ode
 #: app/Platforms/S3Compatible.php:1546
 msgid "Documentation for S3-compatible storages"
 msgstr "Dokumentation für S3-kompatible Speicher"
+
+#: app/Export_Base.php:181
+msgid "The uploaded file could not be removed from the S3 bucket again. Please remove it manually. Error:"
+msgstr "Die hochgeladene Datei konnte nicht wieder aus dem S3-Bucket entfernt werden. Bitte lösche sie manuell. Fehler:"
+
+#: app/Export_Base.php:186
+msgid "The uploaded file has been removed from the S3 bucket again, as it could not be used."
+msgstr "Die hochgeladene Datei wurde wieder aus dem S3-Bucket entfernt, da sie nicht genutzt werden konnte."

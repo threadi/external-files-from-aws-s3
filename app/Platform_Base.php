@@ -140,7 +140,7 @@ class Platform_Base extends Service_Base {
 		// use the protocol in each request, e.g. for private files via the proxy and for exports of uploads by users
 		// without the capability for this platform. Only if the main plugin checks the capability for imports via the
 		// protocol (External Files in Media Library 6.0.0 or newer), otherwise only for users with the capability.
-		$protocol_in_each_request = method_exists( '\ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base', 'is_import_allowed_for_user' );
+		$protocol_in_each_request = method_exists( '\ExternalFilesInMediaLibrary\ExternalFiles\Protocol_Base', 'is_import_allowed_for_user' ); // @phpstan-ignore function.alreadyNarrowedType
 		if ( $protocol_in_each_request ) {
 			add_filter( 'efml_protocols', array( $this, 'add_protocol' ) );
 		}

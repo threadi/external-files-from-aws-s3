@@ -702,7 +702,8 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
-	 * Test if the hooks are only registered for users with the capability for this platform.
+	 * Test if the hooks are only registered for users with the capability for this platform. The protocol is
+	 * registered in each request (e.g. for the proxy for visitors), the import checks the capability itself.
 	 *
 	 * @return void
 	 */
@@ -711,7 +712,8 @@ class AwsS3 extends externalFilesFromAwsS3Tests {
 
 		// test 1: without the capability.
 		$platform->init();
-		$this->assertFalse( has_filter( 'efml_protocols', array( $platform, 'add_protocol' ) ) );
+		$this->assertIsInt( has_filter( 'efml_protocols', array( $platform, 'add_protocol' ) ) );
+		$this->assertFalse( has_filter( 'efml_directory_listing', array( $platform, 'prepare_tree_building' ) ) );
 		$this->assertFalse( has_filter( 'efml_http_check_content_type', array( $platform, 'allow_content_type' ) ) );
 
 		// test 2: with the capability.

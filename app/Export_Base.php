@@ -12,6 +12,7 @@ defined( 'ABSPATH' ) || exit;
 
 use Aws\Exception\AwsException;
 use Aws\Result;
+use Aws\S3\S3Client;
 use Exception;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Log;
@@ -75,9 +76,11 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		/* translators: %1$s will be replaced by the attachment ID, %2$s by the bucket name. */
 		Log::get_instance()->create( sprintf( __( 'Exporting attachment ID %1$s to S3 bucket %2$s.', 'external-files-from-aws-s3' ), '<em>' . $attachment_id . '</em>', '<em>' . $s3_obj->get_bucket_name() . '</em>' ), $target, 'info', 2 );
 
-		// check whether a file with this key already exists, which would be overwritten (only if a cache must be invalidated then).
+		// check whether a file with this key already exists, which would be overwritten (only if a cache must be
+		// invalidated then or if the file is exported publicly: then a new file is removed again, if it would not be
+		// public available).
 		$file_exists = false;
-		if ( $s3_obj->is_cache_invalidation_enabled() ) {
+		if ( $s3_obj->is_cache_invalidation_enabled() || empty( $credentials['private'] ) ) {
 			try {
 				$file_exists = $s3_client->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
 			} catch ( AwsException | Exception $e ) {
@@ -133,12 +136,18 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			// log this event.
 			Log::get_instance()->create( __( 'File would not be public available on your S3 bucket. Check the settings in the bucket to use the export of files.', 'external-files-from-aws-s3' ), $target, 'error' );
 
+			// remove the uploaded file again, so it does not remain unused in the bucket (but never a file, which
+			// existed before and has been overwritten, as it could be used by another file).
+			if ( ! $file_exists ) {
+				$this->remove_uploaded_file( $s3_client, $s3_obj, $key, $target );
+			}
+
 			// return false to prevent to save this file as external file.
 			return false;
 		}
 
 		// invalidate the cache for an overwritten file.
-		if ( $file_exists ) {
+		if ( $file_exists && $s3_obj->is_cache_invalidation_enabled() ) {
 			$s3_obj->invalidate_cache( array( $key ) );
 		}
 
@@ -147,6 +156,34 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 
 		// return the resulting public name of this file.
 		return $s3_obj->get_public_url_of_file( $key, $s3_obj->get_fields() );
+	}
+
+	/**
+	 * Remove a file, which has just been uploaded, but could not be used.
+	 *
+	 * @param S3Client      $s3_client The S3 client.
+	 * @param Platform_Base $s3_obj    The platform object.
+	 * @param string        $key       The key of the file.
+	 * @param string        $target    The target of the file (for the log).
+	 *
+	 * @return void
+	 */
+	private function remove_uploaded_file( S3Client $s3_client, Platform_Base $s3_obj, string $key, string $target ): void {
+		try {
+			$s3_client->deleteObject(
+				array(
+					'Bucket' => $s3_obj->get_bucket_name(),
+					'Key'    => $key,
+				)
+			);
+		} catch ( AwsException | Exception $e ) {
+			// log this event.
+			Log::get_instance()->create( __( 'The uploaded file could not be removed from the S3 bucket again. Please remove it manually. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+			return;
+		}
+
+		// log this event.
+		Log::get_instance()->create( __( 'The uploaded file has been removed from the S3 bucket again, as it could not be used.', 'external-files-from-aws-s3' ), $target, 'info', 2 );
 	}
 
 	/**

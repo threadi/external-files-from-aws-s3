@@ -300,7 +300,7 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	public function is_import_allowed_for_user(): bool {
 		// use the check of the platform, if it is available.
 		$platform = $this->get_directory_listing_object();
-		if ( $platform instanceof Platform_Base && method_exists( $platform, 'is_import_permitted' ) ) {
+		if ( $platform instanceof Platform_Base && method_exists( $platform, 'is_import_permitted' ) ) { // @phpstan-ignore function.alreadyNarrowedType
 			return $platform->is_import_permitted();
 		}
 

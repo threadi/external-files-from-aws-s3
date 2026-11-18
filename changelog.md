@@ -54,6 +54,7 @@
 
 ### Fixed
 
+- Fixed files remaining in the bucket, if an export failed because the file would not be public available: the uploaded file is removed again (an existing file with the same name is never removed)
 - Fixed delivery of private files via the proxy for visitors and users without the capability for the platform (requires External Files in Media Library 6.0.0): the protocols of the platforms are known in each request now, imports still require the capability for the platform
 - Fixed error 500 during the import of a file, if the configuration of the platform is incomplete (e.g. without region): the error is logged
 - Fixed synchronization of buckets with public or custom domain (e.g. Cloudflare R2): their files were assigned to another platform (e.g. DigitalOcean Spaces), whose check of the custom domain used the fields of the external source, and could not be imported ("region" missing)
