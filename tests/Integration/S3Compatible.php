@@ -355,6 +355,118 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Create a local attachment with a file of the given size in MB and return its ID.
+	 *
+	 * @param int $megabytes The size in MB.
+	 *
+	 * @return int
+	 */
+	private function create_large_attachment( int $megabytes ): int {
+		$file = trailingslashit( get_temp_dir() ) . 'efml-large-' . wp_generate_password( 6, false ) . '.pdf';
+		file_put_contents( $file, '%PDF-1.4' . str_repeat( 'x', $megabytes * MB_IN_BYTES ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$attachment_id = self::factory()->attachment->create_upload_object( $file );
+		wp_delete_file( $file );
+		$this->assertIsInt( $attachment_id );
+		return $attachment_id;
+	}
+
+	/**
+	 * Return the options for multipart uploads of these tests: from 5 MB in parts of 5 MB, one after another.
+	 *
+	 * @return array<string,int>
+	 */
+	public function get_multipart_options(): array {
+		return array(
+			'mup_threshold' => 5 * MB_IN_BYTES,
+			'part_size'     => 5 * MB_IN_BYTES,
+			'concurrency'   => 1,
+		);
+	}
+
+	/**
+	 * Test the export of a large file in parts (multipart upload).
+	 *
+	 * @return void
+	 */
+	public function test_export_via_multipart_upload(): void {
+		add_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_large_attachment( 11 );
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the file is uploaded completely.
+		$this->assertNotFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$head = $this->get_platform()->get_s3_client()->headObject(
+			array(
+				'Bucket' => $this->bucket,
+				'Key'    => $file_name,
+			)
+		);
+		$this->assertEquals( filesize( (string) get_attached_file( $attachment_id, true ) ), $head['ContentLength'] );
+		$this->assertStringContainsString( '-3', (string) $head['ETag'] );
+		remove_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+	}
+
+	/**
+	 * Test that the parts of an interrupted multipart upload are removed from the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_interrupted_multipart_upload_is_aborted(): void {
+		add_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+
+		// let the upload of the second part fail.
+		$mock = $this->getMockBuilder( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ): S3Client {
+				$client = new S3Client( $configuration );
+				// as the last step before sending, like a lost connection.
+				$client->getHandlerList()->appendAttempt(
+					static function ( callable $handler ): callable {
+						return static function ( CommandInterface $command, $request = null ) use ( $handler ) {
+							if ( 'UploadPart' === $command->getName() && 2 === (int) $command['PartNumber'] ) {
+								return \GuzzleHttp\Promise\Create::rejectionFor( new \Aws\S3\Exception\S3Exception( 'Connection lost', $command, array( 'code' => 'RequestTimeout' ) ) );
+							}
+							return $handler( $command, $request );
+						};
+					},
+					'efmlawss3_integration_fail_part'
+				);
+				return $client;
+			}
+		);
+		$this->set_property_static( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class, 'instance', $mock );
+
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+			'private'   => true,
+		);
+		$attachment_id = $this->create_large_attachment( 11 );
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the export fails and the parts are removed.
+		$this->assertFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$this->restore_platform();
+		$this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->assertFalse( Export::get_instance()->file_exists_on_target( $directory . $file_name, $credentials ) );
+		$uploads = $this->get_platform()->get_s3_client()->listMultipartUploads( array( 'Bucket' => $this->bucket ) );
+		$this->assertEmpty( $uploads['Uploads'] ?? array() );
+		$this->assertStringContainsString( 'parts of the interrupted upload have been removed', (string) wp_json_encode( \ExternalFilesInMediaLibrary\Plugin\Log::get_instance()->get_logs() ) );
+		remove_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+	}
+
+	/**
 	 * Test the export into a folder and the deletion there.
 	 *
 	 * @return void

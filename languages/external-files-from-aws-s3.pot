@@ -1078,3 +1078,11 @@ msgstr ""
 #: app/Export_Base.php:149
 msgid "The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. \"s3:ListBucket\" and \"s3:GetObject\"). Error:"
 msgstr ""
+
+#: app/Export_Base.php:659
+msgid "The parts of the interrupted upload could not be removed from the S3 bucket. They remain invisible in the bucket and use storage space: remove them via the console of your provider or via a lifecycle rule for incomplete multipart uploads. Error:"
+msgstr ""
+
+#: app/Export_Base.php:664
+msgid "The parts of the interrupted upload have been removed from the S3 bucket."
+msgstr ""

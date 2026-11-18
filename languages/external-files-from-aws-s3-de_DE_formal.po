@@ -1079,3 +1079,11 @@ msgstr "Die hochgeladene Datei wurde wieder aus dem S3-Bucket entfernt, da sie n
 #: app/Export_Base.php:149
 msgid "The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. \"s3:ListBucket\" and \"s3:GetObject\"). Error:"
 msgstr "Die hochgeladene Datei bleibt im S3-Bucket, da vor dem Hochladen nicht geprüft werden konnte, ob es schon eine Datei mit diesem Namen gibt. Bitte lösche sie manuell und prüfe die Berechtigungen des Zugangsschlüssels (z. B. „s3:ListBucket“ und „s3:GetObject“). Fehler:"
+
+#: app/Export_Base.php:659
+msgid "The parts of the interrupted upload could not be removed from the S3 bucket. They remain invisible in the bucket and use storage space: remove them via the console of your provider or via a lifecycle rule for incomplete multipart uploads. Error:"
+msgstr "Die Teile des abgebrochenen Uploads konnten nicht aus dem S3-Bucket entfernt werden. Sie bleiben unsichtbar im Bucket und belegen Speicherplatz: Entferne sie über die Konsole deines Anbieters oder über eine Lebenszyklus-Regel für unvollständige Multipart-Uploads. Fehler:"
+
+#: app/Export_Base.php:664
+msgid "The parts of the interrupted upload have been removed from the S3 bucket."
+msgstr "Die Teile des abgebrochenen Uploads wurden aus dem S3-Bucket entfernt."

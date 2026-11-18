@@ -10,6 +10,8 @@
 - The help for AWS S3 contains the IAM policy with the name of the bucket and, if used, the permission for Amazon CloudFront
 - The connection test and the log name the missing permission, if the storage returns it in its error message (e.g. AWS)
 - Added hook "efmlawss3_iam_policy"
+- Interrupted uploads of large files (from 16 MB, uploaded in parts) are aborted, so their parts do not remain invisible in the bucket and use storage space; the IAM policy contains the permission "s3:AbortMultipartUpload" for this
+- Added hook "efmlawss3_upload_options" to change the upload in parts (e.g. the size of the parts)
 - Added documentation of the permissions in docs/permissions.md
 - Added support for the migration from other offload plugins (WP Offload Media, Advanced Media Offloader, Stowaway, Offload Media – Cloud Storage) via the quickstart of External Files in Media Library 6.0.0: files in the bucket are used as external files without uploading them again
 - Added hook "efmlawss3_offloaded_object_url"
