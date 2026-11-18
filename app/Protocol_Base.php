@@ -288,6 +288,27 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	}
 
 	/**
+	 * Return whether files could be imported with this protocol in the actual request.
+	 *
+	 * The protocols are also registered for visitors (e.g. to deliver private files via the proxy), but only users
+	 * with the capability for the platform are allowed to import files (as well as cron and WP CLI).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return bool
+	 */
+	public function is_import_allowed_for_user(): bool {
+		// use the check of the platform, if it is available.
+		$platform = $this->get_directory_listing_object();
+		if ( $platform instanceof Platform_Base && method_exists( $platform, 'is_import_permitted' ) ) {
+			return $platform->is_import_permitted();
+		}
+
+		// otherwise check the capability for the platform.
+		return defined( 'EFML_SYNC_RUNNING' ) || wp_doing_cron() || Helper::is_cli() || current_user_can( 'efml_cap_' . $this->get_name() );
+	}
+
+	/**
 	 * Return whether the actual import or synchronization uses an external source of another platform.
 	 *
 	 * The fields of an external source are used to recognize URLs on its public or custom domain. Other platforms
