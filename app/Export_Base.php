@@ -80,12 +80,16 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		// invalidated then or if the file is exported publicly: then a new file is removed again, if it would not be
 		// public available).
 		$file_exists = false;
+		$check_error = '';
 		if ( $s3_obj->is_cache_invalidation_enabled() || empty( $credentials['private'] ) ) {
 			try {
 				$file_exists = $s3_client->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
 			} catch ( AwsException | Exception $e ) {
 				// if the check fails, we assume the file exists to invalidate the cache for safety.
 				$file_exists = true;
+
+				// remember the reason, if the export fails afterward.
+				$check_error = $e->getMessage();
 			}
 		}
 
@@ -140,6 +144,9 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			// existed before and has been overwritten, as it could be used by another file).
 			if ( ! $file_exists ) {
 				$this->remove_uploaded_file( $s3_client, $s3_obj, $key, $target );
+			} elseif ( '' !== $check_error ) {
+				// log, why the uploaded file remains in the bucket.
+				Log::get_instance()->create( __( 'The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. "s3:ListBucket" and "s3:GetObject"). Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $check_error ) . '</code>', $target, 'error' );
 			}
 
 			// return false to prevent to save this file as external file.

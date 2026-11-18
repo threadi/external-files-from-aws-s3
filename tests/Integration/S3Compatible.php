@@ -306,6 +306,54 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Test that the uploaded file of a failed public export remains with a hint in the log, if the check for an
+	 * existing file before the upload fails (e.g. without the permission to list the bucket).
+	 *
+	 * @return void
+	 */
+	public function test_failed_public_export_with_failed_check(): void {
+		// let each check for an existing file fail.
+		$mock = $this->getMockBuilder( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ): S3Client {
+				$client = new S3Client( $configuration );
+				$client->getHandlerList()->appendInit(
+					static function ( callable $handler ): callable {
+						return static function ( CommandInterface $command, $request = null ) use ( $handler ) {
+							if ( 'HeadObject' === $command->getName() ) {
+								return \GuzzleHttp\Promise\Create::rejectionFor( new \Aws\S3\Exception\S3Exception( 'Access Denied', $command, array( 'code' => 'AccessDenied' ) ) );
+							}
+							return $handler( $command, $request );
+						};
+					},
+					'efmlawss3_integration_deny_head'
+				);
+				return $client;
+			}
+		);
+		$this->set_property_static( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class, 'instance', $mock );
+
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values( array( 'public_url' => 'http://127.0.0.1:9/efml-not-reachable/' ) ) );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the export fails and the file remains, the log names the reason.
+		$this->assertFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$this->restore_platform();
+		$this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->assertNotEmpty( $this->get_platform()->get_s3_client()->listObjectsV2( array( 'Bucket' => $this->bucket, 'Prefix' => $file_name ) )['Contents'] ?? array() );
+		$this->assertStringContainsString( 'remains in the S3 bucket', (string) wp_json_encode( \ExternalFilesInMediaLibrary\Plugin\Log::get_instance()->get_logs( '', 'error' ) ) );
+	}
+
+	/**
 	 * Test the export into a folder and the deletion there.
 	 *
 	 * @return void

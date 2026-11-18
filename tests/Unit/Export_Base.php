@@ -317,18 +317,50 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$attachment_id = $this->create_local_attachment();
 		$key           = basename( (string) get_attached_file( $attachment_id, true ) );
 
-		$responses              = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
-		$responses['PutObject'] = array();
-		$s3                     = $this->use_s3_mock( $platform_class_name, $responses );
-		$fields                 = $this->set_platform_fields( $s3, $values );
+		$responses                 = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject']    = array();
+		$responses['HeadObject']   = $this->get_s3_exception( 'HeadObject', 404, 'NotFound' );
+		$responses['DeleteObject'] = array();
+		$s3                        = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                    = $this->set_platform_fields( $s3, $values );
 
 		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $this->get_credentials( $fields, $directory ) ) );
 		$this->assertEmpty( get_post_meta( $attachment_id, 'efml_s3_key', true ) );
 
 		// the problem must be logged.
-		$log = $this->get_log_entries( $directory );
-		$this->assertNotEmpty( $log );
-		$this->assertStringContainsString( 'would not be public available', $log[0]['log'] );
+		$this->assertStringContainsString( 'would not be public available', (string) wp_json_encode( $this->get_log_entries( $directory ) ) );
+
+		// the uploaded file is removed again.
+		$this->assertContains( 'DeleteObject', $this->get_s3_command_names() );
+	}
+
+	/**
+	 * Test the export of a file, which would not be public available, if the check for an existing file before the
+	 * upload fails: the uploaded file is not removed (it could be an existing file), the log names the reason.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_file_without_public_access_and_failed_check( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$key           = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		$responses               = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject']  = array();
+		$responses['HeadObject'] = $this->get_s3_exception( 'HeadObject', 403 );
+		$s3                      = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                  = $this->set_platform_fields( $s3, $values );
+
+		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $this->get_credentials( $fields, $directory ) ) );
+		$this->assertNotContains( 'DeleteObject', $this->get_s3_command_names() );
+		$this->assertStringContainsString( 'remains in the S3 bucket', (string) wp_json_encode( $this->get_log_entries( $directory ) ) );
 	}
 
 	/**

@@ -1068,10 +1068,14 @@ msgstr "Für die Auslieferung müssen deine Dateien öffentlich lesbar sein, ode
 msgid "Documentation for S3-compatible storages"
 msgstr "Dokumentation für S3-kompatible Speicher"
 
-#: app/Export_Base.php:181
+#: app/Export_Base.php:188
 msgid "The uploaded file could not be removed from the S3 bucket again. Please remove it manually. Error:"
 msgstr "Die hochgeladene Datei konnte nicht wieder aus dem S3-Bucket entfernt werden. Bitte lösche sie manuell. Fehler:"
 
-#: app/Export_Base.php:186
+#: app/Export_Base.php:193
 msgid "The uploaded file has been removed from the S3 bucket again, as it could not be used."
 msgstr "Die hochgeladene Datei wurde wieder aus dem S3-Bucket entfernt, da sie nicht genutzt werden konnte."
+
+#: app/Export_Base.php:149
+msgid "The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. \"s3:ListBucket\" and \"s3:GetObject\"). Error:"
+msgstr "Die hochgeladene Datei bleibt im S3-Bucket, da vor dem Hochladen nicht geprüft werden konnte, ob es schon eine Datei mit diesem Namen gibt. Bitte lösche sie manuell und prüfe die Berechtigungen des Zugangsschlüssels (z. B. „s3:ListBucket“ und „s3:GetObject“). Fehler:"

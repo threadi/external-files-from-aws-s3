@@ -1067,10 +1067,14 @@ msgstr ""
 msgid "Documentation for S3-compatible storages"
 msgstr ""
 
-#: app/Export_Base.php:181
+#: app/Export_Base.php:188
 msgid "The uploaded file could not be removed from the S3 bucket again. Please remove it manually. Error:"
 msgstr ""
 
-#: app/Export_Base.php:186
+#: app/Export_Base.php:193
 msgid "The uploaded file has been removed from the S3 bucket again, as it could not be used."
+msgstr ""
+
+#: app/Export_Base.php:149
+msgid "The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. \"s3:ListBucket\" and \"s3:GetObject\"). Error:"
 msgstr ""
