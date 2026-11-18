@@ -268,6 +268,44 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 	}
 
 	/**
+	 * Test that a file of a failed public export does not remain in the bucket, but an existing file with the same
+	 * key is never removed.
+	 *
+	 * @return void
+	 */
+	public function test_failed_public_export_removes_upload(): void {
+		// the files are not public available under this URL.
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values( array( 'public_url' => 'http://127.0.0.1:9/efml-not-reachable/' ) ) );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+		$export        = Export::get_instance();
+
+		// test 1: the export fails and the uploaded file is removed again.
+		$this->assertFalse( $export->export_file( $attachment_id, $directory, $credentials ) );
+		$this->assertFalse( $export->file_exists_on_target( $directory . $file_name, $credentials ) );
+
+		// test 2: an existing file with the same key is not removed.
+		$this->get_platform()->get_s3_client()->putObject(
+			array(
+				'Bucket' => $this->bucket,
+				'Key'    => $file_name,
+				'Body'   => 'existing',
+			)
+		);
+		$this->assertFalse( $export->export_file( $attachment_id, $directory, $credentials ) );
+		$this->assertTrue( $export->file_exists_on_target( $directory . $file_name, $credentials ) );
+
+		// test 3: private files do not require the public availability.
+		$credentials['private'] = true;
+		$this->assertNotFalse( $export->export_file( $attachment_id, $directory . '2026/', $credentials ) );
+	}
+
+	/**
 	 * Test the export into a folder and the deletion there.
 	 *
 	 * @return void
@@ -386,6 +424,9 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 
 		// use the protocol of the platform, like for users with its capability.
 		add_filter( 'efml_protocols', array( $this->get_platform(), 'add_protocol' ) );
+		$user_id = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		( new \WP_User( $user_id ) )->add_cap( 'efml_cap_' . $this->get_platform()->get_name() );
+		wp_set_current_user( $user_id );
 		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'efml_import_runs' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$wpdb->query( 'DELETE FROM ' . $wpdb->prefix . 'eml_queue' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$count = getenv( 'EFMLAWSS3_INTEGRATION_IMPORT_COUNT' ) ? absint( getenv( 'EFMLAWSS3_INTEGRATION_IMPORT_COUNT' ) ) : 1100;

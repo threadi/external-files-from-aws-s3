@@ -1066,3 +1066,11 @@ msgstr ""
 #: app/Platforms/S3Compatible.php:1546
 msgid "Documentation for S3-compatible storages"
 msgstr ""
+
+#: app/Export_Base.php:181
+msgid "The uploaded file could not be removed from the S3 bucket again. Please remove it manually. Error:"
+msgstr ""
+
+#: app/Export_Base.php:186
+msgid "The uploaded file has been removed from the S3 bucket again, as it could not be used."
+msgstr ""
