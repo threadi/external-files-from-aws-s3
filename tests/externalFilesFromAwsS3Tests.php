@@ -7,7 +7,9 @@
 
 namespace ExternalFilesFromAwsS3\Tests;
 
+use Aws\CloudFront\CloudFrontClient;
 use Aws\CommandInterface;
+use Aws\Exception\AwsException;
 use Aws\Result;
 use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
@@ -16,6 +18,12 @@ use ExternalFilesFromAwsS3\Platforms\AwsS3;
 use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesFromAwsS3\Platforms\CloudflareR2;
 use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
+use ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\IonosObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\OvhcloudObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\S3Compatible;
+use ExternalFilesFromAwsS3\Platforms\ScalewayObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\Wasabi;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Psr\Http\Message\RequestInterface;
@@ -38,6 +46,12 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		BackblazeS3::class,
 		CloudflareR2::class,
 		DigitalOceanSpaces::class,
+		S3Compatible::class,
+		HetznerObjectStorage::class,
+		IonosObjectStorage::class,
+		OvhcloudObjectStorage::class,
+		ScalewayObjectStorage::class,
+		Wasabi::class,
 	);
 
 	/**
@@ -62,11 +76,27 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	private static array $s3_commands = array();
 
 	/**
+	 * List of the bodies of the S3 commands, read when the command has been sent.
+	 *
+	 * The export closes the file handle of the body after the upload, so the body could not be read afterward.
+	 *
+	 * @var array<int,string>
+	 */
+	private static array $s3_command_bodies = array();
+
+	/**
 	 * List of configurations, which has been used for S3 clients during the actual test.
 	 *
 	 * @var array<int,array<string,mixed>>
 	 */
 	private static array $s3_configurations = array();
+
+	/**
+	 * List of CloudFront commands, which has been sent during the actual test.
+	 *
+	 * @var array<int,CommandInterface>
+	 */
+	private static array $cloudfront_commands = array();
 
 	/**
 	 * List of the original platform objects, which have been replaced by a mock during the actual test.
@@ -133,7 +163,9 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		self::$http_responses    = array();
 		self::$http_requests     = array();
 		self::$s3_commands       = array();
-		self::$s3_configurations = array();
+		self::$s3_command_bodies = array();
+		self::$s3_configurations   = array();
+		self::$cloudfront_commands = array();
 	}
 
 	/**
@@ -175,6 +207,7 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 		self::$http_requests[] = array(
 			'url'    => $url,
 			'method' => isset( $parsed_args['method'] ) ? (string) $parsed_args['method'] : 'GET',
+			'args'   => $parsed_args,
 		);
 
 		// show error if no response is configured for this URL, as we do not want any external URL connection during PHP Unit Tests.
@@ -264,20 +297,59 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	 *
 	 * Commands without a configured response fail the test.
 	 *
-	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
-	 * @param array<string,mixed>         $responses           List of responses per S3 command.
+	 * Optionally the CloudFront client (only for AWS S3) can be replaced with responses per CloudFront command
+	 * (e.g. "CreateInvalidation") in the same way.
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name  The class name of the platform.
+	 * @param array<string,mixed>         $responses            List of responses per S3 command.
+	 * @param array<string,mixed>|null    $cloudfront_responses List of responses per CloudFront command (null to not mock it).
 	 *
 	 * @return Platform_Base
 	 */
-	protected function use_s3_mock( string $platform_class_name, array $responses ): Platform_Base {
-		// create the mock, which uses the original methods except for the creation of the S3 client.
+	protected function use_s3_mock( string $platform_class_name, array $responses, ?array $cloudfront_responses = null ): Platform_Base {
+		// get the methods to mock.
+		$methods = array( 'get_the_client' );
+		if ( is_array( $cloudfront_responses ) ) {
+			$methods[] = 'get_cloudfront_client';
+		}
+
+		// create the mock, which uses the original methods except for the creation of the clients.
 		$mock = $this->getMockBuilder( $platform_class_name )
 			->disableOriginalConstructor()
-			->onlyMethods( array( 'get_the_client' ) )
+			->onlyMethods( $methods )
 			->getMock();
 
-		// create the S3 client with a handler, which answers the commands locally.
+		// create the CloudFront client with a handler, which answers the commands locally.
 		$test = $this;
+		if ( is_array( $cloudfront_responses ) ) {
+			$mock->method( 'get_cloudfront_client' )->willReturnCallback(
+				static function ( array $configuration ) use ( $cloudfront_responses, $test ): CloudFrontClient {
+					$configuration['handler'] = static function ( CommandInterface $command, ?RequestInterface $request = null ) use ( $cloudfront_responses, $test ) {
+						// save the command for checks in the tests.
+						self::$cloudfront_commands[] = $command;
+
+						// fail if no response is configured for this command.
+						if ( ! array_key_exists( $command->getName(), $cloudfront_responses ) ) {
+							$test->fail( 'Unexpected CloudFront command during PHP Unit Tests: ' . $command->getName() );
+						}
+
+						// get the response.
+						$response = $cloudfront_responses[ $command->getName() ];
+
+						// return the exception as rejected promise.
+						if ( $response instanceof AwsException ) {
+							return Create::rejectionFor( $response );
+						}
+
+						// return the result.
+						return Create::promiseFor( $response instanceof Result ? $response : new Result( (array) $response ) );
+					};
+					return new CloudFrontClient( $configuration );
+				}
+			);
+		}
+
+		// create the S3 client with a handler, which answers the commands locally.
 		$mock->method( 'get_the_client' )->willReturnCallback(
 			static function ( array $configuration ) use ( $responses, $test ): S3Client {
 				// save the configuration for checks in the tests.
@@ -287,6 +359,11 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 				$configuration['handler'] = static function ( CommandInterface $command, ?RequestInterface $request = null ) use ( $responses, $test ) {
 					// save the command for checks in the tests.
 					self::$s3_commands[] = $command;
+
+					// save the body now, as the export closes its file handle after the upload.
+					if ( $command->hasParam( 'Body' ) ) {
+						self::$s3_command_bodies[ count( self::$s3_commands ) - 1 ] = (string) $command['Body'];
+					}
 
 					// fail if no response is configured for this command.
 					if ( ! array_key_exists( $command->getName(), $responses ) ) {
@@ -326,6 +403,93 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Replace the singleton of the given platform with a mock, whose S3 client sends no HTTP requests.
+	 *
+	 * In contrast to @use_s3_mock() the requests are built completely by the SDK (incl. signature and checksums),
+	 * so the HTTP requests could be checked. Each request is answered by the given callback with a PSR-7 response.
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param callable                    $responder           Callback, which gets the request and returns the response.
+	 * @param array<int,RequestInterface> $requests            List of the sent requests (as reference).
+	 *
+	 * @return Platform_Base
+	 */
+	protected function use_s3_http_mock( string $platform_class_name, callable $responder, array &$requests ): Platform_Base {
+		// create the mock, which uses the original methods except for the creation of the client.
+		$mock = $this->getMockBuilder( $platform_class_name )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+
+		// create the S3 client with an HTTP handler, which answers the requests locally.
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ) use ( $responder, &$requests ): S3Client {
+				// save the configuration for checks in the tests.
+				self::$s3_configurations[] = $configuration;
+
+				// set the handler for the HTTP requests.
+				$configuration['http_handler'] = static function ( RequestInterface $request ) use ( $responder, &$requests ) {
+					$requests[] = $request;
+					return Create::promiseFor( $responder( $request ) );
+				};
+
+				// return the S3 client.
+				return new S3Client( $configuration );
+			}
+		);
+
+		// save the original object to restore it after the test.
+		if ( ! isset( $this->replaced_platforms[ $platform_class_name ] ) ) {
+			$this->replaced_platforms[ $platform_class_name ] = $platform_class_name::get_instance();
+		}
+
+		// use the mock as singleton.
+		$this->set_platform_instance( $platform_class_name, $mock );
+
+		// return the mock.
+		return $mock;
+	}
+
+	/**
+	 * Answer the HTTP requests to all URLs, which start with the given prefix, with the given status
+	 * (e.g. for URLs with random parts).
+	 *
+	 * @param string $prefix      The prefix of the URLs.
+	 * @param int    $status_code The HTTP status code.
+	 *
+	 * @return callable The callback for the hook "pre_http_request" to remove it after the test.
+	 */
+	protected function add_http_response_for_prefix( string $prefix, int $status_code ): callable {
+		$callback = static function ( false|array|WP_Error $response, array $parsed_args, string $url ) use ( $prefix, $status_code ): false|array|WP_Error {
+			// bail if the URL does not start with the prefix.
+			if ( ! str_starts_with( $url, $prefix ) ) {
+				return $response;
+			}
+
+			// log the request.
+			self::$http_requests[] = array(
+				'url'    => $url,
+				'method' => isset( $parsed_args['method'] ) ? (string) $parsed_args['method'] : 'GET',
+				'args'   => $parsed_args,
+			);
+
+			// return the response.
+			return self::get_http_response( $url, $status_code );
+		};
+		add_filter( 'pre_http_request', $callback, 5, 3 );
+		return $callback;
+	}
+
+	/**
+	 * Return the CloudFront commands, which has been sent during the actual test.
+	 *
+	 * @return array<int,CommandInterface>
+	 */
+	protected function get_cloudfront_commands(): array {
+		return self::$cloudfront_commands;
+	}
+
+	/**
 	 * Return an S3 exception for the given command.
 	 *
 	 * @param string $command_name The name of the command.
@@ -352,6 +516,18 @@ abstract class externalFilesFromAwsS3Tests extends WP_UnitTestCase {
 	 */
 	protected function get_s3_commands(): array {
 		return self::$s3_commands;
+	}
+
+	/**
+	 * Return the body of the given S3 command as it has been sent.
+	 *
+	 * @param CommandInterface $command The command.
+	 *
+	 * @return string
+	 */
+	protected function get_s3_command_body( CommandInterface $command ): string {
+		$index = array_search( $command, self::$s3_commands, true );
+		return false !== $index && isset( self::$s3_command_bodies[ $index ] ) ? self::$s3_command_bodies[ $index ] : '';
 	}
 
 	/**

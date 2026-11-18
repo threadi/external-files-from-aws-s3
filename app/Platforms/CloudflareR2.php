@@ -14,7 +14,6 @@ use Aws\S3\Exception\S3Exception;
 use Aws\S3\S3Client;
 use easyDirectoryListingForWordPress\Crypt;
 use easySettingsForWordPress\Fields\Checkbox;
-use easySettingsForWordPress\Fields\Number;
 use easySettingsForWordPress\Fields\Password;
 use easySettingsForWordPress\Fields\Text;
 use easySettingsForWordPress\Fields\TextInfo;
@@ -41,6 +40,13 @@ class CloudflareR2 extends Platform_Base implements Service {
 	 * @var string
 	 */
 	protected string $name = 'cloudflare-r2';
+
+	/**
+	 * List of fields, which identify the bucket of this platform (account and bucket).
+	 *
+	 * @var array<int,string>
+	 */
+	protected array $constants_target_fields = array( 'account_id', 'bucket' );
 
 	/**
 	 * The public label.
@@ -154,6 +160,17 @@ class CloudflareR2 extends Platform_Base implements Service {
 				'hint'   => '<span class="dashicons dashicons-editor-help" title="' . esc_attr__( 'File-type is not supported', 'external-files-from-aws-s3' ) . '"></span>',
 			),
 		);
+	}
+
+	/**
+	 * Return the URL of the web interface of Cloudflare R2 (the Cloudflare dashboard).
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @return string
+	 */
+	public function get_platform_url(): string {
+		return 'https://dash.cloudflare.com/?to=/:account/r2/overview';
 	}
 
 	/**
@@ -299,83 +316,101 @@ class CloudflareR2 extends Platform_Base implements Service {
 
 		// add settings.
 		if ( defined( 'EFML_ACTIVATION_RUNNING' ) || 'global' === get_option( 'eml_' . $this->get_name() . '_credentials_vault' ) ) {
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_account_id' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Account ID', 'external-files-from-aws-s3' ) );
-			/* translators: %1$s will be replaced by a URL. */
-			$field->set_description( sprintf( __( 'Get your account ID as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
-			$field->set_placeholder( __( 'The account ID', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'account_id', __( 'Account ID', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_account_id' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_cloudflare_r2_account_id' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_cloudflare_r2_account_id' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Account ID', 'external-files-from-aws-s3' ) );
+				/* translators: %1$s will be replaced by a URL. */
+				$field->set_description( sprintf( __( 'Get your account ID as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
+				$field->set_placeholder( __( 'The account ID', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_eu' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'integer' );
-			$setting->set_default( 0 );
-			$field = new Checkbox( $settings_obj );
-			$field->set_title( __( 'EU-storage', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'eu', __( 'EU-storage', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_eu' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'integer' );
+				$setting->set_default( 0 );
+				$field = new Checkbox( $settings_obj );
+				$field->set_title( __( 'EU-storage', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_access_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
-			/* translators: %1$s will be replaced by a URL. */
-			$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
-			$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'access_key', __( 'Access key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_access_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_cloudflare_r2_access_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_cloudflare_r2_access_key' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Access key', 'external-files-from-aws-s3' ) );
+				/* translators: %1$s will be replaced by a URL. */
+				$field->set_description( sprintf( __( 'Get your access key as described <a href="%1$s" target="_blank">here (opens in a new window)</a>.', 'external-files-from-aws-s3' ), 'https://docs.aws.amazon.com/solutions/latest/data-transfer-hub/set-up-credentials-for-amazon-s3.html' ) );
+				$field->set_placeholder( __( 'The access key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_secret_key' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Password( $settings_obj );
-			$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'secret', __( 'Secret key', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_secret_key' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_cloudflare_r2_secret_key' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_cloudflare_r2_secret_key' ) );
+				$field = new Password( $settings_obj );
+				$field->set_title( __( 'Secret key', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The secret key', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_bucket' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$setting->set_read_callback( array( $this, 'decrypt_value' ) );
-			$setting->set_save_callback( array( $this, 'encrypt_value' ) );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'bucket', __( 'Bucket', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_bucket' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$setting->set_read_callback( $this->get_crypt_callback( 'read', 'option:eml_cloudflare_r2_bucket' ) );
+				$setting->set_save_callback( $this->get_crypt_callback( 'save', 'option:eml_cloudflare_r2_bucket' ) );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Bucket', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'The bucket you want to use.', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 
-			// add setting.
-			$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_public_domain' );
-			$setting->set_section( $section );
-			$setting->set_autoload( false );
-			$setting->set_type( 'string' );
-			$setting->set_default( '' );
-			$field = new Text( $settings_obj );
-			$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
-			$field->set_description( __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ) );
-			$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
-			$setting->set_field( $field );
+			// show hint if the value is defined via constant, otherwise the setting.
+			if ( ! $this->show_constant_hint( $section, 'public_domain', __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) ) ) {
+				// add setting.
+				$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_public_domain' );
+				$setting->set_section( $section );
+				$setting->set_autoload( false );
+				$setting->set_type( 'string' );
+				$setting->set_default( '' );
+				$field = new Text( $settings_obj );
+				$field->set_title( __( 'Custom domain (optional)', 'external-files-from-aws-s3' ) );
+				$field->set_description( __( 'Set your custom domain for the given bucket to use external hosted files.', 'external-files-from-aws-s3' ) );
+				$field->set_placeholder( __( 'example.com', 'external-files-from-aws-s3' ) );
+				$setting->set_field( $field );
+			}
 		}
 
 		// show hint for user settings.
@@ -390,18 +425,6 @@ class CloudflareR2 extends Platform_Base implements Service {
 			$field->set_description( sprintf( __( 'Each user will find its settings in his own <a href="%1$s">user profile</a>.', 'external-files-from-aws-s3' ), $this->get_config_url() ) );
 			$setting->set_field( $field );
 		}
-
-		// add setting to show also trashed files.
-		$setting = $settings_obj->add_setting( 'eml_cloudflare_r2_import_limit' );
-		$setting->set_section( $section );
-		$setting->set_type( 'integer' );
-		$setting->set_default( 10 );
-		$field = new Number( $settings_obj );
-		$field->set_title( __( 'Max. files to load during import per iteration', 'external-files-from-aws-s3' ) );
-		$field->set_description( __( 'This value specifies how many files should be loaded during a directory import. The higher the value, the greater the likelihood of timeouts during import.', 'external-files-from-aws-s3' ) );
-		$field->set_setting( $setting );
-		$field->set_readonly( $this->is_disabled() ); // @phpstan-ignore method.notFound
-		$setting->set_field( $field );
 	}
 
 	/**
@@ -608,11 +631,11 @@ class CloudflareR2 extends Platform_Base implements Service {
 
 		// get it global, if this is enabled.
 		if ( $this->is_mode( 'global' ) ) {
-			$values['account_id']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_account_id', '' ) );
+			$values['account_id']    = Crypt::get_instance()->decrypt( (string) get_option( 'eml_cloudflare_r2_account_id', '' ), 'option:eml_cloudflare_r2_account_id' );
 			$values['eu']            = absint( get_option( 'eml_cloudflare_r2_eu', 0 ) );
-			$values['access_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_access_key', '' ) );
-			$values['secret_key']    = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_secret_key', '' ) );
-			$values['bucket']        = Crypt::get_instance()->decrypt( get_option( 'eml_cloudflare_r2_bucket', '' ) );
+			$values['access_key']    = Crypt::get_instance()->decrypt( (string) get_option( 'eml_cloudflare_r2_access_key', '' ), 'option:eml_cloudflare_r2_access_key' );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( (string) get_option( 'eml_cloudflare_r2_secret_key', '' ), 'option:eml_cloudflare_r2_secret_key' );
+			$values['bucket']        = Crypt::get_instance()->decrypt( (string) get_option( 'eml_cloudflare_r2_bucket', '' ), 'option:eml_cloudflare_r2_bucket' );
 			$values['public_domain'] = get_option( 'eml_cloudflare_r2_public_domain', '' );
 		}
 
@@ -627,12 +650,12 @@ class CloudflareR2 extends Platform_Base implements Service {
 			}
 
 			// get the values.
-			$values['account_id']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_account_id', true ) );
-			$values['eu']            = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_eu', true ) );
-			$values['access_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_access_key', true ) );
-			$values['secret_key']    = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_secret_key', true ) );
-			$values['bucket']        = Crypt::get_instance()->decrypt( get_user_meta( $user->ID, 'efml_cloudflare_r2_bucket', true ) );
-			$values['public_domain'] = get_user_meta( $user->ID, 'efml_cloudflare_r2_public_domain', true );
+			$values['account_id']    = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_account_id', true ), 'usermeta:efml_cloudflare_r2_account_id' );
+			$values['eu']            = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_eu', true ), 'usermeta:efml_cloudflare_r2_eu' );
+			$values['access_key']    = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_access_key', true ), 'usermeta:efml_cloudflare_r2_access_key' );
+			$values['secret_key']    = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_secret_key', true ), 'usermeta:efml_cloudflare_r2_secret_key' );
+			$values['bucket']        = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_bucket', true ), 'usermeta:efml_cloudflare_r2_bucket' );
+			$values['public_domain'] = Crypt::get_instance()->decrypt( (string) get_user_meta( $user->ID, 'efml_cloudflare_r2_public_domain', true ), 'usermeta:efml_cloudflare_r2_public_domain' );
 		}
 
 		// return the resulting list of values.
@@ -770,7 +793,7 @@ class CloudflareR2 extends Platform_Base implements Service {
 				'secret' => $fields['secret']['value'],
 			),
 		);
-		return $this->get_the_client( $configuration );
+		return $this->add_error_log( $this->get_the_client( $configuration ) );
 	}
 
 	/**
@@ -837,5 +860,75 @@ class CloudflareR2 extends Platform_Base implements Service {
 		$encoded_key = implode( '/', array_map( 'rawurlencode', explode( '/', ltrim( $key, '/' ) ) ) );
 
 		return 'https://' . $domain . '/' . $encoded_key;
+	}
+
+	/**
+	 * Return the filtered query for the list of files in the bucket.
+	 *
+	 * @param array<string,mixed> $query The query.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function filter_query_params( array $query, string $directory ): array {
+		/**
+		 * Filter the query for files in Cloudflare R2.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param array<string,mixed> $query The query.
+		 * @param string $directory The URL.
+		 */
+		return apply_filters( 'efmlawss3_cloudflare_r2_query_params', $query, $directory );
+	}
+
+	/**
+	 * Return whether the given file from the bucket should be hidden in the directory listing.
+	 *
+	 * @param array<string,mixed> $file The array with the file data.
+	 * @param string              $directory The requested directory.
+	 *
+	 * @return bool
+	 */
+	protected function is_file_hidden( array $file, string $directory ): bool {
+		$false = false;
+		/**
+		 * Filter whether given Cloudflare R2 file should be hidden.
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 *
+		 * @param bool $false True if it should be hidden.
+		 * @param array<string,mixed> $file The array with the file data.
+		 * @param string $directory The requested directory.
+		 *
+		 * @noinspection PhpConditionAlreadyCheckedInspection
+		 */
+		return (bool) apply_filters( 'efmlawss3_service_cloudflare_r2_hide_file', $false, $file, $directory );
+	}
+
+	/**
+	 * Return the help for the setup of this platform.
+	 *
+	 * @return array{intro?: string, steps?: array<int,string>, hints?: array<int,string>, code?: array{label: string, content: string, hint?: string}, links?: array<int,array{label: string, url: string}>}
+	 */
+	public function get_setup_guide(): array {
+		return array(
+			'intro' => __( 'Create an API token for R2 in the Cloudflare dashboard (Storage & databases → R2 → Overview → Manage API tokens).', 'external-files-from-aws-s3' ),
+			'steps' => array(
+				__( 'Create an account API token with the permission "Object Read & Write" and restrict it to your bucket.', 'external-files-from-aws-s3' ),
+				__( 'After the creation, Cloudflare shows the values for S3 clients once: use the "Access Key ID" as access key and the "Secret Access Key" as secret key.', 'external-files-from-aws-s3' ),
+				__( 'You find the account ID in the S3 API URL of your bucket (bucket → Settings): <code>https://ACCOUNT-ID.r2.cloudflarestorage.com</code>.', 'external-files-from-aws-s3' ),
+				__( 'Enable the EU option, if you have created the bucket with the jurisdiction EU (its S3 API URL contains <code>.eu.</code>).', 'external-files-from-aws-s3' ),
+			),
+			'hints' => array(
+				__( 'The "Token value" shown with the API token is not the secret key. With it, the connection fails with "Unauthorized".', 'external-files-from-aws-s3' ),
+				__( 'Files are delivered via a public domain of your bucket: a custom domain or the r2.dev URL, which you enable in the settings of the bucket.', 'external-files-from-aws-s3' ),
+			),
+			'links' => array(
+				array(
+					'label' => __( 'R2 API tokens', 'external-files-from-aws-s3' ),
+					'url'   => 'https://developers.cloudflare.com/r2/api/tokens/',
+				),
+			),
+		);
 	}
 }

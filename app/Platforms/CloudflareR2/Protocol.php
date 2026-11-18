@@ -116,6 +116,11 @@ class Protocol extends Protocol_Base {
 	 * @return bool
 	 */
 	private function is_public_domain_url(): bool {
+		// bail if the actual external source belongs to another platform: its public domain is not ours.
+		if ( $this->is_source_of_other_platform() ) {
+			return false;
+		}
+
 		// get the configured public domain for this connection, if any.
 		$fields = $this->get_fields();
 		$domain = trim( (string) ( ! empty( $fields['public_domain']['value'] ) ? $fields['public_domain']['value'] : '' ) );

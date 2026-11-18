@@ -13,6 +13,8 @@ use ExternalFilesFromAwsS3\Platforms\AwsS3;
 use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesFromAwsS3\Platforms\CloudflareR2;
 use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
+use ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\S3Compatible;
 use ExternalFilesFromAwsS3\Tests\externalFilesFromAwsS3Tests;
 
 /**
@@ -81,6 +83,47 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 				),
 				'https://my-bucket.fra1.digitaloceanspaces.com/',
 				'https://my-bucket.fra1.digitaloceanspaces.com/',
+			),
+			'S3-compatible'                 => array(
+				S3Compatible::class,
+				S3Compatible\Export::class,
+				array(
+					'endpoint'   => 'https://s3.example.com',
+					'region'     => 'us-east-1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+					'path_style' => 1,
+				),
+				'https://s3.example.com/my-bucket/',
+				'https://s3.example.com/my-bucket/',
+			),
+			'S3-compatible with public URL' => array(
+				S3Compatible::class,
+				S3Compatible\Export::class,
+				array(
+					'endpoint'   => 'https://s3.example.com',
+					'region'     => 'us-east-1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+					'path_style' => 0,
+					'public_url' => 'https://cdn.example.com',
+				),
+				'https://my-bucket.s3.example.com/',
+				'https://cdn.example.com/',
+			),
+			'Hetzner Object Storage'        => array(
+				HetznerObjectStorage::class,
+				HetznerObjectStorage\Export::class,
+				array(
+					'region'     => 'fsn1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+				),
+				'https://my-bucket.fsn1.your-objectstorage.com/',
+				'https://my-bucket.fsn1.your-objectstorage.com/',
 			),
 		);
 	}
@@ -183,7 +226,78 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$this->assertCount( 1, $uploads );
 		$this->assertEquals( 'my-bucket', $uploads[0]['Bucket'] );
 		$this->assertEquals( $key, $uploads[0]['Key'] );
-		$this->assertEquals( file_get_contents( $file_path ), (string) $uploads[0]['Body'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$this->assertEquals( file_get_contents( $file_path ), $this->get_s3_command_body( $uploads[0] ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+	}
+
+	/**
+	 * Test the export of a file into a folder below the directory of the external source.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_file_into_folder( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+		$key           = 'uploads/2026/11/' . $file_name;
+
+		$responses               = $this->set_availability( $platform_class_name, $public_base_url . $key, true );
+		$responses['PutObject']  = array( 'ObjectURL' => $public_base_url . $key );
+		$responses['HeadObject'] = array();
+		$s3                      = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                  = $this->set_platform_fields( $s3, $values );
+		$credentials             = $this->get_credentials( $fields, $directory . 'uploads/' );
+
+		// the platform supports folders.
+		$this->assertTrue( $export_class_name::get_instance()->supports_folders() );
+
+		// export the file like the main plugin does it with a folder in the target.
+		$url = $export_class_name::get_instance()->export_file( $attachment_id, $directory . 'uploads/2026/11/' . $file_name, $credentials );
+		$this->assertEquals( $public_base_url . $key, $url );
+		$this->assertEquals( $key, get_post_meta( $attachment_id, 'efml_s3_key', true ) );
+		$uploads = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'PutObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertCount( 1, $uploads );
+		$this->assertEquals( $key, $uploads[0]['Key'] );
+
+		// the check for existing files uses the folder too.
+		$this->assertTrue( $export_class_name::get_instance()->file_exists_on_target( $directory . 'uploads/2026/11/' . $file_name, $credentials ) );
+		$checks = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'HeadObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertEquals( $key, end( $checks )['Key'] );
+	}
+
+	/**
+	 * Test if relative folders in the target are never used for the key.
+	 *
+	 * @return void
+	 */
+	public function test_get_folder_from_target(): void {
+		$export      = \ExternalFilesFromAwsS3\Platforms\AwsS3\Export::get_instance();
+		$credentials = array( 'directory' => 'https://my-bucket.s3.amazonaws.com/uploads/' );
+		$this->assertEquals( '2026/11/', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/2026/11/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/other/2026/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/../2026/file.jpg', $credentials ) ) );
+		$this->assertEquals( '', $this->call_method( $export, 'get_folder_from_target', array( 'https://my-bucket.s3.amazonaws.com/uploads/2026/file.jpg', array() ) ) );
 	}
 
 	/**
@@ -362,5 +476,64 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$export = $this->getMockBuilder( \ExternalFilesFromAwsS3\Export_Base::class )->onlyMethods( array() )->getMock();
 		$this->assertFalse( $export->export_file( 1, 'https://example.com/', array() ) );
 		$this->assertFalse( $export->delete_exported_file( 'https://example.com/', array(), 1 ) );
+	}
+
+	/**
+	 * Test that all platforms support private files.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 *
+	 * @return void
+	 */
+	public function test_supports_private_files( string $platform_class_name, string $export_class_name ): void {
+		$this->assertTrue( $export_class_name::get_instance()->supports_private_files() );
+	}
+
+	/**
+	 * Test the export of a private file into a bucket, which is not public.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_private_file( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$file_path     = (string) get_attached_file( $attachment_id, true );
+		$key           = 'uploads/' . basename( $file_path );
+
+		// the file is not public available.
+		$responses              = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject'] = array( 'ObjectURL' => $public_base_url . $key );
+		$s3                     = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                 = $this->set_platform_fields( $s3, $values );
+		$credentials            = $this->get_credentials( $fields, $directory . 'uploads/' );
+
+		// without the private option the export fails.
+		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+
+		// with the private option the export is successful.
+		$credentials['private'] = true;
+		$url                    = $export_class_name::get_instance()->export_file( $attachment_id, $directory, $credentials );
+		$this->assertIsString( $url );
+		$this->assertNotEmpty( $url );
+		$this->assertEquals( $key, get_post_meta( $attachment_id, 'efml_s3_key', true ) );
+
+		// the file is not checked for public access during the private export.
+		$acl_checks = array_filter(
+			$this->get_s3_commands(),
+			static function ( CommandInterface $command ): bool {
+				return 'GetObjectAcl' === $command->getName();
+			}
+		);
+		$this->assertLessThanOrEqual( 1, count( $acl_checks ) );
 	}
 }

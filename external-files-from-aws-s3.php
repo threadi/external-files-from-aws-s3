@@ -10,6 +10,7 @@
  * Author URI:        https://www.thomaszwirner.de
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI:        https://github.com/threadi/external-files-from-aws-s3
  * Text Domain:       external-files-from-aws-s3
  *
  * @package external-files-from-aws-s3
@@ -38,6 +39,12 @@ const EFMLAWSS3_PLUGIN = __FILE__;
 
 // set the version.
 const EFMLAWSS3_PLUGIN_VERSION = '@@VersionNumber@@';
+
+// bail if "External files in Media Library" is too old: load no functions of this plugin, only show a hint.
+if ( ! Init::get_instance()->is_parent_plugin_compatible() ) {
+	add_action( 'admin_init', array( Init::get_instance(), 'show_incompatible_parent_plugin_hint' ) );
+	return;
+}
 
 // initialize plugin.
 Init::get_instance()->init();

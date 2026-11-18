@@ -30,6 +30,7 @@ jobs:
           rm -fr tests
           rm -fr bin
           rm phpunit.xml.dist
+          rm phpunit-integration.xml.dist
 
       - uses: anchore/sbom-action@v0
 

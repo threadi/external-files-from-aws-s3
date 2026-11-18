@@ -50,14 +50,16 @@ class Uninstall {
 	/**
 	 * Run uninstallation of this plugin.
 	 *
-	 * Hint:
-	 * First set all settings as if the plugin is active.
-	 * Then delete all these settings from DB and disable all.
-	 *
 	 * @return void
 	 */
 	public function run(): void {
-		// remove custom transient.
+		// remove custom transients.
 		delete_transient( 'efml_aws_s3_regions' );
+		delete_site_transient( 'efmlawss3_latest_release' );
+
+		// remove the settings for the import limit, which are not used anymore since 2.0.0.
+		foreach ( array( 'eml_s3_import_limit', 'eml_cloudflare_r2_import_limit', 'eml_digital_ocean_spaces_import_limit', 'eml_backblaze_s3_import_limit' ) as $option ) {
+			delete_option( $option );
+		}
 	}
 }

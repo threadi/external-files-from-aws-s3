@@ -17,6 +17,8 @@ use ExternalFilesFromAwsS3\Platforms\AwsS3;
 use ExternalFilesFromAwsS3\Platforms\BackblazeS3;
 use ExternalFilesFromAwsS3\Platforms\CloudflareR2;
 use ExternalFilesFromAwsS3\Platforms\DigitalOceanSpaces;
+use ExternalFilesFromAwsS3\Platforms\HetznerObjectStorage;
+use ExternalFilesFromAwsS3\Platforms\S3Compatible;
 use ExternalFilesFromAwsS3\Tests\externalFilesFromAwsS3Tests;
 
 /**
@@ -113,6 +115,50 @@ class Protocol_Base extends externalFilesFromAwsS3Tests {
 				'https://my-bucket.fra1.digitaloceanspaces.com/dir/example.jpg',
 				'https://my-bucket.fra1.digitaloceanspaces.com/',
 				'https://my-bucket.fra1.digitaloceanspaces.com/',
+			),
+			'S3-compatible'                 => array(
+				S3Compatible::class,
+				S3Compatible\Protocol::class,
+				array(
+					'endpoint'   => 'https://s3.example.com',
+					'region'     => 'us-east-1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+					'path_style' => 1,
+				),
+				'https://s3.example.com/my-bucket/dir/example.jpg',
+				'https://s3.example.com/my-bucket/',
+				'https://s3.example.com/my-bucket/',
+			),
+			'S3-compatible with public URL' => array(
+				S3Compatible::class,
+				S3Compatible\Protocol::class,
+				array(
+					'endpoint'   => 'https://s3.example.com',
+					'region'     => 'us-east-1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+					'path_style' => 0,
+					'public_url' => 'https://cdn.example.com',
+				),
+				'https://my-bucket.s3.example.com/dir/example.jpg',
+				'https://my-bucket.s3.example.com/',
+				'https://cdn.example.com/',
+			),
+			'Hetzner Object Storage'        => array(
+				HetznerObjectStorage::class,
+				HetznerObjectStorage\Protocol::class,
+				array(
+					'region'     => 'fsn1',
+					'access_key' => 'key',
+					'secret'     => 'secret',
+					'bucket'     => 'my-bucket',
+				),
+				'https://my-bucket.fsn1.your-objectstorage.com/dir/example.jpg',
+				'https://my-bucket.fsn1.your-objectstorage.com/',
+				'https://my-bucket.fsn1.your-objectstorage.com/',
 			),
 		);
 	}
