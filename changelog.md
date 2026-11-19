@@ -4,71 +4,50 @@
 
 ### Added
 
-- Exported files get the header "Cache-Control" for browsers and CDNs, as defined by External Files in Media Library 6.0.0 (one day, with object versioning one week, private files none)
-- Added export of the sizes of images and their original image together with them (requires External Files in Media Library 6.0.0): they are delivered like the images themselves, via the proxy or from the bucket
-- Added help "Where do I find these details?" to the forms of all platforms and to the quickstart (requires External Files in Media Library 6.0.0): where to get the access data, which permissions they need and typical pitfalls
-- The help for AWS S3 contains the IAM policy with the name of the bucket and, if used, the permission for Amazon CloudFront
-- The connection test and the log name the missing permission, if the storage returns it in its error message (e.g. AWS)
-- Added hook "efmlawss3_iam_policy"
-- Interrupted uploads of large files (from 16 MB, uploaded in parts) are aborted, so their parts do not remain invisible in the bucket and use storage space; the IAM policy contains the permission "s3:AbortMultipartUpload" for this
-- Added hook "efmlawss3_upload_options" to change the upload in parts (e.g. the size of the parts)
-- Added documentation of the permissions in docs/permissions.md
-- Added support for the migration from other offload plugins (WP Offload Media, Advanced Media Offloader, Stowaway, Offload Media – Cloud Storage) via the quickstart of External Files in Media Library 6.0.0: files in the bucket are used as external files without uploading them again
-- Added hook "efmlawss3_offloaded_object_url"
-- Added optional Amazon CloudFront domain for AWS S3 to deliver files via CloudFront, also from private buckets
-- Added optional invalidation of the Amazon CloudFront cache for overwritten or deleted files during export
-- Allow switching hostings for AWS S3 if files are delivered via Amazon CloudFront
-- Added possibility to define credentials and settings of each platform via constants, e.g. in wp-config.php (requires External Files in Media Library 6.0.0)
-- Constants of a platform are only used if the constants for all its required fields are defined
-- Settings show hints instead of input fields for values defined via constants
-- Saved external sources for other buckets than the one defined via constants are not usable as long as the constants are defined, files imported before are still delivered
-- Added possibility to define several connections per platform via constants, e.g. two buckets (requires External Files in Media Library 6.0.0)
-- Added check for existing files in the bucket before a file is exported to prevent overwriting them (requires External Files in Media Library 6.0.0)
-- Added hook "efmlawss3_upload_params" to change the parameters for the upload of files
-- Added S3-compatible storage with own endpoint for any provider or self-hosted storage with S3 API (e.g. MinIO, Garage or Ceph)
-- Added presets for Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
-- Added logos for the presets Hetzner Object Storage, IONOS Object Storage, OVHcloud Object Storage, Scaleway Object Storage and Wasabi
-- Added optional public URL (own domain or CDN) for the S3-compatible storage and its presets
-- Added optional setting to send checksums only if required for S3-compatible providers, which do not support the checksums of the AWS SDK
-- Added connection test for all platforms: list, upload, public availability and deletion of a test file
-- Added detailed log entries for failed requests to all platforms incl. HTTP status, error code, request IDs and connection details (without credentials)
-- Added capabilities for new platforms after an update of this plugin
-- Added integration tests against a real S3 server and a GitHub workflow for them
-- Added support for the folder structure of exported files for all platforms (requires External Files in Media Library 6.0.0)
-- Added support for private files for all platforms (requires External Files in Media Library 6.0.0): files are exported without the check for public availability and delivered via pre-signed URLs or the cache of the proxy
-- Added hook "efmlawss3_signed_url" to change the pre-signed URLs
-- Added link to the platform of each file in its info box, e.g. to the AWS console, the Cloudflare dashboard or the consoles of Backblaze, DigitalOcean and the presets (requires External Files in Media Library 6.0.0)
-- The directory listing of each platform with a known web interface now links to it ("Go to …"), before only AWS S3
-- Added optional custom domain (e.g. of a CDN) for Backblaze B2 and DigitalOcean Spaces, also via constants
-- Folders are imported file by file via the import of External Files in Media Library 6.0.0: also folders with tens of thousands of files, in the background if necessary
-- Added integration tests for the file list of a folder with 10,000 files and the import of a folder with 1,100 files
-- Added search terms for the command palette of WordPress, e.g. other names of the service (requires External Files in Media Library 6.0.0)
+- Added S3-compatible storage with own endpoint (e.g. MinIO, Garage, Ceph)
+- Added presets for Hetzner, IONOS, OVHcloud, Scaleway and Wasabi
+- Added optional public URL or custom domain for S3-compatible storages, Backblaze B2 and DigitalOcean Spaces
+- Added Amazon CloudFront support, also for private buckets, with optional cache invalidation
+- Added migration from other offload plugins via the quickstart
+- Added export of image sizes and original images
+- Added private files for all platforms
+- Added folder structure for exported files
+- Added header "Cache-Control" for exported files
+- Added check for existing files before the export
+- Added credentials and settings via constants, also for several connections
+- Added setup help "Where do I find these details?" incl. IAM policy
+- Added connection test for all platforms, naming missing permissions
+- Added detailed log entries for failed requests
+- Added abort of interrupted multipart uploads
+- Added links to the web interfaces of the platforms
+- Added import of large folders file by file, also in the background
+- Added option to send checksums only if required
+- Added search terms for the command palette
+- Added new hooks
+- Added documentation of the permissions
+- Added integration tests with a real S3 server
 
 ### Changed
 
-- Encrypted settings and access data are bound to their purpose (requires External Files in Media Library 6.0.0): an encrypted value copied into another field cannot be decrypted there; values saved by older versions stay readable and are bound to their purpose when they are saved again
+- Now requires External Files in Media Library 6.0.0 or newer
+- Folders are imported including their subfolders
+- Removed the setting "Max. files to load during import per iteration"
+- The connection test uses the one of External Files in Media Library
+- Encrypted values are bound to their purpose
+- Optimized the option for auto-updates
 - Updated German translations
-- Optimized the option for use auto-updates for this plugin
-- The hooks for the directory listing are now called via own methods, so platforms could use their own hooks (no change for the existing platforms)
-- Now requires External Files in Media Library 6.0.0 or newer, with an older version this plugin loads none of its functions and shows a hint
-- The connection test now uses the connection test of External Files in Media Library
-- Removed the setting "Max. files to load during import per iteration" of all platforms, it is replaced by the import in the background
-- The import of a folder imports the files of this folder and its subfolders
 
 ### Fixed
 
-- Fixed files remaining in the bucket, if an export failed because the file would not be public available: the uploaded file is removed again (an existing file with the same name is never removed); if this is not possible, the log names the reason (e.g. missing permissions of the access key)
-- Fixed delivery of private files via the proxy for visitors and users without the capability for the platform (requires External Files in Media Library 6.0.0): the protocols of the platforms are known in each request now, imports still require the capability for the platform
-- Fixed error 500 during the import of a file, if the configuration of the platform is incomplete (e.g. without region): the error is logged
-- Fixed synchronization of buckets with public or custom domain (e.g. Cloudflare R2): their files were assigned to another platform (e.g. DigitalOcean Spaces), whose check of the custom domain used the fields of the external source, and could not be imported ("region" missing)
-- Fixed import and export of AWS S3 files if the access key is not allowed to read object ACLs
-- Fixed usage of the custom domain for Cloudflare R2 in user-specific mode
-- Fixed missing content type of exported files, which resulted in "binary/octet-stream" for every file
-- Fixed high memory usage during the export of large files, they are now uploaded as stream (and in parts for files with more than 16 MB)
-- Fixed missing error handling if the upload of a file fails
-- Fixed the directory listing of Backblaze S3, Cloudflare R2 and DigitalOcean Spaces, which used the hooks of AWS S3: not supported file types were not hidden and subdirectories were not loaded separately
-- Fixed the heading of the settings in the user profile, which showed "AWS S3" for each platform
-- Fixed directory listing, import and synchronization of buckets with more than 1000 files, only the first 1000 files have been used
+- Fixed only the first 1,000 files of a bucket being used
+- Fixed missing content type of exported files ("binary/octet-stream")
+- Fixed high memory usage during the export of large files
+- Fixed files remaining in the bucket after a failed export
+- Fixed delivery of private files to visitors and users without the capability for the platform
+- Fixed synchronization of buckets with custom domain (e.g. Cloudflare R2)
+- Fixed import and export without permission to read object ACLs
+- Fixed custom domain of Cloudflare R2 in user-specific mode
+- Fixed directory listing of
 
 ## [1.2.1] - 24.10.2026
 

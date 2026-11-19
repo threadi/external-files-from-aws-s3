@@ -13,6 +13,7 @@ parameters:
     - "#easyDirectoryListingForWordPress#"
     - "#EFML_PLUGIN#"
     - "#_IN_SECONDS#"
+    - "#WP_PLUGIN_DIR#"
   earlyTerminatingFunctionCalls:
     - wp_send_json
   paths:
