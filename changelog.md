@@ -4,11 +4,14 @@
 
 ### Added
 
+- Exported files get the header "Cache-Control" for browsers and CDNs, as defined by External Files in Media Library 6.0.0 (one day, with object versioning one week, private files none)
 - Added export of the sizes of images and their original image together with them (requires External Files in Media Library 6.0.0): they are delivered like the images themselves, via the proxy or from the bucket
 - Added help "Where do I find these details?" to the forms of all platforms and to the quickstart (requires External Files in Media Library 6.0.0): where to get the access data, which permissions they need and typical pitfalls
 - The help for AWS S3 contains the IAM policy with the name of the bucket and, if used, the permission for Amazon CloudFront
 - The connection test and the log name the missing permission, if the storage returns it in its error message (e.g. AWS)
 - Added hook "efmlawss3_iam_policy"
+- Interrupted uploads of large files (from 16 MB, uploaded in parts) are aborted, so their parts do not remain invisible in the bucket and use storage space; the IAM policy contains the permission "s3:AbortMultipartUpload" for this
+- Added hook "efmlawss3_upload_options" to change the upload in parts (e.g. the size of the parts)
 - Added documentation of the permissions in docs/permissions.md
 - Added support for the migration from other offload plugins (WP Offload Media, Advanced Media Offloader, Stowaway, Offload Media – Cloud Storage) via the quickstart of External Files in Media Library 6.0.0: files in the bucket are used as external files without uploading them again
 - Added hook "efmlawss3_offloaded_object_url"
@@ -54,7 +57,7 @@
 
 ### Fixed
 
-- Fixed files remaining in the bucket, if an export failed because the file would not be public available: the uploaded file is removed again (an existing file with the same name is never removed)
+- Fixed files remaining in the bucket, if an export failed because the file would not be public available: the uploaded file is removed again (an existing file with the same name is never removed); if this is not possible, the log names the reason (e.g. missing permissions of the access key)
 - Fixed delivery of private files via the proxy for visitors and users without the capability for the platform (requires External Files in Media Library 6.0.0): the protocols of the platforms are known in each request now, imports still require the capability for the platform
 - Fixed error 500 during the import of a file, if the configuration of the platform is incomplete (e.g. without region): the error is logged
 - Fixed synchronization of buckets with public or custom domain (e.g. Cloudflare R2): their files were assigned to another platform (e.g. DigitalOcean Spaces), whose check of the custom domain used the fields of the external source, and could not be imported ("region" missing)

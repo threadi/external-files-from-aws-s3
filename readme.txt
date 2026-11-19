@@ -3,17 +3,17 @@ Contributors: threadi
 Tags: external files, media library, aws s3
 Requires at least: 6.2
 Tested up to: 7.2
-Requires PHP: 8.1
+Requires PHP: 8.2
 Requires CP:  2.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Stable tag: @@VersionNumber@@
 
-Add the possibility to import, export and synchronise files from and to AWS S3. Your need the plugin "Externale Files in Media Library" to use it.
+Add the possibility to import, export and synchronize files from and to AWS S3. Your need the plugin "Externale Files in Media Library" to use it.
 
 == Description ==
 
-Add the possibility to import, export and synchronise files from and to AWS S3. You need the plugin "External Files in Media Library" 6.0.0 or newer to use it.
+Add the possibility to import, export and synchronize files from and to AWS S3. You need the plugin "External Files in Media Library" 6.0.0 or newer to use it.
 
 == Repository, documentation and reliability ==
 

@@ -227,6 +227,9 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$this->assertEquals( 'my-bucket', $uploads[0]['Bucket'] );
 		$this->assertEquals( $key, $uploads[0]['Key'] );
 		$this->assertEquals( file_get_contents( $file_path ), $this->get_s3_command_body( $uploads[0] ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+
+		// browsers and CDNs could cache the file for one day, as defined by the main plugin.
+		$this->assertEquals( 'public, max-age=86400', $uploads[0]['CacheControl'] );
 	}
 
 	/**
@@ -317,18 +320,50 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 		$attachment_id = $this->create_local_attachment();
 		$key           = basename( (string) get_attached_file( $attachment_id, true ) );
 
-		$responses              = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
-		$responses['PutObject'] = array();
-		$s3                     = $this->use_s3_mock( $platform_class_name, $responses );
-		$fields                 = $this->set_platform_fields( $s3, $values );
+		$responses                 = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject']    = array();
+		$responses['HeadObject']   = $this->get_s3_exception( 'HeadObject', 404, 'NotFound' );
+		$responses['DeleteObject'] = array();
+		$s3                        = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                    = $this->set_platform_fields( $s3, $values );
 
 		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $this->get_credentials( $fields, $directory ) ) );
 		$this->assertEmpty( get_post_meta( $attachment_id, 'efml_s3_key', true ) );
 
 		// the problem must be logged.
-		$log = $this->get_log_entries( $directory );
-		$this->assertNotEmpty( $log );
-		$this->assertStringContainsString( 'would not be public available', $log[0]['log'] );
+		$this->assertStringContainsString( 'would not be public available', (string) wp_json_encode( $this->get_log_entries( $directory ) ) );
+
+		// the uploaded file is removed again.
+		$this->assertContains( 'DeleteObject', $this->get_s3_command_names() );
+	}
+
+	/**
+	 * Test the export of a file, which would not be public available, if the check for an existing file before the
+	 * upload fails: the uploaded file is not removed (it could be an existing file), the log names the reason.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $export_class_name   The class name of the export object.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $directory           The directory for the export.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_export_file_without_public_access_and_failed_check( string $platform_class_name, string $export_class_name, array $values, string $directory, string $public_base_url ): void {
+		$attachment_id = $this->create_local_attachment();
+		$key           = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		$responses               = $this->set_availability( $platform_class_name, $public_base_url . $key, false );
+		$responses['PutObject']  = array();
+		$responses['HeadObject'] = $this->get_s3_exception( 'HeadObject', 403 );
+		$s3                      = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                  = $this->set_platform_fields( $s3, $values );
+
+		$this->assertFalse( $export_class_name::get_instance()->export_file( $attachment_id, $directory, $this->get_credentials( $fields, $directory ) ) );
+		$this->assertNotContains( 'DeleteObject', $this->get_s3_command_names() );
+		$this->assertStringContainsString( 'remains in the S3 bucket', (string) wp_json_encode( $this->get_log_entries( $directory ) ) );
 	}
 
 	/**
@@ -535,5 +570,40 @@ class Export_Base extends externalFilesFromAwsS3Tests {
 			}
 		);
 		$this->assertLessThanOrEqual( 1, count( $acl_checks ) );
+
+		// private files get no header for the caching.
+		$uploads = array_values(
+			array_filter(
+				$this->get_s3_commands(),
+				static function ( CommandInterface $command ): bool {
+					return 'PutObject' === $command->getName();
+				}
+			)
+		);
+		$this->assertNotEmpty( $uploads );
+		$this->assertArrayNotHasKey( 'CacheControl', end( $uploads )->toArray() );
+	}
+
+	/**
+	 * Test the header "Cache-Control" of uploaded files with object versioning: one week.
+	 *
+	 * @return void
+	 */
+	public function test_cache_control_with_object_versioning(): void {
+		$folders   = get_option( 'eml_export_folders' );
+		$structure = get_option( 'eml_export_folder_structure' );
+		$yearmonth = get_option( 'uploads_use_yearmonth_folders' );
+		update_option( 'eml_export_folders', 1 );
+		update_option( 'eml_export_folder_structure', '%year%/%timestamp%' );
+		update_option( 'uploads_use_yearmonth_folders', 1 );
+
+		$method = new \ReflectionMethod( \ExternalFilesFromAwsS3\Export_Base::class, 'get_upload_params' );
+		$params = $method->invoke( \ExternalFilesFromAwsS3\Platforms\AwsS3\Export::get_instance(), 0, UNIT_TESTS_DATA_PLUGIN_DIR . 'example.jpg', 'example.jpg', \ExternalFilesFromAwsS3\Platforms\AwsS3::get_instance() );
+
+		update_option( 'eml_export_folders', $folders );
+		update_option( 'eml_export_folder_structure', $structure );
+		update_option( 'uploads_use_yearmonth_folders', $yearmonth );
+
+		$this->assertEquals( 'public, max-age=604800', $params['CacheControl'] );
 	}
 }

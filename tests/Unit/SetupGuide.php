@@ -72,6 +72,7 @@ class SetupGuide extends externalFilesFromAwsS3Tests {
 		$this->assertSame( 'arn:aws:s3:::YOUR-BUCKET', $policy['Statement'][0]['Resource'] );
 		$this->assertSame( 'arn:aws:s3:::YOUR-BUCKET/*', $policy['Statement'][1]['Resource'] );
 		$this->assertContains( 's3:PutObjectAcl', $policy['Statement'][1]['Action'] );
+		$this->assertContains( 's3:AbortMultipartUpload', $policy['Statement'][1]['Action'] );
 		$this->assertCount( 2, $policy['Statement'] );
 
 		// with bucket and CloudFront distribution.

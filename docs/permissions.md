@@ -19,7 +19,7 @@ Create an own IAM user for your website and add this policy as inline policy. Re
         {
             "Sid": "UseFiles",
             "Effect": "Allow",
-            "Action": [ "s3:GetObject", "s3:GetObjectAcl", "s3:PutObject", "s3:PutObjectAcl", "s3:DeleteObject" ],
+            "Action": [ "s3:GetObject", "s3:GetObjectAcl", "s3:PutObject", "s3:PutObjectAcl", "s3:AbortMultipartUpload", "s3:DeleteObject" ],
             "Resource": "arn:aws:s3:::YOUR-BUCKET/*"
         }
     ]
@@ -32,6 +32,7 @@ Create an own IAM user for your website and add this policy as inline policy. Re
 | `s3:GetObject` | loading files, checking whether a file exists, signed URLs for private files |
 | `s3:GetObjectAcl` | checking whether a file is public |
 | `s3:PutObject`, `s3:PutObjectAcl` | export (files are uploaded with an ACL) |
+| `s3:AbortMultipartUpload` | removing the parts of an interrupted upload of a large file (from 16 MB, uploaded in parts) |
 | `s3:DeleteObject` | deleting exported files |
 | `cloudfront:CreateInvalidation` | only with Amazon CloudFront: clearing the cache of changed files, resource `arn:aws:cloudfront::*:distribution/YOUR-DISTRIBUTION-ID` |
 

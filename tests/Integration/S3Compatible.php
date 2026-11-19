@@ -249,6 +249,7 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 		$this->assertTrue( $export->file_exists_on_target( $directory . $file_name, $credentials ) );
 		$this->assertEquals( 200, wp_remote_retrieve_response_code( wp_remote_head( (string) $url ) ) );
 		$this->assertEquals( 'image/jpeg', wp_remote_retrieve_header( wp_remote_head( (string) $url ), 'content-type' ) );
+		$this->assertEquals( 'public, max-age=86400', wp_remote_retrieve_header( wp_remote_head( (string) $url ), 'cache-control' ) );
 
 		// test 2: the import of the exported file.
 		$protocol = new Protocol( (string) $url );
@@ -303,6 +304,166 @@ class S3Compatible extends externalFilesFromAwsS3Tests {
 		// test 3: private files do not require the public availability.
 		$credentials['private'] = true;
 		$this->assertNotFalse( $export->export_file( $attachment_id, $directory . '2026/', $credentials ) );
+	}
+
+	/**
+	 * Test that the uploaded file of a failed public export remains with a hint in the log, if the check for an
+	 * existing file before the upload fails (e.g. without the permission to list the bucket).
+	 *
+	 * @return void
+	 */
+	public function test_failed_public_export_with_failed_check(): void {
+		// let each check for an existing file fail.
+		$mock = $this->getMockBuilder( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ): S3Client {
+				$client = new S3Client( $configuration );
+				$client->getHandlerList()->appendInit(
+					static function ( callable $handler ): callable {
+						return static function ( CommandInterface $command, $request = null ) use ( $handler ) {
+							if ( 'HeadObject' === $command->getName() ) {
+								return \GuzzleHttp\Promise\Create::rejectionFor( new \Aws\S3\Exception\S3Exception( 'Access Denied', $command, array( 'code' => 'AccessDenied' ) ) );
+							}
+							return $handler( $command, $request );
+						};
+					},
+					'efmlawss3_integration_deny_head'
+				);
+				return $client;
+			}
+		);
+		$this->set_property_static( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class, 'instance', $mock );
+
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values( array( 'public_url' => 'http://127.0.0.1:9/efml-not-reachable/' ) ) );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_local_attachment();
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the export fails and the file remains, the log names the reason.
+		$this->assertFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$this->restore_platform();
+		$this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->assertNotEmpty( $this->get_platform()->get_s3_client()->listObjectsV2( array( 'Bucket' => $this->bucket, 'Prefix' => $file_name ) )['Contents'] ?? array() );
+		$this->assertStringContainsString( 'remains in the S3 bucket', (string) wp_json_encode( \ExternalFilesInMediaLibrary\Plugin\Log::get_instance()->get_logs( '', 'error' ) ) );
+	}
+
+	/**
+	 * Create a local attachment with a file of the given size in MB and return its ID.
+	 *
+	 * @param int $megabytes The size in MB.
+	 *
+	 * @return int
+	 */
+	private function create_large_attachment( int $megabytes ): int {
+		$file = trailingslashit( get_temp_dir() ) . 'efml-large-' . wp_generate_password( 6, false ) . '.pdf';
+		file_put_contents( $file, '%PDF-1.4' . str_repeat( 'x', $megabytes * MB_IN_BYTES ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$attachment_id = self::factory()->attachment->create_upload_object( $file );
+		wp_delete_file( $file );
+		$this->assertIsInt( $attachment_id );
+		return $attachment_id;
+	}
+
+	/**
+	 * Return the options for multipart uploads of these tests: from 5 MB in parts of 5 MB, one after another.
+	 *
+	 * @return array<string,int>
+	 */
+	public function get_multipart_options(): array {
+		return array(
+			'mup_threshold' => 5 * MB_IN_BYTES,
+			'part_size'     => 5 * MB_IN_BYTES,
+			'concurrency'   => 1,
+		);
+	}
+
+	/**
+	 * Test the export of a large file in parts (multipart upload).
+	 *
+	 * @return void
+	 */
+	public function test_export_via_multipart_upload(): void {
+		add_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+		);
+		$attachment_id = $this->create_large_attachment( 11 );
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the file is uploaded completely.
+		$this->assertNotFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$head = $this->get_platform()->get_s3_client()->headObject(
+			array(
+				'Bucket' => $this->bucket,
+				'Key'    => $file_name,
+			)
+		);
+		$this->assertEquals( filesize( (string) get_attached_file( $attachment_id, true ) ), $head['ContentLength'] );
+		$this->assertStringContainsString( '-3', (string) $head['ETag'] );
+		remove_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+	}
+
+	/**
+	 * Test that the parts of an interrupted multipart upload are removed from the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_interrupted_multipart_upload_is_aborted(): void {
+		add_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
+
+		// let the upload of the second part fail.
+		$mock = $this->getMockBuilder( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class )
+			->disableOriginalConstructor()
+			->onlyMethods( array( 'get_the_client' ) )
+			->getMock();
+		$mock->method( 'get_the_client' )->willReturnCallback(
+			static function ( array $configuration ): S3Client {
+				$client = new S3Client( $configuration );
+				// as the last step before sending, like a lost connection.
+				$client->getHandlerList()->appendAttempt(
+					static function ( callable $handler ): callable {
+						return static function ( CommandInterface $command, $request = null ) use ( $handler ) {
+							if ( 'UploadPart' === $command->getName() && 2 === (int) $command['PartNumber'] ) {
+								return \GuzzleHttp\Promise\Create::rejectionFor( new \Aws\S3\Exception\S3Exception( 'Connection lost', $command, array( 'code' => 'RequestTimeout' ) ) );
+							}
+							return $handler( $command, $request );
+						};
+					},
+					'efmlawss3_integration_fail_part'
+				);
+				return $client;
+			}
+		);
+		$this->set_property_static( \ExternalFilesFromAwsS3\Platforms\S3Compatible::class, 'instance', $mock );
+
+		$fields        = $this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$directory     = $this->get_platform()->get_directory();
+		$credentials   = array(
+			'fields'    => $fields,
+			'directory' => $directory,
+			'private'   => true,
+		);
+		$attachment_id = $this->create_large_attachment( 11 );
+		$file_name     = basename( (string) get_attached_file( $attachment_id, true ) );
+
+		// the export fails and the parts are removed.
+		$this->assertFalse( Export::get_instance()->export_file( $attachment_id, $directory, $credentials ) );
+		$this->restore_platform();
+		$this->set_platform_fields( $this->get_platform(), $this->get_values() );
+		$this->assertFalse( Export::get_instance()->file_exists_on_target( $directory . $file_name, $credentials ) );
+		$uploads = $this->get_platform()->get_s3_client()->listMultipartUploads( array( 'Bucket' => $this->bucket ) );
+		$this->assertEmpty( $uploads['Uploads'] ?? array() );
+		$this->assertStringContainsString( 'parts of the interrupted upload have been removed', (string) wp_json_encode( \ExternalFilesInMediaLibrary\Plugin\Log::get_instance()->get_logs() ) );
+		remove_filter( 'efmlawss3_upload_options', array( $this, 'get_multipart_options' ) );
 	}
 
 	/**

@@ -11,9 +11,11 @@ namespace ExternalFilesFromAwsS3;
 defined( 'ABSPATH' ) || exit;
 
 use Aws\Exception\AwsException;
+use Aws\Exception\MultipartUploadException;
 use Aws\Result;
 use Aws\S3\S3Client;
 use Exception;
+use Throwable;
 use ExternalFilesInMediaLibrary\Plugin\Helper;
 use ExternalFilesInMediaLibrary\Plugin\Log;
 
@@ -80,12 +82,16 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		// invalidated then or if the file is exported publicly: then a new file is removed again, if it would not be
 		// public available).
 		$file_exists = false;
+		$check_error = '';
 		if ( $s3_obj->is_cache_invalidation_enabled() || empty( $credentials['private'] ) ) {
 			try {
 				$file_exists = $s3_client->doesObjectExistV2( $s3_obj->get_bucket_name(), $key );
 			} catch ( AwsException | Exception $e ) {
 				// if the check fails, we assume the file exists to invalidate the cache for safety.
 				$file_exists = true;
+
+				// remember the reason, if the export fails afterward.
+				$check_error = $e->getMessage();
 			}
 		}
 
@@ -109,13 +115,14 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 				$key,
 				$handle,
 				'private',
-				array(
-					'params' => $this->get_upload_params( $attachment_id, $file_path, $key, $s3_obj ),
-				)
+				$this->get_upload_options( $this->get_upload_params( $attachment_id, $file_path, $key, $s3_obj, ! empty( $credentials['private'] ) ), $attachment_id, $key, $s3_obj )
 			);
 		} catch ( AwsException | Exception $e ) {
 			// log this event.
 			Log::get_instance()->create( __( 'File could not be uploaded to the S3 bucket. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+
+			// remove the parts of an interrupted multipart upload, so they do not remain invisible in the bucket.
+			$this->abort_multipart_upload( $e, $s3_client, $target );
 
 			// do nothing more.
 			return false;
@@ -140,6 +147,9 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			// existed before and has been overwritten, as it could be used by another file).
 			if ( ! $file_exists ) {
 				$this->remove_uploaded_file( $s3_client, $s3_obj, $key, $target );
+			} elseif ( '' !== $check_error ) {
+				// log, why the uploaded file remains in the bucket.
+				Log::get_instance()->create( __( 'The uploaded file remains in the S3 bucket, as it could not be checked before the upload whether a file with this name already exists. Please remove it manually and check the permissions of the access key (e.g. "s3:ListBucket" and "s3:GetObject"). Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $check_error ) . '</code>', $target, 'error' );
 			}
 
 			// return false to prevent to save this file as external file.
@@ -349,7 +359,7 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		}
 
 		// get the upload parameters with the content type of this file.
-		$params    = $this->get_upload_params( $attachment_id, $source, $key, $s3_obj );
+		$params    = $this->get_upload_params( $attachment_id, $source, $key, $s3_obj, ! empty( $credentials['private'] ) );
 		$file_type = wp_check_filetype( basename( $source ) );
 		if ( is_string( $file_type['type'] ) && '' !== $file_type['type'] ) {
 			$params['ContentType'] = $file_type['type'];
@@ -365,10 +375,13 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 
 		// upload the file.
 		try {
-			$s3_client->upload( $s3_obj->get_bucket_name(), $key, $handle, 'private', array( 'params' => $params ) );
+			$s3_client->upload( $s3_obj->get_bucket_name(), $key, $handle, 'private', $this->get_upload_options( $params, $attachment_id, $key, $s3_obj ) );
 		} catch ( AwsException | Exception $e ) {
 			// log this event.
 			Log::get_instance()->create( __( 'File could not be uploaded to the S3 bucket. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $e->getMessage() ) . '</code>', $target, 'error' );
+
+			// remove the parts of an interrupted multipart upload, so they do not remain invisible in the bucket.
+			$this->abort_multipart_upload( $e, $s3_client, $target );
 
 			// do nothing more.
 			return false;
@@ -518,10 +531,11 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 	 * @param string        $file_path The absolute path to the local file.
 	 * @param string        $key The key of the file in the bucket.
 	 * @param Platform_Base $s3_obj The platform object.
+	 * @param bool          $is_private Whether the file is saved privately.
 	 *
 	 * @return array<string,mixed>
 	 */
-	protected function get_upload_params( int $attachment_id, string $file_path, string $key, Platform_Base $s3_obj ): array {
+	protected function get_upload_params( int $attachment_id, string $file_path, string $key, Platform_Base $s3_obj, bool $is_private = false ): array {
 		// get the content type from the attachment.
 		$content_type = (string) get_post_mime_type( $attachment_id );
 
@@ -537,6 +551,15 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 			$params['ContentType'] = $content_type;
 		}
 
+		// let browsers and CDNs cache the file, as External Files in Media Library defines it (since its version 6.0.0).
+		$export_obj = \ExternalFilesInMediaLibrary\ExternalFiles\Export::get_instance();
+		if ( method_exists( $export_obj, 'get_cache_control' ) ) { // @phpstan-ignore function.alreadyNarrowedType
+			$cache_control = $export_obj->get_cache_control( $attachment_id, $is_private );
+			if ( '' !== $cache_control ) {
+				$params['CacheControl'] = $cache_control;
+			}
+		}
+
 		/**
 		 * Filter the parameters for the upload of a file to the S3 bucket.
 		 *
@@ -549,6 +572,96 @@ class Export_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Export_Base
 		 * @param Platform_Base $s3_obj The platform object.
 		 */
 		return apply_filters( 'efmlawss3_upload_params', $params, $attachment_id, $key, $s3_obj );
+	}
+
+	/**
+	 * Return the options for the upload of a file via "S3Client::upload()" with the given parameters.
+	 *
+	 * The SDK uploads files larger than 16 MB in parts (multipart upload), by default with 5 MB per part and 3 parts at
+	 * the same time. The file is read as stream, it is never loaded completely into the memory.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param array<string,mixed> $params        The parameters for the upload (see get_upload_params()).
+	 * @param int                 $attachment_id The attachment ID.
+	 * @param string              $key           The key of the file in the bucket.
+	 * @param Platform_Base       $s3_obj        The platform object.
+	 *
+	 * @return array<string,mixed>
+	 */
+	protected function get_upload_options( array $params, int $attachment_id, string $key, Platform_Base $s3_obj ): array {
+		/**
+		 * Filter the options for the upload of a file to the S3 bucket.
+		 *
+		 * Could be used to change the multipart upload, e.g. "mup_threshold" (size in bytes, from which a file is
+		 * uploaded in parts), "part_size" (size of each part in bytes, at least 5 MB) or "concurrency" (number of parts
+		 * uploaded at the same time). The parameters of the upload are changed via the hook "efmlawss3_upload_params".
+		 *
+		 * @since 2.0.0 Available since 2.0.0.
+		 * @param array<string,mixed> $options       The options (without the parameters).
+		 * @param int                 $attachment_id The attachment ID.
+		 * @param string              $key           The key of the file in the bucket.
+		 * @param Platform_Base       $s3_obj        The platform object.
+		 */
+		$options = apply_filters( 'efmlawss3_upload_options', array(), $attachment_id, $key, $s3_obj );
+
+		// use only an array.
+		if ( ! is_array( $options ) ) {
+			$options = array();
+		}
+
+		// add the parameters.
+		$options['params'] = $params;
+
+		// return the options.
+		return $options;
+	}
+
+	/**
+	 * Abort an interrupted multipart upload, so its uploaded parts are deleted.
+	 *
+	 * The SDK does not do this itself: the parts would remain invisible in the bucket (they are not listed as files)
+	 * and use storage space, until a lifecycle rule of the bucket removes them.
+	 *
+	 * @since 2.0.0 Available since 2.0.0.
+	 *
+	 * @param Throwable $e         The exception of the upload.
+	 * @param S3Client  $s3_client The S3 client.
+	 * @param string    $target    The target of the file (for the log).
+	 *
+	 * @return void
+	 */
+	protected function abort_multipart_upload( Throwable $e, S3Client $s3_client, string $target ): void {
+		// bail if this is not an interrupted multipart upload.
+		if ( ! $e instanceof MultipartUploadException ) {
+			return;
+		}
+
+		// get the ID of the multipart upload.
+		$upload = $e->getState()->getId();
+
+		// bail if the multipart upload has not been started.
+		if ( empty( $upload['UploadId'] ) || empty( $upload['Bucket'] ) || empty( $upload['Key'] ) ) {
+			return;
+		}
+
+		// abort it.
+		try {
+			$s3_client->abortMultipartUpload(
+				array(
+					'Bucket'   => $upload['Bucket'],
+					'Key'      => $upload['Key'],
+					'UploadId' => $upload['UploadId'],
+				)
+			);
+		} catch ( AwsException | Exception $abort_exception ) {
+			// log this event.
+			Log::get_instance()->create( __( 'The parts of the interrupted upload could not be removed from the S3 bucket. They remain invisible in the bucket and use storage space: remove them via the console of your provider or via a lifecycle rule for incomplete multipart uploads. Error:', 'external-files-from-aws-s3' ) . ' <code>' . esc_html( $abort_exception->getMessage() ) . '</code>', $target, 'error' );
+			return;
+		}
+
+		// log this event.
+		Log::get_instance()->create( __( 'The parts of the interrupted upload have been removed from the S3 bucket.', 'external-files-from-aws-s3' ), $target, 'info', 1 );
 	}
 
 	/**

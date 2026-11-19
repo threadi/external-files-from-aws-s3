@@ -1381,7 +1381,7 @@ class AwsS3 extends Platform_Base implements Service {
 				array(
 					'Sid'      => 'UseFiles',
 					'Effect'   => 'Allow',
-					'Action'   => array( 's3:GetObject', 's3:GetObjectAcl', 's3:PutObject', 's3:PutObjectAcl', 's3:DeleteObject' ),
+					'Action'   => array( 's3:GetObject', 's3:GetObjectAcl', 's3:PutObject', 's3:PutObjectAcl', 's3:AbortMultipartUpload', 's3:DeleteObject' ),
 					'Resource' => 'arn:aws:s3:::' . $bucket . '/*',
 				),
 			),

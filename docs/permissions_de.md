@@ -19,7 +19,7 @@ Erstelle einen eigenen IAM-Benutzer für deine Website und füge ihm diese Richt
         {
             "Sid": "UseFiles",
             "Effect": "Allow",
-            "Action": [ "s3:GetObject", "s3:GetObjectAcl", "s3:PutObject", "s3:PutObjectAcl", "s3:DeleteObject" ],
+            "Action": [ "s3:GetObject", "s3:GetObjectAcl", "s3:PutObject", "s3:PutObjectAcl", "s3:AbortMultipartUpload", "s3:DeleteObject" ],
             "Resource": "arn:aws:s3:::YOUR-BUCKET/*"
         }
     ]
@@ -32,6 +32,7 @@ Erstelle einen eigenen IAM-Benutzer für deine Website und füge ihm diese Richt
 | `s3:GetObject` | Dateien laden, prüfen ob eine Datei existiert, signierte URLs für private Dateien |
 | `s3:GetObjectAcl` | prüfen, ob eine Datei öffentlich ist |
 | `s3:PutObject`, `s3:PutObjectAcl` | Export (Dateien werden mit einer ACL hochgeladen) |
+| `s3:AbortMultipartUpload` | Entfernen der Teile eines abgebrochenen Uploads einer großen Datei (ab 16 MB, in Teilen hochgeladen) |
 | `s3:DeleteObject` | Löschen exportierter Dateien |
 | `cloudfront:CreateInvalidation` | nur mit Amazon CloudFront: Cache geänderter Dateien leeren, Ressource `arn:aws:cloudfront::*:distribution/DEINE-DISTRIBUTION-ID` |
 
