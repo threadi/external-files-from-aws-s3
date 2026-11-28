@@ -1255,7 +1255,7 @@ class Platform_Base extends Service_Base {
 			$steps['public']['message'] = sprintf( __( 'The test file is public available under %1$s.', 'external-files-from-aws-s3' ), $public_url );
 		} else {
 			/* translators: %1$s will be replaced by a URL. */
-			$steps['public']['message'] = sprintf( __( 'The test file is not public available under %1$s. Files could be imported and exported with the option "Save files privately", but not exported as public files. Check the permissions of the bucket or the public URL.', 'external-files-from-aws-s3' ), $public_url );
+			$steps['public']['message'] = sprintf( __( 'The test file is not public available under %1$s. Files could be imported and exported with the option "Prevent direct access at the source", but not exported as public files. Check the permissions of the bucket or the public URL.', 'external-files-from-aws-s3' ), $public_url );
 		}
 
 		// step 4: delete the test file.

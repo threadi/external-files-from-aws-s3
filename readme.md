@@ -9,7 +9,7 @@ This repository provides the features of the WordPress plugin _External files fr
 * Use files from AWS S3 and S3-compatible storages in your media library: AWS S3 (incl. Amazon CloudFront), Cloudflare R2, Backblaze B2, DigitalOcean Spaces, Hetzner Object Storage, IONOS, OVHcloud, Scaleway, Wasabi and any other S3-compatible storage with its own endpoint (e.g. MinIO).
 * Import single files or complete buckets and folders, also with thousands of files, and synchronize them automatically.
 * Export (offload) files of your media library into a bucket, optionally sorted into folders by year and month.
-* Private buckets: files are delivered via signed URLs or via the proxy of your website, also for WooCommerce downloads.
+* Private buckets with the option "Prevent direct access at the source": files are delivered via signed URLs or via the proxy of your website, also for WooCommerce downloads.
 * Credentials via constants in your wp-config.php, also for several connections (e.g. two buckets).
 * Connection test to check the credentials and permissions.
 

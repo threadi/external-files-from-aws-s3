@@ -52,7 +52,7 @@ In the directory listing of the storage you will find the action "Run connection
 
 Each step is shown with its result and written to the log. The test writes into your bucket, so it only runs if you start it.
 
-The connection test and the log below are available for all platforms of this plugin, also for AWS S3, Cloudflare R2, Backblaze B2 and DigitalOcean Spaces. If the test file is not public available, files could still be exported with the option "Save files privately" of the external source.
+The connection test and the log below are available for all platforms of this plugin, also for AWS S3, Cloudflare R2, Backblaze B2 and DigitalOcean Spaces. If the test file is not public available, files could still be exported with the option "Prevent direct access at the source" of the external source.
 
 ## Log
 

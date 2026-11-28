@@ -52,7 +52,7 @@ In der Verzeichnisansicht des Speichers gibt es die Aktion „Verbindungstest au
 
 Jeder Schritt wird mit seinem Ergebnis angezeigt und ins Log geschrieben. Der Test schreibt in den Bucket und läuft deshalb nur, wenn man ihn startet.
 
-Verbindungstest und Log gibt es für alle Plattformen dieses Plugins, also auch für AWS S3, Cloudflare R2, Backblaze B2 und DigitalOcean Spaces. Ist die Testdatei nicht öffentlich erreichbar, lassen sich Dateien trotzdem mit der Option „Dateien privat speichern“ der externen Quelle exportieren.
+Verbindungstest und Log gibt es für alle Plattformen dieses Plugins, also auch für AWS S3, Cloudflare R2, Backblaze B2 und DigitalOcean Spaces. Ist die Testdatei nicht öffentlich erreichbar, lassen sich Dateien trotzdem mit der Option „Direktzugriff beim Anbieter verhindern“ der externen Quelle exportieren.
 
 ## Log
 
