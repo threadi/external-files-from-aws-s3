@@ -8,6 +8,11 @@
 	width: 92px;
 }
 
+/* the small icon of "External files in Media Library" (e.g. in the media dialog): only the cloud */
+span.efml-service-icon.efml-cloudflare-r2:before {
+	background-image: url(../gfx/cloudflare-icon.png);
+}
+
 .efml-backblaze-s3:before {
 	background-image: url(../gfx/backblaze.svg);
 	background-repeat: no-repeat;

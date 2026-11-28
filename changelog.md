@@ -4,8 +4,9 @@
 
 ### Added
 
-- Added the directories of files relative to their external source, for the folder structure in folder plugins of External Files in Media Library 6.1.0
-- Added support for the option to synchronize subdirectories of External Files in Media Library 6.1.0: folders keep their subfolders by default, without subfolders only the files directly in the folder are synchronized
+- Added relative directories of files for folder plugins (External Files in Media Library 6.1.0)
+- Added support for synchronizing subdirectories (External Files in Media Library 6.1.0)
+- Added service logos in the media dialog, incl. a square Cloudflare R2 icon (External Files in Media Library 6.1.0)
 
 ## [2.0.0] - 22.11.2026
 

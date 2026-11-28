@@ -73,6 +73,7 @@ class Init {
 		// misc.
 		add_action( 'init', array( $this, 'init_languages' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'add_styles_in_admin' ) );
+		add_action( 'efml_enqueue_service_logos', array( $this, 'add_service_logos' ) );
 		add_filter( 'wp_consent_api_registered_' . plugin_basename( EFMLAWSS3_PLUGIN ), array( $this, 'register_consent_api' ) );
 	}
 
@@ -450,6 +451,21 @@ class Init {
 			'efmlawss3-admin',
 			Helper::get_plugin_url() . 'admin/style.css',
 			array(),
+			Helper::get_file_version( Helper::get_plugin_dir() . 'admin/style.css' ),
+		);
+	}
+
+	/**
+	 * Add the logos of our services, where "External files in Media Library" shows them outside of its pages, e.g. in
+	 * the media dialog of the editors (since its version 6.1.0).
+	 *
+	 * @return void
+	 */
+	public function add_service_logos(): void {
+		wp_enqueue_style(
+			'efmlawss3-admin',
+			Helper::get_plugin_url() . 'admin/style.css',
+			array( 'efml-components' ),
 			Helper::get_file_version( Helper::get_plugin_dir() . 'admin/style.css' ),
 		);
 	}

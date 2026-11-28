@@ -40,6 +40,7 @@ class Init extends externalFilesFromAwsS3Tests {
 		$this->assertIsInt( has_filter( 'efml_configurations', array( $init, 'add_configurations' ) ) );
 		$this->assertIsInt( has_action( 'init', array( $init, 'init_languages' ) ) );
 		$this->assertIsInt( has_action( 'admin_enqueue_scripts', array( $init, 'add_styles_in_admin' ) ) );
+		$this->assertIsInt( has_action( 'efml_enqueue_service_logos', array( $init, 'add_service_logos' ) ) );
 		$this->assertIsInt( has_filter( 'update_plugins_github.com', array( \ExternalFilesFromAwsS3\Plugin\Updates::get_instance(), 'check' ) ) );
 	}
 
@@ -247,6 +248,26 @@ class Init extends externalFilesFromAwsS3Tests {
 		$init->add_styles_in_admin( 'upload.php' );
 		$this->assertTrue( wp_style_is( 'efmlawss3-admin' ) );
 		$this->assertStringEndsWith( 'admin/style.css', wp_styles()->registered['efmlawss3-admin']->src );
+
+		// cleanup.
+		wp_dequeue_style( 'efmlawss3-admin' );
+		wp_deregister_style( 'efmlawss3-admin' );
+	}
+
+	/**
+	 * Test that the logos of the services are loaded, where the main plugin shows them outside of its pages (e.g. in
+	 * the media dialog of the editors).
+	 *
+	 * @return void
+	 */
+	public function test_add_service_logos(): void {
+		$this->assertFalse( wp_style_is( 'efmlawss3-admin' ) );
+
+		// the main plugin loads the logos of the services.
+		do_action( 'efml_enqueue_service_logos' );
+		$this->assertTrue( wp_style_is( 'efmlawss3-admin' ) );
+		$this->assertStringEndsWith( 'admin/style.css', wp_styles()->registered['efmlawss3-admin']->src );
+		$this->assertContains( 'efml-components', wp_styles()->registered['efmlawss3-admin']->deps );
 
 		// cleanup.
 		wp_dequeue_style( 'efmlawss3-admin' );
