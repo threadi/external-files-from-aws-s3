@@ -351,6 +351,86 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	}
 
 	/**
+	 * Return whether this protocol could use the files of subdirectories during a synchronization.
+	 *
+	 * @since 2.1.0 Available since 2.1.0.
+	 *
+	 * @return bool
+	 */
+	public function supports_subdirectories(): bool {
+		return true;
+	}
+
+	/**
+	 * Return whether this protocol uses the files of subdirectories by default.
+	 *
+	 * The import of folders has always used the files of their subfolders.
+	 *
+	 * @since 2.1.0 Available since 2.1.0.
+	 *
+	 * @return bool
+	 */
+	public function get_subdirectories_default(): bool {
+		return true;
+	}
+
+	/**
+	 * Return the path of the directory of the given file URL relative to the requested directory in the bucket.
+	 *
+	 * The files are listed with their public URL or their key, so the key of the file is compared with the requested
+	 * path in the bucket.
+	 *
+	 * @since 2.1.0 Available since 2.1.0.
+	 *
+	 * @param string $file_url The URL of the file.
+	 *
+	 * @return string
+	 */
+	public function get_relative_directory( string $file_url ): string {
+		// get the key of the file.
+		$key = ltrim( rawurldecode( $this->get_key_of_file( $file_url ) ), '/' );
+
+		// bail if no key could be found.
+		if ( '' === $key || str_contains( $key, '://' ) ) {
+			return '';
+		}
+
+		// get the requested directory in the bucket (empty for the complete bucket).
+		$requested_path = $this->get_requested_path();
+		$prefix         = str_contains( $requested_path, '://' ) ? '' : trim( $requested_path, '/' );
+		$prefix         = '' !== $prefix ? $prefix . '/' : '';
+
+		// bail if the file is not in the requested directory.
+		if ( '' !== $prefix && ! str_starts_with( $key, $prefix ) ) {
+			return '';
+		}
+
+		// get the directory of the file relative to the requested directory.
+		$directory = dirname( substr( $key, strlen( $prefix ) ) );
+
+		// return the directory, empty for files directly in the requested directory.
+		return '.' === $directory ? '' : $directory;
+	}
+
+	/**
+	 * Return whether the files of subdirectories should be used for the URL of this object.
+	 *
+	 * Older versions of "External Files in Media Library" do not know this setting: the files of subdirectories are
+	 * used then like before.
+	 *
+	 * @return bool
+	 */
+	private function use_subdirectories(): bool {
+		// bail if the main plugin does not support the setting.
+		if ( ! method_exists( $this, 'is_subdirectories_enabled' ) ) { // @phpstan-ignore function.alreadyNarrowedType
+			return true;
+		}
+
+		// return the setting.
+		return $this->is_subdirectories_enabled();
+	}
+
+	/**
 	 * Return the requested path in the bucket of the URL of this object (e.g. a directory or a file).
 	 *
 	 * @return string
@@ -389,7 +469,8 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 	}
 
 	/**
-	 * Return one page of the files in the requested directory of the bucket, also from its subdirectories.
+	 * Return one page of the files in the requested directory of the bucket, also from its subdirectories (if they
+	 * should be used).
 	 *
 	 * @param string $cursor The cursor for the requested page.
 	 *
@@ -407,8 +488,8 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 		// set the fields.
 		$s3->set_fields( $this->get_fields() );
 
-		// return the page.
-		return $s3->get_file_list_page( $this->get_requested_path(), $cursor, $this->get_file_list_page_size() );
+		// return the page (with the files of the subdirectories, if they should be used).
+		return $s3->get_file_list_page( $this->get_requested_path(), $cursor, $this->get_file_list_page_size(), $this->use_subdirectories() );
 	}
 
 	/**
@@ -460,6 +541,11 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 				// use the directory listing to get the dirs and files.
 				$files = $s3->get_directory_listing( '/' );
 
+				// get the directory in the bucket, whose files are used, if the files of subdirectories should not be used
+				// (like for the file list: a requested path, which is not a path in the bucket, is the complete bucket).
+				$requested_path = $this->get_requested_path();
+				$only_directory = $this->use_subdirectories() ? false : ( str_contains( $requested_path, '://' ) ? '' : trim( $requested_path, '/' ) );
+
 				/**
 				 * Run action if we have files to check via S3-protocol.
 				 *
@@ -489,6 +575,11 @@ class Protocol_Base extends \ExternalFilesInMediaLibrary\ExternalFiles\Protocol_
 
 					// add each file to the list.
 					foreach ( $dir_data['files'] as $file ) {
+						// bail if the file is not directly in the requested directory, if subdirectories should not be used.
+						if ( false !== $only_directory && trim( dirname( '/' . $file['s3_key'] ), '/' ) !== $only_directory ) {
+							continue;
+						}
+
 						// bail if this an AJAX-request, and the file already exist in media library.
 						if ( wp_doing_ajax() && Files::get_instance()->get_file_by_title( $file['title'] ) ) {
 							continue;

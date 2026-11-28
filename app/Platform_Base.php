@@ -721,10 +721,11 @@ class Platform_Base extends Service_Base {
 	 * @param string $prefix    The prefix of the keys (e.g. the requested directory), empty for the complete bucket.
 	 * @param string $cursor    The continuation token of the page, empty for the first page.
 	 * @param int    $page_size The maximum count of objects on this page.
+	 * @param bool   $recursive True to use the files of subdirectories (since 2.1.0).
 	 *
 	 * @return array{files: array<int,array{url: string, media-url?: string, filesize?: int, last-modified?: int}>, cursor: string}|false
 	 */
-	public function get_file_list_page( string $prefix, string $cursor, int $page_size ): array|false {
+	public function get_file_list_page( string $prefix, string $cursor, int $page_size, bool $recursive = true ): array|false {
 		// get the S3Client.
 		$s3 = $this->get_s3_client();
 
@@ -734,6 +735,14 @@ class Platform_Base extends Service_Base {
 		// use the prefix, if the query does not have one and it is a path in the bucket (not a URL).
 		if ( empty( $query['Prefix'] ) && '' !== $prefix && '/' !== $prefix && ! str_contains( $prefix, '://' ) ) {
 			$query['Prefix'] = ltrim( $prefix, '/' );
+		}
+
+		// use only the files directly in the directory, if the files of subdirectories should not be used.
+		if ( ! $recursive ) {
+			if ( ! empty( $query['Prefix'] ) ) {
+				$query['Prefix'] = trailingslashit( (string) $query['Prefix'] );
+			}
+			$query['Delimiter'] = '/';
 		}
 
 		// set the size of the page.

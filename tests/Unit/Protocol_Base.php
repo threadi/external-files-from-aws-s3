@@ -479,4 +479,101 @@ class Protocol_Base extends externalFilesFromAwsS3Tests {
 		sort( $keys );
 		$this->assertEquals( array( 'dir/example.jpg', 'example.jpg' ), $keys );
 	}
+
+	/**
+	 * Test the file list with and without the files of subdirectories.
+	 *
+	 * By default, the files of subdirectories are used like before. If this is disabled (e.g. for the synchronization
+	 * of an external source), only the files directly in the directory are requested.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $protocol_class_name The class name of the protocol.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $file_url            The URL of the file.
+	 * @param string                      $directory_url       The URL of the main directory.
+	 *
+	 * @return void
+	 */
+	public function test_get_file_list_with_and_without_subdirectories( string $platform_class_name, string $protocol_class_name, array $values, string $file_url, string $directory_url ): void {
+		$date = new DateTimeResult( '2024-01-02T03:04:05Z' );
+		$s3   = $this->use_s3_mock(
+			$platform_class_name,
+			array(
+				'ListObjectsV2' => static function ( \Aws\CommandInterface $command ) use ( $date ): array {
+					$contents = array( array( 'Key' => 'example.jpg', 'Size' => 706, 'LastModified' => $date ) );
+					if ( empty( $command['Delimiter'] ) ) {
+						$contents[] = array( 'Key' => 'dir/example.jpg', 'Size' => 706, 'LastModified' => $date );
+					}
+					return array( 'Contents' => $contents );
+				},
+			)
+		);
+		$fields   = $this->set_platform_fields( $s3, $values );
+		$protocol = $this->get_protocol( $protocol_class_name, $directory_url, $fields );
+
+		// the files of subdirectories are used by default.
+		$this->assertTrue( $protocol->supports_subdirectories() );
+		$this->assertTrue( $protocol->get_subdirectories_default() );
+		$page = $protocol->get_file_list( '' );
+		$this->assertIsArray( $page );
+		$this->assertCount( 2, $page['files'] );
+		$commands = $this->get_s3_commands();
+		$this->assertArrayNotHasKey( 'Delimiter', end( $commands )->toArray() );
+
+		// the directories of the files relative to the external source are known (e.g. for folder plugins).
+		$this->assertEquals( array( '', 'dir' ), array_map( array( $protocol, 'get_relative_directory' ), array_column( $page['files'], 'url' ) ) );
+
+		// without subdirectories, only the files of the directory are requested.
+		add_filter( 'efml_include_subdirectories', '__return_false' );
+		$page = $protocol->get_file_list( '' );
+		remove_filter( 'efml_include_subdirectories', '__return_false' );
+		$this->assertIsArray( $page );
+		$this->assertCount( 1, $page['files'] );
+		$commands = $this->get_s3_commands();
+		$this->assertEquals( '/', end( $commands )['Delimiter'] );
+	}
+
+	/**
+	 * Test the import of a complete directory without the files of subdirectories.
+	 *
+	 * @dataProvider platforms_provider
+	 *
+	 * @param class-string<Platform_Base> $platform_class_name The class name of the platform.
+	 * @param string                      $protocol_class_name The class name of the protocol.
+	 * @param array<string,mixed>         $values              The values for the fields.
+	 * @param string                      $file_url            The URL of the file.
+	 * @param string                      $directory_url       The URL of the main directory.
+	 * @param string                      $public_base_url     The public base URL of the bucket.
+	 *
+	 * @return void
+	 */
+	public function test_get_url_infos_for_directory_without_subdirectories( string $platform_class_name, string $protocol_class_name, array $values, string $file_url, string $directory_url, string $public_base_url ): void {
+		$date                       = new DateTimeResult( '2024-01-02T03:04:05Z' );
+		$responses                  = $this->set_availability( $platform_class_name, $public_base_url, array( 'example.jpg', 'dir/example.jpg' ), false );
+		$responses['GetObject']     = $this->get_object_response();
+		$responses['ListObjectsV2'] = array(
+			'Contents' => array(
+				array( 'Key' => 'example.jpg', 'Size' => 706, 'LastModified' => $date ),
+				array( 'Key' => 'dir/example.jpg', 'Size' => 706, 'LastModified' => $date ),
+			),
+		);
+		$s3                         = $this->use_s3_mock( $platform_class_name, $responses );
+		$fields                     = $this->set_platform_fields( $s3, $values );
+
+		add_filter( 'efml_include_subdirectories', '__return_false' );
+		$results = $this->get_protocol( $protocol_class_name, $directory_url, $fields )->get_url_infos();
+		remove_filter( 'efml_include_subdirectories', '__return_false' );
+
+		// only the file in the directory itself is imported.
+		$this->assertCount( 1, $results );
+		$keys = array();
+		foreach ( $this->get_s3_commands() as $command ) {
+			if ( 'GetObject' === $command->getName() ) {
+				$keys[] = $command['Key'];
+			}
+		}
+		$this->assertEquals( array( 'example.jpg' ), $keys );
+	}
 }
